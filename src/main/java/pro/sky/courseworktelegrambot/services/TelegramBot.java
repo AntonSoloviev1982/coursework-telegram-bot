@@ -10,11 +10,11 @@ import pro.sky.courseworktelegrambot.config.BotConfig;
 
 @Slf4j
 @Service
-public class TelegramBotUpdateListener extends TelegramLongPollingBot {
+public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig botConfig;
 
-    public TelegramBotUpdateListener(BotConfig botConfig) {
+    public TelegramBot(BotConfig botConfig) {
         this.botConfig = botConfig;
     }
 
