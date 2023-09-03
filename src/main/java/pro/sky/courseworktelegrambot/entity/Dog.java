@@ -16,6 +16,17 @@ public class Dog {
     private byte[] photo;
     private boolean isAdopted;
 
+    public Dog() {
+    }
+
+    public Dog(String name, String breed, int age, byte[] photo) {
+        this.name = name;
+        this.breed = breed;
+        this.age = age;
+        this.photo = photo;
+        this.isAdopted = false;
+    }
+
     public int getId() {
         return id;
     }
