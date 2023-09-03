@@ -1,6 +1,7 @@
 # The name of the workflow. GitHub displays the names of your workflows under your repository's "Actions" tab. If you omit `name`, GitHub displays the workflow file path relative to the root of the repository.
 name: Java CI
 
+
 on:
   pull_request:
     types: [opened, reopened]
