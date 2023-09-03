@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Dog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     private String name;
     private String breed;
     private int age;
@@ -27,7 +27,7 @@ public class Dog {
         this.isAdopted = false;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
