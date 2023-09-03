@@ -31,7 +31,6 @@ public class BotInitializer {
             // Регистрация бота с TelegramBotsApi.
             telegramBotsApi.registerBot(bot);
         } catch (TelegramApiException e) {
-            // В случае возникновения ошибки, записываем сообщение об ошибке в журнал.
             log.error("Error occurred: " + e.getMessage());
         }
     }
