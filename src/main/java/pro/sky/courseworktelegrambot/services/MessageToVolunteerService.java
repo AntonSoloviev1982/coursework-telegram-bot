@@ -8,6 +8,10 @@ import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * В класс MessageToVolunteerService находятся методы с бизнес логикой для общения волонтера
+ * и пользователя через бот, с помощью вопросов и ответов.
+ */
 @Service
 public class MessageToVolunteerService {
 

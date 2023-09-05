@@ -7,9 +7,15 @@ import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
 import java.util.List;
 
+/**
+ * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.
+ */
 @Service
 public class ShelterService {
 
+    /**
+     * Лист для получения всех приютов из БД.
+     */
     private final List<Shelter> shelters;
 
     private final ShelterRepository shelterRepository;
