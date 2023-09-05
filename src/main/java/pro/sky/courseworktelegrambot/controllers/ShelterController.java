@@ -1,6 +1,11 @@
 package pro.sky.courseworktelegrambot.controllers;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entity.Shelter;
 import pro.sky.courseworktelegrambot.services.ShelterService;
@@ -17,9 +22,19 @@ public class ShelterController {
         this.shelterService = shelterService;
     }
 
-
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Создание нового приюта",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Shelter.class)
+                    )
+            )
+    })
     @PostMapping
-    public Shelter create(@RequestBody Shelter shelter) {
+    public Shelter create(@Parameter(schema = @Schema(implementation = Shelter.class))
+                              @RequestBody Shelter shelter) {
         return shelterService.create(shelter);
     }
 
