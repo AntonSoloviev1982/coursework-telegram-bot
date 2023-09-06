@@ -1,4 +1,4 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

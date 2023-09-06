@@ -1,12 +1,18 @@
-package pro.sky.courseworktelegrambot.service;
+package pro.sky.courseworktelegrambot.services;
 
 //import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import pro.sky.courseworktelegrambot.entities.State;
+import pro.sky.courseworktelegrambot.repositories.StateRepository;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 //import pro.sky.courseworktelegrambot.config.BotConfig;
 
 //@Slf4j
@@ -18,6 +24,14 @@ public class TelegramBot extends TelegramLongPollingBot {
     //public TelegramBot(BotConfig botConfig) {
     //    this.botConfig = botConfig;
     //}
+
+    @Autowired
+    StateRepository stateRepository;
+    List<State> states;
+    @PostConstruct
+    public void initStates() {
+        states = stateRepository.findAll();
+    }
 
     /**
      * Получает имя бота, которое будет использоваться при регистрации на платформе Telegram.
