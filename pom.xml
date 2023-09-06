@@ -60,10 +60,10 @@
             <version>6.2.7.Final</version>
         </dependency>
 
-        <!--dependency>
+        <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-        </dependency-->
+        </dependency>
     </dependencies>
 
     <build>
