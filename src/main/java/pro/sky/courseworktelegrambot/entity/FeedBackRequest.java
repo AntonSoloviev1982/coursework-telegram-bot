@@ -11,7 +11,7 @@ public class FeedBackRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     private LocalDateTime requestTime;
 
@@ -30,7 +30,7 @@ public class FeedBackRequest {
     public FeedBackRequest() {
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
