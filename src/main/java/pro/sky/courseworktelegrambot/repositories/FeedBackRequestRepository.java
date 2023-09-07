@@ -1,4 +1,4 @@
-package pro.sky.courseworktelegrambot.reposirory;
+package pro.sky.courseworktelegrambot.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import pro.sky.courseworktelegrambot.entity.FeedBackRequest;

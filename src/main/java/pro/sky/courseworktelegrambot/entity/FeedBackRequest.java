@@ -13,25 +13,27 @@ public class FeedBackRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime requestTime;
+    private final Long chatId;
 
-    private String contact;
+    private final LocalDateTime requestTime;
 
+    private final String contact;
 
     @Nullable
     private LocalDateTime executionTime;
 
-
-    public FeedBackRequest(LocalDateTime requestTime, String contact) {
+    public FeedBackRequest(Long chatId, LocalDateTime requestTime, String contact) {
+        this.chatId = chatId;
         this.requestTime = requestTime;
         this.contact = contact;
     }
 
-    public FeedBackRequest() {
-    }
-
     public Long getId() {
         return id;
+    }
+
+    public Long getChatId() {
+        return chatId;
     }
 
     public LocalDateTime getRequestTime() {
