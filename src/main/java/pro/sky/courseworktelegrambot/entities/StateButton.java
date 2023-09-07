@@ -1,8 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import javax.persistence.*;
 
 @Entity
 @IdClass(StateButtonPK.class)
@@ -11,6 +9,20 @@ public class StateButton {
     private String state_id;
     @Id
     private String caption;
-    private String next_state_id;
+    @ManyToOne   //(fetch = FetchType.LAZY)
+    private State nextState;
+
+
+    public String getState_id() {  //думаю, никогда не потребуется
+        return state_id;
+    }
+
+    public String getCaption() {
+        return caption;
+    }
+
+    public State getNextState() {
+        return nextState;
+    }
 }
 
