@@ -1,7 +1,7 @@
 package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entity.Shelter;
+import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 

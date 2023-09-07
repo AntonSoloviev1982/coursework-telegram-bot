@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.courseworktelegrambot.entity.MessageToVolunteer;
+import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 
 import java.util.List;

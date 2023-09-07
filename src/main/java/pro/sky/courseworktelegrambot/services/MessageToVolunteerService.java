@@ -1,7 +1,7 @@
 package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entity.MessageToVolunteer;
+import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 
