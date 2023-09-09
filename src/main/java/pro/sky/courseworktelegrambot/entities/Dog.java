@@ -1,5 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
+<<<<<<< HEAD
 import jakarta.persistence.*;
 import java.util.Objects;
 
@@ -99,4 +100,12 @@ public class Dog {
                 ", age=" + age + '\'' +
                 ", isAdopted=" + isAdopted;
     }
+=======
+import javax.persistence.Entity;
+import javax.persistence.Id;
+@Entity
+public class Dog extends Animal{
+    @Id
+    int Id;
+>>>>>>> origin/feature-Salavat-1
 }
