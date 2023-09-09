@@ -143,3 +143,14 @@ CREATE TABLE shelter(
     cynologists TEXT,
     refusal_reasons TEXT
     );
+
+--changeset alexander:create_feedback_request
+DROP TABLE IF EXISTS feedback_request;
+CREATE TABLE feedback_request(
+    id LONG PRIMARY KEY,
+    chat_id LONG NOT NULL,
+    request_time DATETIME NOT NULL,
+    contact VARCHAR(30),
+    execution_time DATETIME,
+    FOREIGN KEY (chat_id) REFERENCES users(id)
+   );
