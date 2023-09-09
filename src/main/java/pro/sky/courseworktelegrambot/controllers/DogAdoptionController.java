@@ -18,20 +18,22 @@ public class DogAdoptionController {
     }
 
     @PostMapping
-    public ResponseEntity<DogAdoption> createDogAdoption(@RequestBody DogAdoption dogAdoption){
-        if (dogAdoption == null){
+    public ResponseEntity<DogAdoption> createDogAdoption(@RequestBody DogAdoption dogAdoption) {
+        if (dogAdoption == null) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(dogAdoptionService.createDogAdoption(dogAdoption));
     }
+
     @GetMapping("{dogId}")
-    public ResponseEntity<DogAdoption> getDog(@PathVariable Integer dogId){
+    public ResponseEntity<DogAdoption> getDog(@PathVariable Integer dogId) {
         DogAdoption dogAdoption = dogAdoptionService.getDogAdoption(dogId);
         if (dogAdoption == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(dogAdoption);
     }
+
     @PutMapping
     public ResponseEntity<DogAdoption> updateDog(@RequestBody DogAdoption dogAdoption) {
         DogAdoption updateDogAdoption = dogAdoptionService.updateDogAdoption(dogAdoption);
@@ -40,13 +42,15 @@ public class DogAdoptionController {
         }
         return ResponseEntity.ok(updateDogAdoption);
     }
+
     @DeleteMapping("{dogId}")
-    public ResponseEntity<DogAdoption> deleteDog(@PathVariable Integer dogId){
+    public ResponseEntity<DogAdoption> deleteDog(@PathVariable Integer dogId) {
         dogAdoptionService.deleteDogAdoption(dogId);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("all")
-    public ResponseEntity<Collection> getAllDogs(){
+    public ResponseEntity<Collection> getAllDogs() {
         return ResponseEntity.ok(dogAdoptionService.getAllDogAdoption());
     }
 }

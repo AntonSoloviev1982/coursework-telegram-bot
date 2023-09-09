@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.DogReport;
 import pro.sky.courseworktelegrambot.services.DogReportService;
-import pro.sky.courseworktelegrambot.services.DogService;
 
 import java.util.Collection;
 
@@ -14,24 +13,28 @@ import java.util.Collection;
 @RequestMapping("dog-report")
 public class DogReportController {
     private final DogReportService dogReportService;
-    public DogReportController(DogReportService dogReportService){
+
+    public DogReportController(DogReportService dogReportService) {
         this.dogReportService = dogReportService;
     }
+
     @PostMapping
-    public ResponseEntity<DogReport> createDogReport(@RequestBody DogReport dogReport){
-        if (dogReport == null){
+    public ResponseEntity<DogReport> createDogReport(@RequestBody DogReport dogReport) {
+        if (dogReport == null) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(dogReportService.createDogReport(dogReport));
     }
+
     @GetMapping("{reportId}")
-    public ResponseEntity<DogReport> getDogReport(@PathVariable Integer reportId){
+    public ResponseEntity<DogReport> getDogReport(@PathVariable Integer reportId) {
         DogReport dogReport = dogReportService.getDogReport(reportId);
         if (dogReport == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(dogReport);
     }
+
     @PutMapping
     public ResponseEntity<DogReport> updateDogReport(@RequestBody DogReport dogReport) {
         DogReport updateDogReport = dogReportService.updateDogReport(dogReport);
@@ -40,13 +43,15 @@ public class DogReportController {
         }
         return ResponseEntity.ok(updateDogReport);
     }
+
     @DeleteMapping("{reportId}")
-    public ResponseEntity<Dog> deleteDogReport(@PathVariable Integer reportId){
+    public ResponseEntity<Dog> deleteDogReport(@PathVariable Integer reportId) {
         dogReportService.deleteDogReport(reportId);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("all")
-    public ResponseEntity<Collection> getAllDogReports(){
+    public ResponseEntity<Collection> getAllDogReports() {
         return ResponseEntity.ok(dogReportService.getAllDogReports());
     }
 }

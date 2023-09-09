@@ -1,6 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.*;
+import javax.persistence.Lob;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -15,7 +15,9 @@ public abstract class Pet {
     @Lob
     private byte[] photo;
     private boolean isAdopted;
-    public Pet(){}
+
+    public Pet() {
+    }
 
     public Pet(String name, String breed, int age, byte[] photo) {
         this.name = name;

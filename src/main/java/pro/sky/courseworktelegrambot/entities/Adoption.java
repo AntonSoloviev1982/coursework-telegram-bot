@@ -11,7 +11,8 @@ public abstract class Adoption {
     private LocalDateTime trialDate; //дата окончания испытательного срока
     private int trialDecision; //количество дополнительных дней
 
-    public Adoption(){}
+    public Adoption() {
+    }
 
     public Adoption(int userId, int petId) {
         // !!!требуется проверка!!!
