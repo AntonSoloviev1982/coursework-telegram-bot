@@ -6,6 +6,7 @@ import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.repositories.DogRepository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,7 +44,7 @@ public class DogService {
         }
     }
     public Collection<Dog> getAllDog(){
-        return dogRepository.findAll();
+        return List.copyOf(dogRepository.findAll());
     }
 }
 

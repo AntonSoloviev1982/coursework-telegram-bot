@@ -8,5 +8,4 @@ public class DogReport extends Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
 }

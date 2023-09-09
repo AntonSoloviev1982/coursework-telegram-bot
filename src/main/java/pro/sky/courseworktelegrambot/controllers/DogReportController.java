@@ -1,5 +1,6 @@
 package pro.sky.courseworktelegrambot.controllers;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +8,7 @@ import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.DogReport;
 import pro.sky.courseworktelegrambot.services.DogReportService;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
 @RestController
@@ -50,8 +52,12 @@ public class DogReportController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("all")
+    @GetMapping("all") // все отчеты
     public ResponseEntity<Collection> getAllDogReports() {
         return ResponseEntity.ok(dogReportService.getAllDogReports());
+    }
+    @GetMapping("/date") // отчет за указанную дату
+    public  ResponseEntity<Collection> getReportByDate(@RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date){
+        return ResponseEntity.ok(dogReportService.readByDate(date));
     }
 }

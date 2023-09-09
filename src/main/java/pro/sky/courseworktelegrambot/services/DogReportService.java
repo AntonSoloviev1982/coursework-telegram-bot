@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.DogReport;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
 import javax.persistence.EntityNotFoundException;
+import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,6 +45,10 @@ public class DogReportService {
         }
     }
     public Collection<DogReport> getAllDogReports(){
-        return dogReportRepository.findAll();
+        return List.copyOf(dogReportRepository.findAll());
+    }
+
+    public Collection<DogReport> readByDate(LocalDate reportDate){
+       return List.copyOf(dogReportRepository.findAllByReportDate(reportDate));
     }
 }
