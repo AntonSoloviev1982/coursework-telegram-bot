@@ -3,7 +3,8 @@ package pro.sky.courseworktelegrambot.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.courseworktelegrambot.entity.Dog;
+import pro.sky.courseworktelegrambot.entities.Dog;
+import pro.sky.courseworktelegrambot.entities.DogAdoption;
 import pro.sky.courseworktelegrambot.services.DogAdoptionService;
 
 import java.util.Collection;
@@ -18,30 +19,30 @@ public class DogAdoptionController {
     }
 
     @PostMapping
-    public ResponseEntity<Dog> createDog(@RequestBody Dog dog){
-        if (dog == null){
+    public ResponseEntity<DogAdoption> createDogAdoption(@RequestBody DogAdoption dogAdoption){
+        if (dogAdoption == null){
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(dogAdoptionService.createDogAdoption(dog));
+        return ResponseEntity.ok(dogAdoptionService.createDogAdoption(dogAdoption));
     }
     @GetMapping("{dogId}")
-    public ResponseEntity<Dog> getDog(@PathVariable Long dogId){
-        Dog dog = dogAdoptionService.getDogAdoption(dogId);
-        if (dog == null) {
+    public ResponseEntity<DogAdoption> getDog(@PathVariable Integer dogId){
+        DogAdoption dogAdoption = dogAdoptionService.getDogAdoption(dogId);
+        if (dogAdoption == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(dog);
+        return ResponseEntity.ok(dogAdoption);
     }
     @PutMapping
-    public ResponseEntity<Dog> updateDog(@RequestBody Dog dog) {
-        Dog updateDog = dogAdoptionService.updateDogAdoption(dog);
-        if (updateDog == null) {
+    public ResponseEntity<DogAdoption> updateDog(@RequestBody DogAdoption dogAdoption) {
+        DogAdoption updateDogAdoption = dogAdoptionService.updateDogAdoption(dogAdoption);
+        if (updateDogAdoption == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return ResponseEntity.ok(updateDog);
+        return ResponseEntity.ok(updateDogAdoption);
     }
     @DeleteMapping("{dogId}")
-    public ResponseEntity<Dog> deleteDog(@PathVariable Long dogId){
+    public ResponseEntity<DogAdoption> deleteDog(@PathVariable Integer dogId){
         dogAdoptionService.deleteDogAdoption(dogId);
         return ResponseEntity.ok().build();
     }

@@ -1,4 +1,4 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -10,11 +10,11 @@ public class DogAdoption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private int userId;
-    private int dogId;
-    private LocalDateTime date;
-    private LocalDateTime trialDate;
-    private int trialDecision;
+    private int userId; //усыновитель
+    private int dogId; //питомец (собака)
+    private LocalDateTime date; //дата усыновления
+    private LocalDateTime trialDate; //дата окончания испытательного срока
+    private int trialDecision; //количество дополнительных дней
 
     public int getId() {
         return id;
