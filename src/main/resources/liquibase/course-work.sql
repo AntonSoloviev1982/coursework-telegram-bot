@@ -4,9 +4,9 @@
 DROP TABLE IF EXISTS state;
 CREATE TABLE state(
    id VARCHAR(30) PRIMARY KEY,
-   text VARCHAR(30)),
-   text_input BOOLEAN
-   ;
+   text VARCHAR(60),
+   text_input BOOLEAN);
+
 INSERT INTO state(id, text, text_input) VALUES
     ('BadChoice', 'Нераспознанная команда. Выберите кнопку:', FALSE),
     ('Shelter', 'Выберите приют:', FALSE),
@@ -19,7 +19,7 @@ INSERT INTO state(id, text, text_input) VALUES
     ('TimeTable', '@timetable', FALSE),
     ('Security', '@security', FALSE),
     ('SafetyPrecautions', '@safety_precautions', FALSE),
-    ('AnimalList', 'Наши питомцы:'),
+    ('AnimalList', 'Наши питомцы:', FALSE),
     ('AnimalByNumber', 'Введите номер животного', TRUE),
 
     ('Rules', '@rules', FALSE),

@@ -179,7 +179,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         List<KeyboardRow> keyboard = keyboardForTextInput; //изначально прикрепим только кнопку Назад к кнопкам
         if (!state.isTextInput()) {
-            //если не текстовый ввод то долдны быть кнопки в таблице state_button
+            //если не текстовый ввод то должны быть кнопки в таблице state_button. Делаем спец клавиатуру
+            //для использования переменных в лямбде они должны быть final
+            final List<KeyboardRow> customKeyboard = new ArrayList<>();
             final List<StateButton> buttons = state.getButtons();
             //вывести в лог
             if (buttons.isEmpty()) System.out.println("State " + state.getId() + " has no button");
@@ -194,8 +196,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 .sorted(Comparator.comparingInt(StateButton::getCol)).forEach(button -> {
                                     keyboardRow.add(button.getCaption());
                                 });
-                        keyboard.add(keyboardRow);
+                        customKeyboard.add(keyboardRow);
                     });
+            keyboard = customKeyboard;
         }
         //Создаем клавиатуру
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -308,7 +311,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //посылаем все о животном с помощью sendMessage
 
         //В конце используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
-        sendMessageToUser(user, "Введите следующий ID животного:", 0);
+        sendMessageToUser(user, "Введите следующий номер животного:", 0);
         //состояние не меняем. Пользователь может слать следующие ID животных.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
