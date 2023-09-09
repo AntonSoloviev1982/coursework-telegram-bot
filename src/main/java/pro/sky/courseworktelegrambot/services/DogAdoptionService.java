@@ -28,7 +28,7 @@ public class DogAdoptionService {
     public DogAdoption updateDogAdoption(DogAdoption dogAdoption) {
         DogAdoption dogAdoptionFromDB = getDogAdoption(dogAdoption.getId());
         dogAdoptionFromDB.setUserId(dogAdoption.getUserId());
-        dogAdoptionFromDB.setDogId(dogAdoption.getDogId());
+        dogAdoptionFromDB.setPetId(dogAdoption.getPetId());
         dogAdoptionFromDB.setDate(dogAdoption.getDate());
         dogAdoptionFromDB.setTrialDate(dogAdoption.getTrialDate());
         dogAdoptionFromDB.setTrialDecision(dogAdoption.getTrialDecision());

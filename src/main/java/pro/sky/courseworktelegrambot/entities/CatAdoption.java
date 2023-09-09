@@ -3,15 +3,15 @@ package pro.sky.courseworktelegrambot.entities;
 import javax.persistence.*;
 
 @Entity
-@Table(name="dog_adoption")
-public class DogAdoption extends Adoption{
+@Table(name="cat_adoption")
+public class CatAdoption extends Adoption{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    public DogAdoption() {
+    public CatAdoption() {
     }
-    public DogAdoption(int userId,int dogId) {
-        super(userId,dogId);
+    public CatAdoption(int userId,int catId) {
+        super(userId,catId);
     }
 }

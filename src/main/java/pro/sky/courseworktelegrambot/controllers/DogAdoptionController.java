@@ -3,14 +3,13 @@ package pro.sky.courseworktelegrambot.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.DogAdoption;
 import pro.sky.courseworktelegrambot.services.DogAdoptionService;
 
 import java.util.Collection;
 
 @RestController
-@RequestMapping("dog/adoption")
+@RequestMapping("dog-adoption")
 public class DogAdoptionController {
     private final DogAdoptionService dogAdoptionService;
 
