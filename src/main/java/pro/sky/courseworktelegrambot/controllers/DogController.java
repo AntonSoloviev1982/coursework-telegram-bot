@@ -3,7 +3,7 @@ package pro.sky.courseworktelegrambot.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.courseworktelegrambot.entity.Dog;
+import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.services.DogService;
 
 import java.util.Collection;

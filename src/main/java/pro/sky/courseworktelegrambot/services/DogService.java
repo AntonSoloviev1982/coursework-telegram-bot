@@ -2,7 +2,7 @@ package pro.sky.courseworktelegrambot.services;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entity.Dog;
+import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.repositories.DogRepository;
 
 import java.util.Collection;
