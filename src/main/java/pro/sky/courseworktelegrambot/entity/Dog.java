@@ -3,12 +3,15 @@ package pro.sky.courseworktelegrambot.entity;
 import jakarta.persistence.*;
 import java.util.Objects;
 
+/**
+ * Object dog
+ */
 @Entity
 @Table(name = "dog")
 public class Dog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
     private String name;
     private String breed;
     private int age;
@@ -27,7 +30,7 @@ public class Dog {
         this.isAdopted = false;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
