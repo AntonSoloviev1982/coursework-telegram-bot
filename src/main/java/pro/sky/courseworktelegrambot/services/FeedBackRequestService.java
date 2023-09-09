@@ -2,7 +2,7 @@ package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pro.sky.courseworktelegrambot.entity.FeedBackRequest;
+import pro.sky.courseworktelegrambot.entities.FeedBackRequest;
 import pro.sky.courseworktelegrambot.repositories.FeedBackRequestRepository;
 
 import java.time.LocalDateTime;
