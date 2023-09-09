@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -24,9 +23,7 @@ import pro.sky.courseworktelegrambot.repositories.StateRepository;
 import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 //import pro.sky.courseworktelegrambot.config.BotConfig;
 
 @Slf4j
@@ -135,7 +132,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //Т.е. в ожидательных состояниях PreviousState не трогается, пока мы не нажмем "Возврат к боту"
         if (!user.getState().equals(oldState)) user.setPreviousState(oldState);
         user.setStateTime();
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
     }
 
     /**
@@ -193,9 +190,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                         KeyboardRow keyboardRow = new KeyboardRow();
                         buttons.stream()
                                 .filter(button -> button.getRow() == row)
-                                .sorted(Comparator.comparingInt(StateButton::getCol)).forEach(button -> {
-                                    keyboardRow.add(button.getCaption());
-                                });
+                                .sorted(Comparator.comparingInt(StateButton::getCol))
+                                .forEach(button -> keyboardRow.add(button.getCaption()));
                         customKeyboard.add(keyboardRow);
                     });
             keyboard = customKeyboard;
