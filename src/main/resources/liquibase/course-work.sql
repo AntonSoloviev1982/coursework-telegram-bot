@@ -144,13 +144,24 @@ CREATE TABLE shelter(
     refusal_reasons TEXT
     );
 
---changeset alexander:create_feedback_request
+--changeset alexander:1 create_feedback_request
 DROP TABLE IF EXISTS feedback_request;
 CREATE TABLE feedback_request(
     id LONG PRIMARY KEY,
     chat_id LONG NOT NULL,
-    request_time DATETIME NOT NULL,
+    request_time TIMESTAMP NOT NULL,
     contact VARCHAR(30),
-    execution_time DATETIME,
+    execution_time TIMESTAMP,
     FOREIGN KEY (chat_id) REFERENCES users(id)
+   );
+
+--changeset alexander:2 create_cat_report
+DROP TABLE IF EXISTS cat_report;
+CREATE TABLE cat_report(
+    id LONG PRIMARY KEY,
+    adoption_id LONG NOT NULL,
+    report_date DATE NOT NULL,
+    photo BLOB;
+    text VARCHAR(255),
+    FOREIGN KEY (adoption_id) REFERENCES cat_adoption(id)
    );
