@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.Animal;
@@ -23,9 +24,9 @@ import pro.sky.courseworktelegrambot.repositories.StateRepository;
 import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 //import pro.sky.courseworktelegrambot.config.BotConfig;
 
 @Slf4j
@@ -47,26 +48,40 @@ public class TelegramBot extends TelegramLongPollingBot {
     private DogRepository dogRepository;
     @Autowired
     private CatRepository catRepository;
-    private JpaRepository<? extends Animal,Integer> animalRepository(String shelterId) {
-        return (shelterId.equals("Dog"))?dogRepository:catRepository;
+
+    private JpaRepository<? extends Animal, Integer> animalRepository(String shelterId) {
+        return (shelterId.equals("Dog")) ? dogRepository : catRepository;
     }
 
-
-
-    private List<State> states;
-    private State initialState;
+    private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
+    //остальные будут приходить вместе с пользователем при извлечении его из репозитория
+    private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
+    private State infoState;  //состояние после выбора приюта.
+                              // Нужно, если решим кнопки приютов создавать из табл Shelter
     @PostConstruct
     public void initStates() {
-        states = stateRepository.findAll();
-        initialState = stateRepository.findById("ShelterChoice").get();
+        initialState = stateRepository.findById("Shelter").get();
+        badChoiceState = stateRepository.findById("BadChoice").get();
+        infoState = stateRepository.findById("Info").get();
     }
+
+    private final String returnButtonForTextInput = "Назад к кнопкам";
+    //Для состояний ожидания ввода текста создадим заранее клавиатуру. Получилось одной строкой
+    private final List<KeyboardRow> keyboardForTextInput =
+            Collections.singletonList(new KeyboardRow(
+                    Collections.singletonList(new KeyboardButton(
+                            returnButtonForTextInput))));
+
+    private final String botName = "Shelters";
 
     @Override
     public String getBotUsername() {
-        return "Shelters"; //botConfig.getBotName();
+        return botName; //botConfig.getBotName();
     }
+
     @Value("${telegram.bot.token}")
     private String token;
+
     @Override
     public String getBotToken() {
         return token;//botConfig.getBotToken();
@@ -77,32 +92,50 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (!update.hasMessage()) return;
         Message message = update.getMessage();
         long chatId = message.getChatId();
-        User user= userRepository.findById(chatId).orElse(null);
-        State oldState = null;
+        User user = userRepository.findById(chatId).orElse(null);
+        State oldState = null; //старое состояние (или состояние при входе)
         if (user == null) {
             user = new User(chatId, message.getChat().getFirstName(), initialState);
-            //oldState останется = null
+            //oldState останется = null. Сейчас это вызовет goToNextState
+            sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
+            //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
+            //Сейчас goToInitialState пустой метод.
+            //Когда заработает - oldState надо установить в initialState, чтобы обойти goToNextState
+            goToInitialState(user);
         } else {
-            //запоминаем старое состояние
+            //запоминаем старое состояние (или состояние при входе)
             oldState = user.getState();
-            user.setPreviousState(oldState);
+            //Последующие действия возможно назначат новое состояние
+            if (oldState.isTextInput()) {
+                if (message.getText().equals(returnButtonForTextInput)) {
+                    user.setState(user.getPreviousState());
+                } else {
+                    //хорошо бы сделать рефлексией, т.е. поместить имена методов в табл State
+                    switch (user.getState().getId()) {
+                        //проверяем, не нужны ли спец действия для определенных состояний
+                        case "MessageToVolonteer" -> createMessageToVolonteer(user, message);
+                        case "FeedbackRequest" -> createFeedbackRequest(user, message);
+                        case "Report" -> acceptReport(user, message);
+                        case "AnimalByNumber" -> showAnimal(user, message);
+                    }
+                }
+            } else {
+                //проверяем, не нажата ли кнопка. Если нажата, то только установим новое состояние у user
+                checkButton(user, message);
+            }
         }
-        //Последующие действия возможно назначат новое состояние
-        switch (user.getState().getId()) {
-            //проверяем, не нужны ли спец действия для определенных состояний
-            case "WaitingMessageToVolonteer"->createMessageToVolonteer(user, message);
-            case "WaitingFeedbackRequest"->createFeedbackRequest(user, message);
-            case "WaitingReport"->acceptReport(animalRepository(user.getShelterId()),message);
-            //выбор приюта
+        //У usera возможно установлено новое состояние.
+        //Если оно изменилось относительно входного, отработаем изменение
+        //Здесь посылаем сообщение с кнопками из StateButton
+        //Если в новом состоянии кнопок нет, то новое состояние вернем в состояние oldState
+        if (!user.getState().equals(oldState)) goToNextState(user, oldState);
 
-            //проверяем, не нажата ли кнопка. Если нажата, то только установим новое состояние у user
-            default -> checkButton(user, message);
-        }
-        //У usera возможно установлено новое состояние. Если оно изменилось, отработаем изменение
-        if (!user.getState().equals(oldState)) goToNextState(user);
-
-        //сохраняем новые состояния пользователя
-
+        //сохраняем новые состояния пользователя (старое и новое)
+        //PreviousState меняем, если к выходу State отличется от входного
+        //Т.е. в ожидательных состояниях PreviousState не трогается, пока мы не нажмем "Возврат к боту"
+        if (!user.getState().equals(oldState)) user.setPreviousState(oldState);
+        user.setStateTime();
+        User savedUser = userRepository.save(user);
     }
 
     /**
@@ -115,12 +148,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                             ReplyKeyboardMarkup replyKeyboardMarkup, int replyToMessageId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(chatId));
-        if (textToSend!=null) sendMessage.setText(textToSend);
-        if (replyKeyboardMarkup!=null) {
+        sendMessage.setText(textToSend);
+        if (replyKeyboardMarkup != null) {
             sendMessage.enableMarkdown(true);
             sendMessage.setReplyMarkup(replyKeyboardMarkup);
         }
-        if (replyToMessageId!=0) sendMessage.setReplyToMessageId(replyToMessageId);
+        if (replyToMessageId != 0) sendMessage.setReplyToMessageId(replyToMessageId);
 
         try {
             execute(sendMessage);
@@ -129,80 +162,155 @@ public class TelegramBot extends TelegramLongPollingBot {
             System.out.println("Error occurred: " + e.getMessage());
         }
     }
-    private void goToNextState(User user) {
-        //если сменилось состояние
-        State state = user.getState(); //новое состояние
-        //выясняем есть ли кнопки в новом состоянии
-        List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()) {
-            //если нет - только выводим текст и возвращаем состояние назад и выводим кнопки старого состояния
-            sendMessage(user.getId(), state.getText(), null,0);
-            state = user.getPreviousState();
-            user.setState(state);
-            buttons = state.getButtons();
-        }
-        // Создаем клавиатуру
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
 
+    public void sendMessageToUser(User user, String text, int replyToMessageId) {
+        //задача - послать юзеру текст, но снабдить его кнопками в соответствии с состоянием
+        //этом метод вызываем откуда угодно и любой момент общения с ботом,
+        //например, после получения ответа от волонтера
+        //если текст в параметре пустой, то используется текст состояния из State
+        State state = user.getState();
+        if (text==null) text = state.getText();
+
+        //т.е. можно посылать все что угодно и сколько угодно раз с помощью SendMessage,
+        //но завершать переписку надо обязательно через sendMessageToUser(user, null, 0)
+        //чтобы появились правильные кнопки и обозначилось текущее состояние.
+        //Сообщений без кнопок мы посылать не планируем. Какие-нибудь кнопки всегда должны быть.
+        //Поэтому надо позаботиться, чтобы в таблицах не оказалось состояний не текстового ввода и без кнопок.
+
+        List<KeyboardRow> keyboard = keyboardForTextInput; //изначально прикрепим только кнопку Назад к кнопкам
+        if (!state.isTextInput()) {
+            //если не текстовый ввод то долдны быть кнопки в таблице state_button
+            final List<StateButton> buttons = state.getButtons();
+            //вывести в лог
+            if (buttons.isEmpty()) System.out.println("State " + state.getId() + " has no button");
+            buttons.stream()
+                    .filter(button -> button.getShelterId() == null || button.getShelterId().equals(user.getShelterId()))
+                    .mapToInt(StateButton::getRow)
+                    .distinct()
+                    .forEachOrdered(row -> {
+                        KeyboardRow keyboardRow = new KeyboardRow();
+                        buttons.stream()
+                                .filter(button -> button.getRow() == row)
+                                .sorted(Comparator.comparingInt(StateButton::getCol)).forEach(button -> {
+                                    keyboardRow.add(button.getCaption());
+                                });
+                        keyboard.add(keyboardRow);
+                    });
+        }
+        //Создаем клавиатуру
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(false);
-
-        // Создаем список строк клавиатуры
-        List<KeyboardRow> keyboard = new ArrayList<>();
-
-        // Первая строчка клавиатуры
-        KeyboardRow keyboardFirstRow = new KeyboardRow();
-        // Добавляем кнопки в первую строчку клавиатуры
-        keyboardFirstRow.add("Ко 1");
-        keyboardFirstRow.add("Кома 1");
-        keyboardFirstRow.add("Команда 2Команда 2Команда 2Команда 2");
-
-        // Вторая строчка клавиатуры
-        KeyboardRow keyboardSecondRow = new KeyboardRow();
-        // Добавляем кнопки во вторую строчку клавиатуры
-        keyboardSecondRow.add("К3");
-        keyboardSecondRow.add("Команда 4");
-
-        // Добавляем все строчки клавиатуры в список
-        keyboard.add(keyboardFirstRow);
-        keyboard.add(keyboardSecondRow);
-        // и устанавливаем этот список нашей клавиатуре
+        //устанавливаем список keyboard нашей клавиатуре
         replyKeyboardMarkup.setKeyboard(keyboard);
 
-        String text = (state.equals(user.getPreviousState())) ? state.getText() : null;
-        sendMessage(user.getId(), text, replyKeyboardMarkup,0);
+        sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
     }
+
+
+    private void goToInitialState(User user) {
+    //Сообщение берем из initialState
+    //а кнопки из shelter.name
+    //sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
+    }
+
+    private void goToNextState(User user, State oldState) {
+        //если сменилось состояние
+        State state = user.getState(); //новое состояние. Если нет кнопок, то мы его откатим к oldState
+        String text = state.getText(); //предстоящее сообщение - текст нового состояния
+
+        if (state.getId().equals("AnimalList")) showAnimalList(user);
+        //выясняем, есть ли кнопки в текущем состоянии
+        List<StateButton> buttons = state.getButtons();
+        if (buttons.isEmpty()  && !state.isTextInput()) {
+            //если кнопок нет и нет состояния текстового ввода
+            //возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
+            //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
+            user.setState(oldState);
+            //выводим текст нового и кнопки старого состояния
+        }
+        sendMessageToUser(user, text, 0);
+    }
+
     private void checkButton(User user, Message message) {
-        if (!message.hasText()){
-            sendMessage(user.getId(), "Не распознанная команда. Ожидаю текст", null, 0);
+        //для состояний, не являющихся текстовым вводом, т.е. состояний выбора из клавиатуры
+        //задача: проверить что пришло (какая кнопка нажата) и установить новое состояние
+        if (!message.hasText()) {
+            user.setState(badChoiceState);
             return;
         }
         String textFromUser = message.getText();
-        List<StateButton> buttons = user.getState().getButtons();
-        for (StateButton button:buttons) {
-            if (button.getCaption().equals(textFromUser)) user.setState(button.getNextState());
+
+        if (user.getState().equals(initialState)) {  //если состоялся выбор приюта
+            //Это заплатка. По хорошему надо найти по названию ключ из таблицы приютов
+            user.setShelterId((textFromUser.equals("Собаки"))?"Dog":"Cat");
+            user.setState(infoState);
             return;
-        };
-        sendMessage(user.getId(), "Не распознанная команда. Ожидаю нажатие кнопки", null, 0);
+        }
+        List<StateButton> buttons = user.getState().getButtons();
+        for (StateButton button : buttons) {
+            if (button.getCaption().equals(textFromUser)){
+                user.setState(button.getNextState());
+                return;
+            }
+        }
+        user.setState(badChoiceState);
     }
 
-    private void createMessageToVolonteer(User user, Message question) {
-        //question.getText();
-        //question.getMessageId();
-        //сохранить, чтобы у волонтера была возможность ответить на вопрос, а не просто послать сообщение
+    private void createMessageToVolonteer(User user, Message message) {
+        if (!message.hasText()) {
+            user.setState(badChoiceState);
+            return;
+        }
+        //сохраняем в табл MessageToVolonteer пришедший текст
+        //message.getMessageId() - тоже сохраняем
+        //чтобы у волонтера была возможность ответить на конкретный вопрос, а не просто послать сообщение
+        //состояние не меняем. Пользователь может слать следующие сообщения волонтеру.
+        //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
-    private void createFeedbackRequest(User user, Message contact) {
+
+    private void createFeedbackRequest(User user, Message message) {
+        if (!message.hasText()) {
+            user.setState(badChoiceState);
+            return;
+        }
+
+        //сохраняем в табл FeedbackRequest пришедший текст
+
+        sendMessage(user.getId(), "Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", null, 0);
+        user.setState(user.getPreviousState());
+        //состояние изменилось, поэтому вызовется goToNextState
+        //и нарисует состояние до входа в запрос обратной связи
+    }
+
+    private void acceptReport(User user, Message message) {
+        JpaRepository<? extends Animal, Integer> repository = animalRepository(user.getShelterId());
+
+        //принимаем отчет из message
+
+        //используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
+        sendMessageToUser(user, "Принято", 0);
+        //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
+        //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
+    }
+
+    private void showAnimalList(User user) {
+        String searchTerm; //можно запросить условия отбора, но пока не сделали
+
+        //посылаем картинки из базы. Почти то же, что информация из Shelter
 
     }
-    private void acceptReport(JpaRepository<? extends Animal,Integer> repository, Message messageFromUser) {
 
-    }
-    private void findPets(Repository repository, String searchTerm) {
+    private void showAnimal(User user, Message message) {
+        //id животного спрятано в message
 
-    }
-    private void showPet(Repository repository, int animalId) {
+        //посылаем все о животном с помощью sendMessage
 
+        //В конце используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
+        sendMessageToUser(user, "Введите следующий ID животного:", 0);
+        //состояние не меняем. Пользователь может слать следующие ID животных.
+        //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
 
 }

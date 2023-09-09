@@ -20,10 +20,12 @@ public class User {
     private State previousState;
     private LocalDateTime stateTime;
 
-    public User(long id, String name, State state) {
+    public User(long id, String name, State state) {  //для создания нового
         this.id = id;
         this.name = name;
         this.state = state;
+    }
+    public User() {  //для JPA репозитория
     }
 
     public long getId() {
@@ -62,8 +64,8 @@ public class User {
         return stateTime;
     }
 
-    public void setStateTime(LocalDateTime stateTime) {
-        this.stateTime = stateTime;
+    public void setStateTime() {
+        this.stateTime = LocalDateTime.now();
     }
 
     public String getName() {

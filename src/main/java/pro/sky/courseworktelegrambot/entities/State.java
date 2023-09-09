@@ -8,7 +8,7 @@ public class State {
     @Id
     private String id;
     private String text;
-
+    private Boolean textInput;
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -27,7 +27,11 @@ public class State {
     public String getText() {
         return text;
     }
+    public Boolean isTextInput() {
+        return textInput;
+    }
     public List<StateButton>getButtons() {
         return buttons;
     }
+
 }
