@@ -1,7 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Cat extends Animal{
