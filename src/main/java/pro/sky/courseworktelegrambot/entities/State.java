@@ -1,9 +1,6 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
@@ -11,8 +8,16 @@ public class State {
     @Id
     private String id;
     private String text;
+    private Boolean textInput;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof State state)) return false;
 
-    @OneToMany
+        return id.equals(state.id);
+    }
+
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name="state_id")
     private List<StateButton> buttons;
     public String getId() {
@@ -22,4 +27,11 @@ public class State {
     public String getText() {
         return text;
     }
+    public Boolean isTextInput() {
+        return textInput;
+    }
+    public List<StateButton>getButtons() {
+        return buttons;
+    }
+
 }
