@@ -1,6 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 /**
  * Object Dog
