@@ -1,7 +1,7 @@
 package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entity.MessageToVolunteer;
+import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 
@@ -74,13 +74,19 @@ public class MessageToVolunteerService {
      * @param id идентификатор объекта MessageToVolunteer.
      * @throws MessageToVolunteerNotFoundException если объект не найден.
      */
+
+    //надо сделать поле user вместо chatId,
+    //поставить связь в базе и в хибернете и посылать через sendMessageToUser, чтобы не стереть кнопки
+    /*
     public void sendAnswer(int id) {
         MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
                 .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
         long chatId = messageToVolunteer.getChatId();
         String answer = messageToVolunteer.getAnswer();
         telegramBot.sendMessage(chatId, answer);
+        и надо бы отработать ошибку отправки. Если она есть, то sentTime не обновлять
         messageToVolunteer.setSentTime(LocalDateTime.now());
         messageToVolunteerRepository.save(messageToVolunteer);
     }
+    */
 }

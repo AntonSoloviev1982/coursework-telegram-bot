@@ -53,13 +53,13 @@ public class TelegramBot extends TelegramLongPollingBot {
     private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
-    private State infoState;  //состояние после выбора приюта.
+    private State afterShelterChoiceState;  //состояние после выбора приюта.
                               // Нужно, если решим кнопки приютов создавать из табл Shelter
     @PostConstruct
     public void initStates() {
         initialState = stateRepository.findById("Shelter").get();
         badChoiceState = stateRepository.findById("BadChoice").get();
-        infoState = stateRepository.findById("Info").get();
+        afterShelterChoiceState = stateRepository.findById("Stage").get();
     }
 
     private final String returnButtonForTextInput = "Назад к кнопкам";
@@ -183,13 +183,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             //вывести в лог
             if (buttons.isEmpty()) System.out.println("State " + state.getId() + " has no button");
             buttons.stream()
-                    .filter(button -> button.getShelterId() == null || button.getShelterId().equals(user.getShelterId()))
+                    .filter(button -> button.getShelterId() == null
+                            || button.getShelterId().equals(user.getShelterId()))
                     .mapToInt(StateButton::getRow)
                     .distinct()
                     .forEachOrdered(row -> {
                         KeyboardRow keyboardRow = new KeyboardRow();
                         buttons.stream()
-                                .filter(button -> button.getRow() == row)
+                                .filter(button -> button.getRow() == row
+                                        && (button.getShelterId() == null
+                                            || button.getShelterId().equals(user.getShelterId())))
                                 .sorted(Comparator.comparingInt(StateButton::getCol))
                                 .forEach(button -> keyboardRow.add(button.getCaption()));
                         customKeyboard.add(keyboardRow);
@@ -243,8 +246,12 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         if (user.getState().equals(initialState)) {  //если состоялся выбор приюта
             //Это заплатка. По хорошему надо найти по названию ключ из таблицы приютов
+            if (!textFromUser.equals("Собаки") & !textFromUser.equals("Кошки")) {
+                user.setState(badChoiceState);
+                return;
+            }
             user.setShelterId((textFromUser.equals("Собаки"))?"Dog":"Cat");
-            user.setState(infoState);
+            user.setState(afterShelterChoiceState);
             return;
         }
         List<StateButton> buttons = user.getState().getButtons();

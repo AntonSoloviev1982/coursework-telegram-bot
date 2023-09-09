@@ -1,14 +1,14 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "shelter")
 public class Shelter {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String id;
     private String name;
     private String information;
     private String timetable;
