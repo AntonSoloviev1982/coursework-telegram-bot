@@ -1,13 +1,16 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.Lob;
+import javax.persistence.*;
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Object Pet
  */
+@MappedSuperclass
 public abstract class Pet {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
     private String breed;

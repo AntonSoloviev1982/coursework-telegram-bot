@@ -1,9 +1,16 @@
 package pro.sky.courseworktelegrambot.entities;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@MappedSuperclass
 public abstract class Adoption {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private int userId; //усыновитель
     private int petId; //питомец

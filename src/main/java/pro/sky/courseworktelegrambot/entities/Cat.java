@@ -1,6 +1,7 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
 /**
  * Object Cat
@@ -9,14 +10,5 @@ import javax.persistence.*;
 @Entity
 @Table(name = "cat")
 public class Cat extends Pet {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
 
-    public Cat() {
-    }
-
-    public Cat(String name, String breed, int age, byte[] photo) {
-        super(name, breed, age, photo);
-    }
 }

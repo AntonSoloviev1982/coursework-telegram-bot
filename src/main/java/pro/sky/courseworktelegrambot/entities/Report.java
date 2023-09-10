@@ -1,10 +1,19 @@
 package pro.sky.courseworktelegrambot.entities;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.time.LocalDate;
 import java.util.Objects;
-
+/**
+ * Object Report
+ */
+@MappedSuperclass
 public abstract class Report {
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    protected int id;
     private int adoptionId; // ID усыновления
     private LocalDate reportDate; // дата отчета
     private byte[] photo; // фото отчета
