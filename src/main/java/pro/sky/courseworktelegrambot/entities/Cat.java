@@ -1,10 +1,14 @@
 package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.Table;
+
+/**
+ * Object Cat
+ */
 
 @Entity
-public class Cat extends Animal{
-    @Id
-    int Id;
+@Table(name = "cat")
+public class Cat extends Pet {
+
 }

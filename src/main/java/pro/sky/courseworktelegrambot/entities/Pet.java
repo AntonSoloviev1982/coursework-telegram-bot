@@ -1,14 +1,17 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
+import java.util.Arrays;
 import java.util.Objects;
 
-@Entity
-@Table(name = "dog")
-public class Dog {
+/**
+ * Object Pet
+ */
+@MappedSuperclass
+public abstract class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
     private String name;
     private String breed;
     private int age;
@@ -16,10 +19,10 @@ public class Dog {
     private byte[] photo;
     private boolean isAdopted;
 
-    public Dog() {
+    public Pet() {
     }
 
-    public Dog(String name, String breed, int age, byte[] photo) {
+    public Pet(String name, String breed, int age, byte[] photo) {
         this.name = name;
         this.breed = breed;
         this.age = age;
@@ -27,12 +30,8 @@ public class Dog {
         this.isAdopted = false;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -79,8 +78,8 @@ public class Dog {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Dog dog = (Dog) o;
-        return id == dog.id;
+        Pet pet = (Pet) o;
+        return id == pet.id;
     }
 
     @Override
@@ -90,10 +89,13 @@ public class Dog {
 
     @Override
     public String toString() {
-        return "id=" + id +
-                "Dog " + "name=" + name + '\'' +
+        return "Pet{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", breed='" + breed + '\'' +
-                ", age=" + age + '\'' +
-                ", isAdopted=" + isAdopted;
+                ", age=" + age +
+                ", photo=" + Arrays.toString(photo) +
+                ", isAdopted=" + isAdopted +
+                '}';
     }
 }

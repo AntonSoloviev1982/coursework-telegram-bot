@@ -1,8 +1,7 @@
 package pro.sky.courseworktelegrambot.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import pro.sky.courseworktelegrambot.entity.CatReport;
-
+import pro.sky.courseworktelegrambot.entities.CatReport;
 import java.time.LocalDate;
 import java.util.List;
 

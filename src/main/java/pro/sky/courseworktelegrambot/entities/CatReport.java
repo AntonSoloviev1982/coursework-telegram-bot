@@ -1,4 +1,4 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -39,28 +39,28 @@ public class CatReport {
         return adoptionId;
     }
 
-    public LocalDate getReportDate() {
-        return reportDate;
-    }
-
-    public byte[] getPhoto() {
-        return photo;
-    }
-
-    public String getText() {
-        return text;
-    }
-
     public void setAdoptionId(Long adoptionId) {
         this.adoptionId = adoptionId;
+    }
+
+    public LocalDate getReportDate() {
+        return reportDate;
     }
 
     public void setReportDate(LocalDate reportDate) {
         this.reportDate = reportDate;
     }
 
+    public byte[] getPhoto() {
+        return photo;
+    }
+
     public void setPhoto(byte[] photo) {
         this.photo = photo;
+    }
+
+    public String getText() {
+        return text;
     }
 
     public void setText(String text) {

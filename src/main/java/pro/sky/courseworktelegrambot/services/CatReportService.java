@@ -1,7 +1,7 @@
 package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entity.CatReport;
+import pro.sky.courseworktelegrambot.entities.CatReport;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 
 import java.time.LocalDate;

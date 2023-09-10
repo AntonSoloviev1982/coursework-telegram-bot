@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import pro.sky.courseworktelegrambot.entities.Animal;
+import pro.sky.courseworktelegrambot.entities.Pet;
 import pro.sky.courseworktelegrambot.entities.State;
 import pro.sky.courseworktelegrambot.entities.StateButton;
 import pro.sky.courseworktelegrambot.entities.User;
@@ -46,7 +46,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private CatRepository catRepository;
 
-    private JpaRepository<? extends Animal, Integer> animalRepository(String shelterId) {
+    private JpaRepository<? extends Pet, Integer> animalRepository(String shelterId) {
         return (shelterId.equals("Dog")) ? dogRepository : catRepository;
     }
 
@@ -291,7 +291,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void acceptReport(User user, Message message) {
-        JpaRepository<? extends Animal, Integer> repository = animalRepository(user.getShelterId());
+        JpaRepository<? extends Pet, Integer> repository = animalRepository(user.getShelterId());
 
         //принимаем отчет из message
 
