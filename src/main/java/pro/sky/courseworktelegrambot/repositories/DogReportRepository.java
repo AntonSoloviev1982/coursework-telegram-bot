@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface DogReportRepository extends JpaRepository<DogReport,Integer> {
-    List<DogReport> findAllByReportDate(LocalDate localDate);
+    List<DogReport> findAllByReportDate(LocalDate reportDate);
 }
