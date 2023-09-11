@@ -24,6 +24,8 @@ import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.replace;
 //import pro.sky.courseworktelegrambot.config.BotConfig;
 
 @Slf4j
@@ -46,7 +48,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private CatRepository catRepository;
 
-    private JpaRepository<? extends Pet, Integer> animalRepository(String shelterId) {
+    private JpaRepository<? extends Pet, Integer> petRepository(String shelterId) {
         return (shelterId.equals("Dog")) ? dogRepository : catRepository;
     }
 
@@ -69,7 +71,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                     Collections.singletonList(new KeyboardButton(
                             returnButtonForTextInput))));
 
-    private final String botName = "Shelters";
+    @Value("${telegram.bot.name}")
+    private String botName;
 
     @Override
     public String getBotUsername() {
@@ -93,12 +96,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         State oldState = null; //старое состояние (или состояние при входе)
         if (user == null) {
             user = new User(chatId, message.getChat().getFirstName(), initialState);
-            //oldState останется = null. Сейчас это вызовет goToNextState
+            //oldState останется = null. Это вызовет goToNextState, т.к. oldState<>initialState
             sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
-            //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
-            //Сейчас goToInitialState пустой метод.
-            //Когда заработает - oldState надо установить в initialState, чтобы обойти goToNextState
-            goToInitialState(user);
         } else {
             //запоминаем старое состояние (или состояние при входе)
             oldState = user.getState();
@@ -145,7 +144,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                             ReplyKeyboardMarkup replyKeyboardMarkup, int replyToMessageId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(chatId));
-        sendMessage.setText(textToSend);
+        //при посылке подчеркивания возникает ошибка
+        //[400] Bad Request: can't parse entities: Can't find end of the entity starting at byte offset - место подчеркивания
+        //поэтому заменяю подчеркивания на тире
+        sendMessage.setText(replace(textToSend,"_","_"));
         if (replyKeyboardMarkup != null) {
             sendMessage.enableMarkdown(true);
             sendMessage.setReplyMarkup(replyKeyboardMarkup);
@@ -174,9 +176,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         //Сообщений без кнопок мы посылать не планируем. Какие-нибудь кнопки всегда должны быть.
         //Поэтому надо позаботиться, чтобы в таблицах не оказалось состояний не текстового ввода и без кнопок.
 
-        List<KeyboardRow> keyboard = keyboardForTextInput; //изначально прикрепим только кнопку Назад к кнопкам
-        if (!state.isTextInput()) {
-            //если не текстовый ввод то должны быть кнопки в таблице state_button. Делаем спец клавиатуру
+        List<KeyboardRow> keyboard;
+        if (state.isTextInput()) {
+            keyboard = keyboardForTextInput; //прикрепим только кнопку Назад к кнопкам
+        //else if (state.equals(initialState)) {
+        //    //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
+        } else {
+            //если не текстовый ввод и не список приютов,
+            //то должны быть кнопки в таблице state_button. Делаем спец клавиатуру
             //для использования переменных в лямбде они должны быть final
             final List<KeyboardRow> customKeyboard = new ArrayList<>();
             final List<StateButton> buttons = state.getButtons();
@@ -199,6 +206,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     });
             keyboard = customKeyboard;
         }
+
         //Создаем клавиатуру
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
@@ -225,8 +233,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (state.getId().equals("AnimalList")) showAnimalList(user);
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput()) {
-            //если кнопок нет и нет состояния текстового ввода
+        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
+            //если кнопок нет и нет состояния текстового ввода и не список приютов
             //возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
             user.setState(oldState);
@@ -291,7 +299,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void acceptReport(User user, Message message) {
-        JpaRepository<? extends Pet, Integer> repository = animalRepository(user.getShelterId());
+        JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
 
         //принимаем отчет из message
 
@@ -310,9 +318,22 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void showAnimal(User user, Message message) {
         //id животного спрятано в message
-
         //посылаем все о животном с помощью sendMessage
 
+        if (!message.hasText()) {
+            sendMessageToUser(user, "Ожидаю номер животного:", 0);
+            return;
+        }
+        String text = message.getText();
+        //проверить, что число
+        int id = Integer.valueOf(text);
+        JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
+        Pet pet = repository.findById(id).orElse(null);
+        if (pet == null) {
+            sendMessageToUser(user, "Неправильный номер", 0);
+        } else {
+            sendMessageToUser(user, pet.toString(), 0);
+        }
         //В конце используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
         sendMessageToUser(user, "Введите следующий номер животного:", 0);
         //состояние не меняем. Пользователь может слать следующие ID животных.

@@ -1,9 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Objects;
 /**
@@ -16,10 +13,12 @@ public abstract class Report {
     protected int id;
     private int adoptionId; // ID усыновления
     private LocalDate reportDate; // дата отчета
+    @Lob
     private byte[] photo; // фото отчета
-    private String text; // комментарий отчета
+    @Lob
+    private byte[] text; // комментарий отчета
 
-    public Report(int adoptionId, LocalDate reportDate, byte[] photo, String text) {
+    public Report(int adoptionId, LocalDate reportDate, byte[] photo, byte[] text) {
         this.adoptionId = adoptionId;
         this.reportDate = reportDate;
         this.photo = photo;
@@ -57,11 +56,11 @@ public abstract class Report {
         this.photo = photo;
     }
 
-    public String getText() {
+    public byte[]  getText() {
         return text;
     }
 
-    public void setText(String text) {
+    public void setText(byte[]  text) {
         this.text = text;
     }
 

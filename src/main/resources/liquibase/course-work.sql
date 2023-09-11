@@ -1,5 +1,29 @@
 -- liquibase formatted sql
 
+--changeset anton:create_shelter
+--может быть у кого-то сделана и заполнена DROP TABLE IF EXISTS message_to_volunteer;
+CREATE TABLE shelter(
+    id VARCHAR(3) PRIMARY KEY,
+    name VARCHAR(30),
+    information TEXT,
+    timetable TEXT,
+    address TEXT,
+    security TEXT,
+    safety_precautions TEXT,
+    rules TEXT,
+    documents TEXT,
+    transportation TEXT,
+    child_accomodation TEXT,
+    adult_accomodation TEXT,
+    invalid_accomodation TEXT,
+    communication TEXT,
+    cynologists TEXT,
+    refusal_reasons TEXT
+    );
+INSERT INTO shelter(id, name) VALUES
+    ('Dog', 'Собаки'),
+    ('Cat', 'Кошки');
+
 -- changeset pavel:create_state
 DROP TABLE IF EXISTS state;
 CREATE TABLE state(
@@ -47,7 +71,8 @@ CREATE TABLE state_button(
     shelter_id VARCHAR(3),
     PRIMARY KEY (state_id, caption),
     FOREIGN KEY (state_id) REFERENCES state(id),
-    FOREIGN KEY (next_state_id) REFERENCES state(id)
+    FOREIGN KEY (next_state_id) REFERENCES state(id),
+    FOREIGN KEY (shelter_id) REFERENCES shelter(id)
     );
 INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_col, shelter_id) VALUES
     ('Shelter', 'Собаки', 'Stage', 1, 1, Null),
@@ -97,18 +122,10 @@ CREATE TABLE users(     --имя user не разрешает, зарезерв�
     shelter_id VARCHAR(3),
     state_id VARCHAR(30) NOT NULL,
     previous_state_id VARCHAR(30),
-    state_time DATETIME,
+    state_time TIMESTAMP,
     FOREIGN KEY (state_id) REFERENCES state(id),
     FOREIGN KEY (previous_state_id) REFERENCES state(id)
    );
-
---changeset pavel:create_animals
-CREATE TABLE Dog(
-    id INTEGER PRIMARY KEY
-    );
-CREATE TABLE Cat(
-    id INTEGER PRIMARY KEY
-    );
 
 --changeset anton:create_message_to_volunteer
 DROP TABLE IF EXISTS message_to_volunteer;
@@ -123,23 +140,89 @@ CREATE TABLE message_to_volunteer(
     FOREIGN KEY (chat_id) REFERENCES users(id)
     );
 
---changeset anton:create_shelter
---может быть у кого-то сделана и заполнена DROP TABLE IF EXISTS message_to_volunteer;
-CREATE TABLE shelter(
-    id VARCHAR(3) PRIMARY KEY,
-    name VARCHAR(30),
-    information TEXT,
-    timetable TEXT,
-    address TEXT,
-    security TEXT,
-    safety_precautions TEXT,
-    rules TEXT,
-    documents TEXT,
-    transportation TEXT,
-    child_accomodation TEXT,
-    adult_accomodation TEXT,
-    invalid_accomodation TEXT,
-    communication TEXT,
-    cynologists TEXT,
-    refusal_reasons TEXT
+--changeset alexander:create_feedback_request
+DROP TABLE IF EXISTS feedback_request;
+CREATE TABLE feedback_request(
+    id INTEGER PRIMARY KEY,
+    chat_id LONG NOT NULL,
+    request_time TIMESTAMP NOT NULL,
+    contact TEXT,
+    execution_time TIMESTAMP,
+    FOREIGN KEY (chat_id) REFERENCES users(id)
     );
+
+--changeset salavat:create_cat
+DROP TABLE IF EXISTS cat;
+CREATE TABLE cat(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(30),
+    breed VARCHAR(30),
+    age INTEGER,
+    photo BLOB,
+    is_adopted BOOLEAN
+    );
+INSERT INTO cat(id, name, breed, age, is_adopted) VALUES
+    (11, 'Кот', 'Дворовый', 5, FALSE),
+    (22, 'Котяра', 'Кошка', 10, TRUE);
+
+--changeset alexander:create_dog
+CREATE TABLE dog(
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(30),
+    breed VARCHAR(30),
+    age INTEGER,
+    photo BLOB,
+    is_adopted BOOLEAN
+    );
+INSERT INTO dog(id, name, breed, age, is_adopted) VALUES
+    (11, 'Пес', 'Дворняга', 5, FALSE),
+    (33, 'Барбос', 'Собака', 10, TRUE);
+
+--changeset salavat:create_cat_adobtion
+CREATE TABLE cat_adoption(
+    id INTEGER PRIMARY KEY,
+    user_id LONG,
+    pet_id INTEGER,
+    date DATETIME,
+    trial_date DATETIME,
+    trial_decision INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (pet_id) REFERENCES cat(id)
+    );
+
+--changeset salavat:create_dog_adobtion
+CREATE TABLE dog_adoption(
+    id INTEGER PRIMARY KEY,
+    user_id LONG,
+    pet_id INTEGER,
+    date DATETIME,
+    trial_date DATETIME,
+    trial_decision INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (pet_id) REFERENCES dog(id)
+    );
+
+--changeset alexander:create_cat_report
+DROP TABLE IF EXISTS cat_report;
+CREATE TABLE cat_report(
+    id INTEGER PRIMARY KEY,
+    adoption_id INTEGER NOT NULL,
+    report_date DATE NOT NULL,
+    photo BLOB,
+    text BLOB,
+    FOREIGN KEY (adoption_id) REFERENCES cat_adoption(id)
+    );
+CREATE UNIQUE INDEX cat_report_adoption_date ON cat_report (adoption_id, report_date)
+
+--changeset alexander:create_dog_report
+DROP TABLE IF EXISTS dog_report;
+CREATE TABLE dog_report(
+    id INTEGER PRIMARY KEY,
+    adoption_id INTEGER NOT NULL,
+    report_date DATE NOT NULL,
+    photo BLOB,
+    text BLOB,
+    FOREIGN KEY (adoption_id) REFERENCES dog_adoption(id)
+    );
+CREATE UNIQUE INDEX dog_report_adoption_date ON dog_report (adoption_id, report_date)
+

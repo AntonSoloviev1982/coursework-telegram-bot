@@ -12,7 +12,7 @@ public abstract class Adoption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private int userId; //усыновитель
+    private long userId; //усыновитель
     private int petId; //питомец
     private LocalDateTime date; //дата усыновления
     private LocalDateTime trialDate; //дата окончания испытательного срока
@@ -36,11 +36,11 @@ public abstract class Adoption {
         this.id = id;
     }
 
-    public int getUserId() {
+    public long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(long userId) {
         this.userId = userId;
     }
 

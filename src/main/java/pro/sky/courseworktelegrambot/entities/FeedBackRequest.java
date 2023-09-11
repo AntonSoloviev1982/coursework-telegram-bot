@@ -1,4 +1,4 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
 import org.springframework.lang.Nullable;
 
@@ -11,28 +11,30 @@ public class FeedBackRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
-    private final Long chatId;
+    private long chatId;
 
-    private final LocalDateTime requestTime;
+    private LocalDateTime requestTime;
 
-    private final String contact;
+    private String contact;
 
     @Nullable
     private LocalDateTime executionTime;
 
+    public FeedBackRequest() { //для JPA репозитория
+    }
     public FeedBackRequest(Long chatId, LocalDateTime requestTime, String contact) {
         this.chatId = chatId;
         this.requestTime = requestTime;
         this.contact = contact;
     }
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public Long getChatId() {
+    public long getChatId() {
         return chatId;
     }
 
