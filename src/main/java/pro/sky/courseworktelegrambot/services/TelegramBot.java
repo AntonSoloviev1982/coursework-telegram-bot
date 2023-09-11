@@ -147,7 +147,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //при посылке подчеркивания возникает ошибка
         //[400] Bad Request: can't parse entities: Can't find end of the entity starting at byte offset - место подчеркивания
         //поэтому заменяю подчеркивания на тире
-        sendMessage.setText(replace(textToSend,"_","_"));
+        sendMessage.setText(replace(textToSend,"_","-"));
         if (replyKeyboardMarkup != null) {
             sendMessage.enableMarkdown(true);
             sendMessage.setReplyMarkup(replyKeyboardMarkup);
