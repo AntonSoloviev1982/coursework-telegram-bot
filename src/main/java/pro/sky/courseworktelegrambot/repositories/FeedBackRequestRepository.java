@@ -1,7 +1,7 @@
 package pro.sky.courseworktelegrambot.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import pro.sky.courseworktelegrambot.entity.FeedBackRequest;
+import pro.sky.courseworktelegrambot.entities.FeedBackRequest;
 
 import java.util.List;
 
