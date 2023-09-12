@@ -2,10 +2,16 @@ package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.Shelter;
+import pro.sky.courseworktelegrambot.exceptions.InformationTypeByShelterNotFoundException;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
  * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.
@@ -44,52 +50,60 @@ public class ShelterService {
      * @return возвращает объект Shelter.
      * @throws ShelterNotFoundException Если Shelter с указанным идентификатором не найдено.
      */
-    public Shelter get(int id) {
-        return shelterRepository.findById(id).orElseThrow(() -> new ShelterNotFoundException(id));
+    public Shelter get(String id) {
+        return Optional.ofNullable(id)
+                .map(shelterRepository::findById)
+                .orElseThrow(() -> new ShelterNotFoundException(id));
     }
 
     /**
      * Обновляет данные Shelter с указанным идентификатором.
      *
-     * @param id      идентификатор Shelter, которое нужно обновить.
-     * @param shelter объект Shelter с обновленными данными.
+     * @param id              идентификатор Shelter, который нужно обновить.
+     * @param informationType тип информации о приюте.
+     * @param newInformation  новая информация.
      * @return возвращает обновленный объект Shelter.
      * @throws ShelterNotFoundException если объект Shelter с указанным идентификатором не найден.
      */
-    public Shelter update(int id, Shelter shelter) {
-        return shelterRepository.findById(id)
-                .map(oldShelter -> {
-                    oldShelter.setName(shelter.getName());
-                    oldShelter.setInformation(shelter.getInformation());
-                    oldShelter.setTimetable(shelter.getTimetable());
-                    oldShelter.setAddress(shelter.getAddress());
-                    oldShelter.setSecurity(shelter.getSecurity());
-                    oldShelter.setSafetyPrecautions(shelter.getSafetyPrecautions());
-                    oldShelter.setRules(shelter.getRules());
-                    oldShelter.setDocuments(shelter.getDocuments());
-                    oldShelter.setTransportation(shelter.getTransportation());
-                    oldShelter.setChildAccomodation(shelter.getChildAccomodation());
-                    oldShelter.setAdultAccomodation(shelter.getAdultAccomodation());
-                    oldShelter.setInvalidAccomodation(shelter.getInvalidAccomodation());
-                    oldShelter.setCommunication(shelter.getCommunication());
-                    oldShelter.setCynologists(shelter.getCynologists());
-                    oldShelter.setRefusalReasons(shelter.getRefusalReasons());
-                    return shelterRepository.save(oldShelter);
-                }).orElseThrow(() -> new ShelterNotFoundException(id));
+    public Shelter update(String id, String informationType, String newInformation) throws IllegalAccessException {
+        Shelter shelter = Optional.ofNullable(id)
+                .map(shelterRepository::findById)
+                .orElseThrow(() -> new ShelterNotFoundException(id));
+
+        Field[] fields = shelter.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if (field.getName().equals(informationType)) {
+                field.setAccessible(true);
+                field.set(shelter, newInformation);
+            }
+        }
+
+//        informationType = informationType.toLowerCase();
+//        informationType = informationType.substring(0, 1).toUpperCase() + informationType.substring(1);
+//        String methodName = "set" + informationType;
+//        Method method = null;
+//        Method[] methods = shelter.getClass().getDeclaredMethods();
+//        for (Method myMethod : methods) {
+//            if (myMethod.getName().equals(methodName)) {
+//                method = myMethod;
+//            }
+//        }
+//        method.invoke(shelter, newInformation);
+        setInformation(id, informationType, newInformation);
+        shelterRepository.save(shelter);
+        return shelter;
     }
 
     /**
      * Удаляет объект Shelter с указанным идентификатором из БД.
      *
      * @param id идентификатор объекта Shelter для удаления.
-     * @return возвращает удаленный объект Shelter.
      * @throws ShelterNotFoundException Если объект Shelter с указанным идентификатором не найден.
      */
-    public Shelter delete(int id) {
-        Shelter shelter = shelterRepository.findById(id)
+    public void delete(String id) {
+        Optional.ofNullable(id)
+                .map(shelterRepository::deleteById)
                 .orElseThrow(() -> new ShelterNotFoundException(id));
-        shelterRepository.deleteById(id);
-        return shelter;
     }
 
     /**
@@ -102,12 +116,49 @@ public class ShelterService {
     }
 
 
-    public String getProperty(int shelterId, String propertyName) {
-        return null;
+    public String getInformation(String id, String informationType)
+            throws IllegalAccessException {
+        Shelter shelter = null;
+        for (Shelter myShelter : shelters) {
+            if (myShelter.getId().equals(id)) {
+                shelter = myShelter;
+            }
+        }
+        if (shelter == null) {
+            throw new ShelterNotFoundException(id);
+        }
+        Field field = null;
+        Field[] fields = shelter.getClass().getDeclaredFields();
+        for (Field myField : fields) {
+            if (myField.getName().equals(informationType)) {
+                field = myField;
+            }
+        }
+        if (field == null) {
+            throw new InformationTypeByShelterNotFoundException(informationType);
+        }
+        field.setAccessible(true);
+        return (String) field.get(shelter);
     }
 
-    public void setProperty(int shelterId, String propertyName) {
-
+    public void setInformation(String id, String informationType, String newInformation)
+            throws IllegalAccessException {
+        Shelter shelter = null;
+        for (Shelter myShelter : shelters) {
+            if (myShelter.getId().equals(id)) {
+                shelter = myShelter;
+            }
+        }
+        if (shelter == null) {
+            throw new ShelterNotFoundException(id);
+        }
+        Field[] fields = shelter.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if (field.getName().equals(informationType)) {
+                field.setAccessible(true);
+                field.set(shelter, newInformation);
+            }
+        }
     }
 
 }
