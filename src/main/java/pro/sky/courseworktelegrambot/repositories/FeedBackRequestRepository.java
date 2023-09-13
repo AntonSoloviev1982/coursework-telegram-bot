@@ -5,7 +5,7 @@ import pro.sky.courseworktelegrambot.entities.FeedBackRequest;
 
 import java.util.List;
 
-public interface FeedBackRequestRepository extends JpaRepository<FeedBackRequest, Long> {
+public interface FeedBackRequestRepository extends JpaRepository<FeedBackRequest, Integer> {
 
     List<FeedBackRequest> findAllByExecutionTimeIsNull();
 
