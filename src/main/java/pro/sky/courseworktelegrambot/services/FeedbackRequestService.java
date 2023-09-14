@@ -3,8 +3,8 @@ package pro.sky.courseworktelegrambot.services;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
-import pro.sky.courseworktelegrambot.entities.FeedBackRequest;
-import pro.sky.courseworktelegrambot.repositories.FeedBackRequestRepository;
+import pro.sky.courseworktelegrambot.entities.FeedbackRequest;
+import pro.sky.courseworktelegrambot.repositories.FeedbackRequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,11 +19,11 @@ import java.util.NoSuchElementException;
  */
 
 @Service
-public class FeedBackRequestService {
+public class FeedbackRequestService {
 
-    private final FeedBackRequestRepository feedBackRequestRepository;
+    private final FeedbackRequestRepository feedBackRequestRepository;
 
-    public FeedBackRequestService(FeedBackRequestRepository feedBackRequestRepository) {
+    public FeedbackRequestService(FeedbackRequestRepository feedBackRequestRepository) {
         this.feedBackRequestRepository = feedBackRequestRepository;
     }
 
@@ -34,7 +34,7 @@ public class FeedBackRequestService {
      *  @param contact контактная информация
      * */
     public void save(Long chatId, String contact) {
-        feedBackRequestRepository.save(new FeedBackRequest(chatId, LocalDateTime.now(), contact));
+        feedBackRequestRepository.save(new FeedbackRequest(chatId, LocalDateTime.now(), contact));
     }
 
     /**
@@ -42,7 +42,7 @@ public class FeedBackRequestService {
      *  Используется метод репозитория {@link JpaRepository#findAll(Sort)}
      * @return список запросов с нулевым полем executionTime.
      */
-    public List<FeedBackRequest> getWaitingList(){
+    public List<FeedbackRequest> getWaitingList(){
         return feedBackRequestRepository.findAllByExecutionTimeIsNull();
     }
 
@@ -54,7 +54,7 @@ public class FeedBackRequestService {
      *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
      */
     public void executionTimeUpdate(Integer id) {
-        FeedBackRequest feedBackRequest = feedBackRequestRepository.findById(id).get();
+        FeedbackRequest feedBackRequest = feedBackRequestRepository.findById(id).get();
         feedBackRequest.setExecutionTime(LocalDateTime.now());
         feedBackRequestRepository.save(feedBackRequest);
     }

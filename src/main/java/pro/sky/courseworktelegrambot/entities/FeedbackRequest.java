@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feedback_request")
-public class FeedBackRequest {
+public class FeedbackRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +29,10 @@ public class FeedBackRequest {
     @Nullable
     private LocalDateTime executionTime;
 
-    public FeedBackRequest() {
+    public FeedbackRequest() {
     }
 
-    public FeedBackRequest(Long chatId, LocalDateTime requestTime, String contact) {
+    public FeedbackRequest(Long chatId, LocalDateTime requestTime, String contact) {
         this.chatId = chatId;
         this.requestTime = requestTime;
         this.contact = contact;
