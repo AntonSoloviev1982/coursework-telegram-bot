@@ -47,13 +47,23 @@ public class FeedbackRequestService {
     }
 
     /**
+     *  Находит запись в БД в таблице "feedback_request" по ее идентификатору.<br>
+     *  Используется метод репозитория {@link JpaRepository#findById(Object)}
+     *  @param id идентификатор запроса.
+     *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
+     */
+    public FeedbackRequest getFeedbackRequest(Integer id) {
+        return feedBackRequestRepository.findById(id).get();
+    }
+
+    /**
      *  Изменяет запись в БД в таблице "feedback_request".<br>
      *  Заполняет поле executionTime текущим временем после связи с пользователем.
      *  Используется метод репозитория {@link JpaRepository#save(Object)}
      *  @param id идентификатор запроса.
      *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
      */
-    public void executionTimeUpdate(Integer id) {
+    public void updateExecutionTime(Integer id) {
         FeedbackRequest feedBackRequest = feedBackRequestRepository.findById(id).get();
         feedBackRequest.setExecutionTime(LocalDateTime.now());
         feedBackRequestRepository.save(feedBackRequest);
