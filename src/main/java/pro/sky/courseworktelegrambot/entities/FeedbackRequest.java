@@ -5,9 +5,16 @@ import org.springframework.lang.Nullable;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Сущность "запрос обратной связи".<br>
+ *  При запросе пользователя об обратной связи создается запись в базе данных в таблице <u>"feedback_request"</u>
+ *  с указанием пользователя <u>chatId</u>, временем запроса <u>requestTime</u> и контактными данными <u>contact</u>.
+ *  Поле  <u>executionTime</u> заполняется волонтером после связи с пользователем.
+ */
+
 @Entity
 @Table(name = "feedback_request")
-public class FeedBackRequest {
+public class FeedbackRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +29,10 @@ public class FeedBackRequest {
     @Nullable
     private LocalDateTime executionTime;
 
-    public FeedBackRequest() { //для JPA репозитория
+    public FeedbackRequest() {
     }
-    public FeedBackRequest(Long chatId, LocalDateTime requestTime, String contact) {
+
+    public FeedbackRequest(Long chatId, LocalDateTime requestTime, String contact) {
         this.chatId = chatId;
         this.requestTime = requestTime;
         this.contact = contact;
