@@ -57,7 +57,7 @@ public class ShelterService {
     }
 
     /**
-     * Обновляет данные Shelter с указанным идентификатором.
+     * Обновляет данные Shelter с указанным идентификатором в БД.
      *
      * @param id              идентификатор Shelter, который нужно обновить.
      * @param informationType тип информации о приюте.
@@ -66,30 +66,7 @@ public class ShelterService {
      * @throws ShelterNotFoundException если объект Shelter с указанным идентификатором не найден.
      */
     public Shelter update(String id, String informationType, String newInformation) throws IllegalAccessException {
-        Shelter shelter = Optional.ofNullable(id)
-                .map(shelterRepository::findById)
-                .orElseThrow(() -> new ShelterNotFoundException(id));
-
-        Field[] fields = shelter.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            if (field.getName().equals(informationType)) {
-                field.setAccessible(true);
-                field.set(shelter, newInformation);
-            }
-        }
-
-//        informationType = informationType.toLowerCase();
-//        informationType = informationType.substring(0, 1).toUpperCase() + informationType.substring(1);
-//        String methodName = "set" + informationType;
-//        Method method = null;
-//        Method[] methods = shelter.getClass().getDeclaredMethods();
-//        for (Method myMethod : methods) {
-//            if (myMethod.getName().equals(methodName)) {
-//                method = myMethod;
-//            }
-//        }
-//        method.invoke(shelter, newInformation);
-        setInformation(id, informationType, newInformation);
+        Shelter shelter = setInformation(id, informationType, newInformation);
         shelterRepository.save(shelter);
         return shelter;
     }
@@ -115,7 +92,13 @@ public class ShelterService {
         return shelterRepository.findAll();
     }
 
-
+    /**
+     * Получает необходимое значение поля из объекта Shelter, находящегося в листе shelters.
+     * @param id                идентификатор объекта Shelter.
+     * @param informationType   тип информации о приюте..
+     * @return возвращает нужную информацию о приюте.
+     * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
+     */
     public String getInformation(String id, String informationType)
             throws IllegalAccessException {
         Shelter shelter = null;
@@ -141,7 +124,15 @@ public class ShelterService {
         return (String) field.get(shelter);
     }
 
-    public void setInformation(String id, String informationType, String newInformation)
+    /**
+     * Изменяет значение типа информации (поля) о приюте. Изменения записываются в лист shelters.
+     * @param id                идентификатор объекта Shelter.
+     * @param informationType   тип информации о приюте..
+     * @param newInformation    новая информация.
+     * @return возвращает обновленный объект Shelter.
+     * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
+     */
+    public Shelter setInformation(String id, String informationType, String newInformation)
             throws IllegalAccessException {
         Shelter shelter = null;
         for (Shelter myShelter : shelters) {
@@ -159,6 +150,7 @@ public class ShelterService {
                 field.set(shelter, newInformation);
             }
         }
+        return shelter;
     }
 
 }

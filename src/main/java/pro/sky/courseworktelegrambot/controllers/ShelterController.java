@@ -84,8 +84,7 @@ public class ShelterController {
                           @Parameter(description = "Тип информации о приюте")
                           @RequestParam String informationType,
                           @Parameter(description = "Новая информация")
-                          @RequestParam String newInformation) throws IllegalAccessException
-            , InvocationTargetException {
+                          @RequestParam String newInformation) throws IllegalAccessException {
         return shelterService.update(id, informationType, newInformation);
     }
 
