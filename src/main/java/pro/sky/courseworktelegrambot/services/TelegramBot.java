@@ -42,6 +42,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private StateRepository stateRepository;
 
+    @Autowired
+    private FeedbackRequestService feedbackRequestService;
 
     @Autowired
     private DogRepository dogRepository;
@@ -290,6 +292,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             return;
         }
 
+        feedbackRequestService.save(user.getId(), message.getText());
         //сохраняем в табл FeedbackRequest пришедший текст
 
         sendMessage(user.getId(), "Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", null, 0);
