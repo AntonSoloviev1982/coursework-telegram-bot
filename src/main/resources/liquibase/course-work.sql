@@ -20,9 +20,22 @@ CREATE TABLE shelter(
     cynologists TEXT,
     refusal_reasons TEXT
     );
-INSERT INTO shelter(id, name) VALUES
-    ('Dog', 'Собаки'),
-    ('Cat', 'Кошки');
+INSERT INTO shelter(id, name, information, timetable, address, security, safety_precautions, rules, documents, transportation
+, child_accomodation, adult_accomodation, invalid_accomodation, communication, cynologists, refusal_reasons) VALUES
+    ('Dog', 'Собаки', 'Текст: информация о приюте для собак', 'Текст: расписание работы приюта и адрес, схему проезда'
+    , 'Текст: адрес', 'Текст: контактные данные охраны для оформления пропуска на машину'
+    , 'Текст: рекомендации по технике безопасности на территории приюта', 'Текст: правила знакомства с животным'
+    , 'Текст: список документов, чтобы взять животное из приюта', 'Текст: транспортировка животного'
+    , 'Текст: обустройство дома для щенка', 'Текст: обустройство дома для взрослого животного'
+    , 'Текст: обустройство дома для животного-инвалида', 'Текст: советы кинолога по первичному общению с собакой'
+    , 'Текст: рекомендации по проверенным кинологам', 'Текст: причины отказа отдать животное'),
+
+    ('Cat', 'Кошки', 'Текст: информация о приюте для собак', 'Текст: расписание работы приюта и адрес, схему проезда'
+    , 'Текст: адрес', 'Текст: контактные данные охраны для оформления пропуска на машину'
+    , 'Текст: рекомендации по технике безопасности на территории приюта', 'Текст: правила знакомства с животным'
+    , 'Текст: список документов, чтобы взять животное из приюта', 'Текст: транспортировка животного'
+    , 'Текст: обустройство дома для котенка', 'Текст: обустройство дома для взрослого животного'
+    , 'Текст: обустройство дома для животного-инвалида', ' ', ' ', 'Текст: причины отказа отдать животное');
 
 -- changeset pavel:create_state
 DROP TABLE IF EXISTS state;
@@ -41,20 +54,21 @@ INSERT INTO state(id, text, text_input) VALUES
 
     ('AboutShelter', '@information', FALSE),
     ('TimeTable', '@timetable', FALSE),
+    ('Address', '@address', FALSE),
     ('Security', '@security', FALSE),
-    ('SafetyPrecautions', '@safety_precautions', FALSE),
+    ('SafetyPrecautions', '@safetyPrecautions', FALSE),
     ('AnimalList', 'Наши питомцы:', FALSE),
     ('AnimalByNumber', 'Введите номер животного', TRUE),
 
     ('Rules', '@rules', FALSE),
     ('Documents', '@documents', FALSE),
-    ('Tranportation', '@tranportation', FALSE),
-    ('ChildAccomodation', '@child_accomodation', FALSE),
-    ('AdultAccomodation', '@adult_accomodation', FALSE),
-    ('InvalidAccomodation', '@invalid_accomodation', FALSE),
-    ('DogCommunication', '@dog_communication', FALSE),
+    ('Tranportation', '@transportation', FALSE),
+    ('ChildAccomodation', '@childAccomodation', FALSE),
+    ('AdultAccomodation', '@adultAccomodation', FALSE),
+    ('InvalidAccomodation', '@invalidAccomodation', FALSE),
+    ('DogCommunication', '@communication', FALSE),
     ('Cynologists', '@cynologists', FALSE),
-    ('RefusalReasons', '@refusal_reasons', FALSE),
+    ('RefusalReasons', '@refusalReasons', FALSE),
 
     ('MessageToVolonteer', 'Введите сообщение для волонтера', TRUE),
     ('FeedbackRequest', 'Введите контакт для обратной связи', TRUE)
@@ -131,13 +145,13 @@ CREATE TABLE users(     --имя user не разрешает, зарезерв�
 DROP TABLE IF EXISTS message_to_volunteer;
 CREATE TABLE message_to_volunteer(
     id INTEGER PRIMARY KEY,
-    chat_id LONG,
+    user_id LONG,
     question_time DATETIME,
     question TEXT,
     answer_time DATETIME,
     answer TEXT,
     sent_time DATETIME,
-    FOREIGN KEY (chat_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
 --changeset alexander:create_feedback_request

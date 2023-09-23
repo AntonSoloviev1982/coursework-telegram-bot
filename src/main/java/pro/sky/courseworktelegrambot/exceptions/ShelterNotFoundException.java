@@ -2,9 +2,9 @@ package pro.sky.courseworktelegrambot.exceptions;
 
 public class ShelterNotFoundException extends RuntimeException{
 
-    private final int id;
+    private final String id;
 
-    public ShelterNotFoundException(int id) {
+    public ShelterNotFoundException(String id) {
         this.id = id;
     }
 

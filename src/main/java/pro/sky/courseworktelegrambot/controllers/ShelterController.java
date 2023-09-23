@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.services.ShelterService;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @RestController
@@ -60,7 +61,7 @@ public class ShelterController {
             })
     @GetMapping("{id}")
     public Shelter get(@Parameter(description = "Идентификатор приюта")
-                       @PathVariable("id") int id) {
+                       @PathVariable("id") String id) {
         return shelterService.get(id);
     }
 
@@ -75,39 +76,30 @@ public class ShelterController {
                                     schema = @Schema(implementation = Shelter.class)
                             )
                     )
-            },
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Редактируемый приют",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = Shelter.class)
-                    )
-            )
+            }
     )
     @PutMapping("{id}")
     public Shelter update(@Parameter(description = "Идентификатор приюта")
-                          @PathVariable("id") int id,
-                          @RequestBody Shelter shelter) {
-        return shelterService.update(id, shelter);
+                          @PathVariable("id") String id,
+                          @Parameter(description = "Тип информации о приюте")
+                          @RequestParam String informationType,
+                          @Parameter(description = "Новая информация")
+                          @RequestParam String newInformation) throws IllegalAccessException {
+        return shelterService.update(id, informationType, newInformation);
     }
 
     @Operation(
             summary = "Удаление приюта",
             responses = {
                     @ApiResponse(
-                            responseCode = "200",
-                            description = "Удаленный приют",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Shelter.class)
-                            )
+                            responseCode = "200"
                     )
             }
     )
     @DeleteMapping("{id}")
-    public Shelter delete(@Parameter(description = "Идентификатор приюта")
-                          @PathVariable("id") int id) {
-        return shelterService.delete(id);
+    public void delete(@Parameter(description = "Идентификатор приюта")
+                          @PathVariable("id") String id) {
+        shelterService.delete(id);
     }
 
     @Operation(

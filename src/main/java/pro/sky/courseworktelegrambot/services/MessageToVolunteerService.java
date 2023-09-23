@@ -2,6 +2,7 @@ package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
+import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 
@@ -26,15 +27,15 @@ public class MessageToVolunteerService {
     }
 
     /**
-     * Создает новый объект MessageToVolunteer с вопросом от пользователя, временем когда вопрос был задан
-     * и chatId пользователя. Остальные поля остаются пустыми.
+     * Создает новый объект MessageToVolunteer с пользователем, вопросом от пользователя
+     * , временем когда вопрос был задан. Остальные поля остаются пустыми.
      *
-     * @param chatId      Идентификатор чата, от куда поступает вопрос.
+     * @param user        Юзер, от которого поступает вопрос.
      * @param question    Текст вопроса.
      */
-    public void create(long chatId, String question) {
+    public void create(User user, String question) {
         MessageToVolunteer messageToVolunteer = new MessageToVolunteer();
-        messageToVolunteer.setChatId(chatId);
+        messageToVolunteer.setUser(user);
         messageToVolunteer.setQuestionTime(LocalDateTime.now());
         messageToVolunteer.setQuestion(question);
         messageToVolunteerRepository.save(messageToVolunteer);
@@ -51,7 +52,7 @@ public class MessageToVolunteerService {
     }
 
     /**
-     * Получает строку с ответом, находит по id нужный объект MessageToVolunteer в БД,
+     * Получает строку с ответом, находим по id нужный объект MessageToVolunteer в БД,
      * присваивает строку полю answer и заполняет поле answerTime.
      *
      * @param id идентификатор объекта MessageToVolunteer.
@@ -77,16 +78,16 @@ public class MessageToVolunteerService {
 
     //надо сделать поле user вместо chatId,
     //поставить связь в базе и в хибернете и посылать через sendMessageToUser, чтобы не стереть кнопки
-    /*
-    public void sendAnswer(int id) {
-        MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
-                .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
-        long chatId = messageToVolunteer.getChatId();
-        String answer = messageToVolunteer.getAnswer();
-        telegramBot.sendMessage(chatId, answer);
-        и надо бы отработать ошибку отправки. Если она есть, то sentTime не обновлять
-        messageToVolunteer.setSentTime(LocalDateTime.now());
-        messageToVolunteerRepository.save(messageToVolunteer);
-    }
-    */
+
+//    public void sendAnswer(int id) {
+//        MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
+//                .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
+//        long chatId = messageToVolunteer.getChatId();
+//        String answer = messageToVolunteer.getAnswer();
+//        telegramBot.sendMessageToUser(chatId, answer);
+//        //и надо бы отработать ошибку отправки. Если она есть, то sentTime не обновлять
+//        messageToVolunteer.setSentTime(LocalDateTime.now());
+//        messageToVolunteerRepository.save(messageToVolunteer);
+//    }
+
 }

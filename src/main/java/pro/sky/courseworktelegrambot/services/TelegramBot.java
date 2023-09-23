@@ -43,6 +43,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     private StateRepository stateRepository;
 
     @Autowired
+    private ShelterService shelterService;
+
+    @Autowired
     private FeedbackRequestService feedbackRequestService;
 
     @Autowired
@@ -231,6 +234,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         //если сменилось состояние
         State state = user.getState(); //новое состояние. Если нет кнопок, то мы его откатим к oldState
         String text = state.getText(); //предстоящее сообщение - текст нового состояния
+        String shelterId = user.getShelterId();
+        String informationType;
+        if (text.startsWith("@")) {
+            informationType = text.substring(1);
+            try {
+                text = shelterService.getInformation(shelterId, informationType);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         if (state.getId().equals("AnimalList")) showAnimalList(user);
         //выясняем, есть ли кнопки в текущем состоянии

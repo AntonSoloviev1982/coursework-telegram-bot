@@ -12,7 +12,9 @@ public class MessageToVolunteer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    long chatId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     private LocalDateTime questionTime;
 
@@ -24,13 +26,12 @@ public class MessageToVolunteer {
 
     private LocalDateTime sentTime;
 
-
-    public long getChatId() {
-        return chatId;
+    public User getUser() {
+        return user;
     }
 
-    public void setChatId(long chatId) {
-        this.chatId = chatId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public LocalDateTime getQuestionTime() {
