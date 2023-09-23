@@ -4,6 +4,7 @@ import javax.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.DogAdoption;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
+import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,12 +13,17 @@ import java.util.Optional;
 @Service
 public class DogAdoptionService {
     private final DogAdoptionRepository dogAdoptionRepository;
+    private final UserRepository userRepository;
 
-    public DogAdoptionService(DogAdoptionRepository dogAdoptionRepository) {
+    public DogAdoptionService(DogAdoptionRepository dogAdoptionRepository, UserRepository userRepository) {
         this.dogAdoptionRepository = dogAdoptionRepository;
+        this.userRepository = userRepository;
     }
 
     public DogAdoption createDogAdoption(DogAdoption dogAdoption) {
+        if (dogAdoptionRepository.existsByUserIdOrPetId(dogAdoption.getUserId(),dogAdoption.getPetId())){
+            return dogAdoption;
+        }
         return dogAdoptionRepository.save(dogAdoption);
     }
 
