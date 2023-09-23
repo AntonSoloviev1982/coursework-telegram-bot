@@ -121,12 +121,7 @@ INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_co
     ('GetAnimal', 'Причины отказа отдать животное','RefusalReasons', 9, 1, Null),
     ('GetAnimal', 'Назад к выбору этапа','Stage', 10, 1, Null),
     ('GetAnimal', 'Позвать волонтера','MessageToVolonteer', 11, 1, Null),
-    ('GetAnimal', 'Запросить обратную свзь','FeedbackRequest', 11, 2, Null),
-
-    ('MessageToVolonteer', 'Возврат к боту', Null, 1, 1, Null),
-    ('FeedbackRequest', 'Возврат к боту', Null, 1, 1, Null),
-    ('Report', 'Возврат к боту', Null, 1, 1, Null),
-    ('AnimalByNumber', 'Возврат к боту', Null, 1, 1, Null);
+    ('GetAnimal', 'Запросить обратную свзь','FeedbackRequest', 11, 2, Null);
 
 --changeset pavel:create_user
 DROP TABLE IF EXISTS users;
@@ -203,6 +198,8 @@ CREATE TABLE cat_adoption(
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (pet_id) REFERENCES cat(id)
     );
+--за один день один пользователь может усыновить только одно животное
+CREATE UNIQUE INDEX user_cat_date ON cat_adoption (user_id, pet_id, date)
 
 --changeset salavat:create_dog_adobtion
 CREATE TABLE dog_adoption(
@@ -215,6 +212,9 @@ CREATE TABLE dog_adoption(
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (pet_id) REFERENCES dog(id)
     );
+--за один день один пользователь может усыновить только одно животное
+--проверки, что у разных усыновлений не пересекаются испытательные строки в базе нет. Это сделает сервис
+CREATE UNIQUE INDEX user_dog_date ON dog_adoption (user_id, pet_id, date)
 
 --changeset alexander:create_cat_report
 DROP TABLE IF EXISTS cat_report;
@@ -226,6 +226,7 @@ CREATE TABLE cat_report(
     text BLOB,
     FOREIGN KEY (adoption_id) REFERENCES cat_adoption(id)
     );
+--за один день по одному усыновлению может прийти только один отчет
 CREATE UNIQUE INDEX cat_report_adoption_date ON cat_report (adoption_id, report_date)
 
 --changeset alexander:create_dog_report
@@ -238,5 +239,6 @@ CREATE TABLE dog_report(
     text BLOB,
     FOREIGN KEY (adoption_id) REFERENCES dog_adoption(id)
     );
+--за один день по одному усыновлению может прийти только один отчет
 CREATE UNIQUE INDEX dog_report_adoption_date ON dog_report (adoption_id, report_date)
 

@@ -7,6 +7,13 @@ import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+//Объекты этого класса никогда не будут созданы.
+//Он будет унаследован потомками DogAdoption и CatAdoption
+//нужен, чтобы создать две одинаковые таблицы dog_adoption и cat_аdoption
+//и обращаться к ним через универсальный репозиторий типа JpaRepository<? extends Adoption, Integer>
+//Две таблицы возникают из ТЗ данного нам заказчиком. Мы переспрашивали у наставника.
+//На самом деле иметь 2 одинаковые таблицы - плохое решение
+
 @MappedSuperclass
 public abstract class Adoption {
     @Id

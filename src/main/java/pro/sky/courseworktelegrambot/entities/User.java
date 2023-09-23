@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     private long id; //id чата
-
     private String name;
     private String shelterId;
     @ManyToOne
