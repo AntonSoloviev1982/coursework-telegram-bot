@@ -17,15 +17,14 @@ import java.util.List;
  */
 @Service
 public class MessageToVolunteerService {
-
-
-    private final TelegramBot telegramBot;
-
+    //вызывает циклическую ссылку private final TelegramBot telegramBot;
     private final MessageToVolunteerRepository messageToVolunteerRepository;
 
 
-    public MessageToVolunteerService(TelegramBot telegramBot, MessageToVolunteerRepository messageToVolunteerRepository) {
-        this.telegramBot = telegramBot;
+    public MessageToVolunteerService(
+            //TelegramBot telegramBot,
+            MessageToVolunteerRepository messageToVolunteerRepository) {
+        //this.telegramBot = telegramBot;
         this.messageToVolunteerRepository = messageToVolunteerRepository;
     }
 
@@ -70,11 +69,11 @@ public class MessageToVolunteerService {
                 .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
         messageToVolunteer.setAnswerTime(LocalDateTime.now());
         messageToVolunteer.setAnswer(answer);
-        try {
-            telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
-        } catch(TelegramApiException e) {
-            throw new TelegramException();
-        }
+        //try {
+        //    вызывает циклическую ссылку telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
+        //} catch(TelegramApiException e) {
+        //    throw new TelegramException();
+        //}
         messageToVolunteerRepository.save(messageToVolunteer);
     }
 
