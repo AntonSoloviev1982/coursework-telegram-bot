@@ -14,6 +14,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("dog-report")
 public class DogReportController {
+    /*
     private final DogReportService dogReportService;
 
     public DogReportController(DogReportService dogReportService) {
@@ -60,4 +61,6 @@ public class DogReportController {
     public  ResponseEntity<Collection> getReportByDate(@RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date){
         return ResponseEntity.ok(dogReportService.readByDate(date));
     }
+
+     */
 }

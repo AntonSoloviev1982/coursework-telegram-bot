@@ -5,13 +5,14 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
 public class User {
     @Id
-    private long id; //id чата
-
+    private long id; //пока не придумали авторизацию, в качестве id пользователя используем id чата
+                     //когда будет авторизация, тогда введем отдельно поле chatId
     private String name;
     private String shelterId;
     @ManyToOne
@@ -35,7 +36,7 @@ public class User {
     public void setId(long id) {
         this.id = id;
     }
-
+    @JsonIgnore
     public State getState() {
         return state;
     }
@@ -44,6 +45,7 @@ public class User {
         this.state = state;
     }
 
+    @JsonIgnore
     public State getPreviousState() {
         return previousState;
     }
@@ -52,6 +54,7 @@ public class User {
         this.previousState = previousState;
     }
 
+    @JsonIgnore
     public String getShelterId() {
         return shelterId;
     }
@@ -76,4 +79,11 @@ public class User {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
