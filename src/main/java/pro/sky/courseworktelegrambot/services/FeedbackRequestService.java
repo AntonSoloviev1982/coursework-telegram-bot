@@ -4,8 +4,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.FeedbackRequest;
+import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.repositories.FeedbackRequestRepository;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -30,17 +32,17 @@ public class FeedbackRequestService {
     /**
      *  Cоздает запись в БД в таблице "feedback_request".<br>
      *  Используется метод репозитория {@link JpaRepository#save(Object)}
-     *  @param chatId идентификатор пользователя
+     *  @param user пользователь
      *  @param contact контактная информация
      * */
-    public void save(Long chatId, String contact) {
-        feedBackRequestRepository.save(new FeedbackRequest(chatId, LocalDateTime.now(), contact));
+    public void save(User user, String contact) {
+        feedBackRequestRepository.save(new FeedbackRequest(user, LocalDateTime.now(), contact));
     }
 
     /**
      *  Находит список всех ожидающих вызова запросов пользователей.
      *  Используется метод репозитория {@link JpaRepository#findAll(Sort)}
-     * @return список запросов с нулевым полем executionTime.
+     *  @return список запросов с нулевым полем executionTime.
      */
     public List<FeedbackRequest> getWaitingList(){
         return feedBackRequestRepository.findAllByExecutionTimeIsNull();
@@ -64,7 +66,8 @@ public class FeedbackRequestService {
      *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
      */
     public void updateExecutionTime(Integer id) {
-        FeedbackRequest feedBackRequest = feedBackRequestRepository.findById(id).get();
+        FeedbackRequest feedBackRequest = feedBackRequestRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
+                "feedBackRequest with id = " + id + " not found"));
         feedBackRequest.setExecutionTime(LocalDateTime.now());
         feedBackRequestRepository.save(feedBackRequest);
     }

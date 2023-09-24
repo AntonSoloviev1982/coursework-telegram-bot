@@ -20,7 +20,7 @@ public class CatReportService {
         return catReportRepository.save(catReport);
     }
 
-    public CatReport getCatReportById(Long id) {
+    public CatReport getCatReportById(int id) {
         return catReportRepository.findById(id).get();
     }
 
@@ -28,18 +28,18 @@ public class CatReportService {
         return catReportRepository.save(catReport);
     }
 
-    public CatReport deleteCatReport(Long id) {
+    public CatReport deleteCatReport(int id) {
         CatReport catReport = catReportRepository.findById(id).get();
         catReportRepository.deleteById(id);
         return catReport;
     }
 
     public List<CatReport> readByDate(LocalDate localDate){
-        return List.copyOf(catReportRepository.findAllByReportDate(localDate));
+        return List.copyOf(catReportRepository.findAllByDate(localDate));
     }
 
-    public List<CatReport> readAllById(Long id){
-        return List.copyOf(catReportRepository.findAllById(id));
-    }
+    //public List<CatReport> readAllById(int id){
+    //    return List.copyOf(catReportRepository.findAllById(id));
+    //}
 
 }

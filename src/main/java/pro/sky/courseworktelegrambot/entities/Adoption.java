@@ -1,9 +1,7 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -17,70 +15,57 @@ import java.util.Objects;
 @MappedSuperclass
 public abstract class Adoption {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.AUTO) так выдает Schema-validation: missing sequence [hibernate_sequence]
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //так работает, но поле id д.б. с AUTO_INCREMENT
+    //а вот так тоже работает, если в базе есть последовательность my_sequence
+    //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "my_sequence")
+    //@SequenceGenerator(name="my_sequence", sequenceName="my_sequence", строго allocationSize=1)
     private int id;
-    private long userId; //усыновитель
-    private int petId; //питомец
-    private LocalDateTime date; //дата усыновления
-    private LocalDateTime trialDate; //дата окончания испытательного срока
-    private int trialDecision; //количество дополнительных дней
+    //Усыновитель. не user_id, а целый User, чтобы возвратить в коллекции усыновлений описание усыновителя тоже
+    @ManyToOne
+    private User user;
+
+    //Дата усыновления. За один день один пользователь может усыновить только одно животное.
+    //Да и для усыновлений за разные дни нельзя допускать пересечение испытательных сроков
+    private LocalDate date;
+    //Дата окончания испытательного срока. Назначается волонтером.
+    //В интервале от date до trialDate бот ждет отчеты
+    //При отборе животного волонтер устанавливает trialDate в 01.01.2001
+    private LocalDate trialDate;
 
     public Adoption() {
     }
 
-    public Adoption(int userId, int petId) {
-        // !!!требуется проверка!!!
-        this.userId = userId;
-        this.petId = petId;
-
+    public Adoption(User user, LocalDate trialDate) {
+        this.user = user;
+        this.date = LocalDate.now();
+        this.trialDate = trialDate;
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public User getUser() {
+        return user;
     }
 
-    public long getUserId() {
-        return userId;
-    }
+    //не удалось включить сюда Pet, т.к. здесь нельзя поставить связь
+    //а возвращать список усыновлений волонтеру хочется вместе с описанием животных
+    //пришлось поле pet унести в наследников
+    public abstract Pet getPet();
 
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
-    public int getPetId() {
-        return petId;
-    }
-
-    public void setPetId(int petId) {
-        this.petId = petId;
-    }
-
-    public LocalDateTime getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
 
-    public LocalDateTime getTrialDate() {
+    public LocalDate getTrialDate() {
         return trialDate;
     }
 
-    public void setTrialDate(LocalDateTime trialDate) {
+    public void setTrialDate(LocalDate trialDate) {
         this.trialDate = trialDate;
-    }
-
-    public int getTrialDecision() {
-        return trialDecision;
-    }
-
-    public void setTrialDecision(int trialDecision) {
-        this.trialDecision = trialDecision;
     }
 
     @Override
@@ -100,11 +85,10 @@ public abstract class Adoption {
     public String toString() {
         return "Adoption{" +
                 "id=" + id +
-                ", userId=" + userId +
-                ", dogId=" + petId +
+                ", user=" + user +
+                //", pet=" + pet +
                 ", date=" + date +
                 ", trialDate=" + trialDate +
-                ", trialDecision=" + trialDecision +
-                '}';
+                "}";
     }
 }

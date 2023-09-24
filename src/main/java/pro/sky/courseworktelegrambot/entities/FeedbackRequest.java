@@ -19,8 +19,8 @@ public class FeedbackRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    private long chatId;
+    @ManyToOne
+    private User user;
 
     private LocalDateTime requestTime;
 
@@ -32,8 +32,8 @@ public class FeedbackRequest {
     public FeedbackRequest() {
     }
 
-    public FeedbackRequest(Long chatId, LocalDateTime requestTime, String contact) {
-        this.chatId = chatId;
+    public FeedbackRequest(User user, LocalDateTime requestTime, String contact) {
+        this.user = user;
         this.requestTime = requestTime;
         this.contact = contact;
     }
@@ -42,8 +42,8 @@ public class FeedbackRequest {
         return id;
     }
 
-    public long getChatId() {
-        return chatId;
+    public User getUser() {
+        return user;
     }
 
     public LocalDateTime getRequestTime() {
@@ -59,7 +59,7 @@ public class FeedbackRequest {
         return executionTime;
     }
 
-    public void setExecutionTime(@Nullable LocalDateTime executionTime) {
+    public void setExecutionTime(LocalDateTime executionTime) {
         this.executionTime = executionTime;
     }
 

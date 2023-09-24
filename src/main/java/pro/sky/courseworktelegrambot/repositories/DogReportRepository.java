@@ -8,6 +8,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface DogReportRepository extends JpaRepository<DogReport,Integer> {
-    List<DogReport> findAllByReportDate(LocalDate reportDate);
+public interface DogReportRepository extends JpaRepository<DogReport, Integer> {
+    //List<DogReport> findAllByReportDate(LocalDate reportDate);
 }
