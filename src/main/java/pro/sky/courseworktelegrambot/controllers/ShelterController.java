@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.services.ShelterService;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @RestController

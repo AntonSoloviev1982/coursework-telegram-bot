@@ -25,13 +25,13 @@ public class Shelter {
     private String cynologists;
     private String refusalReasons;
 
-    public String getId() {
+    public String getId() { // для тестов
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
-    }
+    } // для тестов
 
     public String getName() {
         return name;

@@ -7,10 +7,7 @@ import pro.sky.courseworktelegrambot.entities.Shelter;
 import java.util.Optional;
 
 @Repository
-public interface ShelterRepository extends JpaRepository<Shelter, Integer> {
+public interface ShelterRepository extends JpaRepository<Shelter, String> {
 
-    Shelter findById(String id);
-
-    Shelter deleteById(String id);
 
 }

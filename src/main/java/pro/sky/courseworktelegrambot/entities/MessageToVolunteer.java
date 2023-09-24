@@ -3,6 +3,7 @@ package pro.sky.courseworktelegrambot.entities;
 import javax.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "message_to_volunteer")
@@ -25,6 +26,15 @@ public class MessageToVolunteer {
     private String answer;
 
     private LocalDateTime sentTime;
+
+
+    public int getId() {
+        return id;
+    } // для тестов
+
+    public void setId(int id) {
+        this.id = id;
+    } // для тестов
 
     public User getUser() {
         return user;
@@ -72,5 +82,18 @@ public class MessageToVolunteer {
 
     public void setSentTime(LocalDateTime sentTime) {
         this.sentTime = sentTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageToVolunteer that = (MessageToVolunteer) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

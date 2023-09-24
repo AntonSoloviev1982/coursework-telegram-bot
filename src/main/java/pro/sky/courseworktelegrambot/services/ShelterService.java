@@ -51,9 +51,9 @@ public class ShelterService {
      * @throws ShelterNotFoundException Если Shelter с указанным идентификатором не найдено.
      */
     public Shelter get(String id) {
-        return Optional.ofNullable(id)
-                .map(shelterRepository::findById)
-                .orElseThrow(() -> new ShelterNotFoundException(id));
+        Optional<Shelter> optionalShelter = Optional.ofNullable(id)
+                .flatMap(shelterRepository::findById);
+        return optionalShelter.orElseThrow(() -> new ShelterNotFoundException(id));
     }
 
     /**
@@ -78,9 +78,12 @@ public class ShelterService {
      * @throws ShelterNotFoundException Если объект Shelter с указанным идентификатором не найден.
      */
     public void delete(String id) {
-        Optional.ofNullable(id)
-                .map(shelterRepository::deleteById)
-                .orElseThrow(() -> new ShelterNotFoundException(id));
+        Optional<Shelter> shelterOptional = shelterRepository.findById(id);
+        if (shelterOptional.isPresent()) {
+            shelterRepository.deleteById(id);
+        } else {
+            throw new ShelterNotFoundException(id);
+        }
     }
 
     /**
