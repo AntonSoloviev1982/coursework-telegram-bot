@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Service
 public class DogReportService {
+    /*
     private final DogReportRepository dogReportRepository;
 
     public DogReportService(DogReportRepository dogReportRepository) {
@@ -51,4 +52,6 @@ public class DogReportService {
     public Collection<DogReport> readByDate(LocalDate reportDate){
        return List.copyOf(dogReportRepository.findAllByReportDate(reportDate));
     }
+
+     */
 }

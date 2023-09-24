@@ -24,8 +24,6 @@ public class MessageToVolunteer {
 
     private String answer;
 
-    private LocalDateTime sentTime;
-
     public User getUser() {
         return user;
     }
@@ -65,12 +63,5 @@ public class MessageToVolunteer {
     public void setAnswer(String answer) {
         this.answer = answer;
     }
-
-    public LocalDateTime getSentTime() {
-        return sentTime;
-    }
-
-    public void setSentTime(LocalDateTime sentTime) {
-        this.sentTime = sentTime;
-    }
+    
 }

@@ -12,15 +12,15 @@ public abstract class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected int id;
     private int adoptionId; // ID усыновления
-    private LocalDate reportDate; // дата отчета
+    private LocalDate date; // дата отчета
     @Lob
     private byte[] photo; // фото отчета
     @Lob
     private byte[] text; // комментарий отчета
 
-    public Report(int adoptionId, LocalDate reportDate, byte[] photo, byte[] text) {
+    public Report(int adoptionId, LocalDate date, byte[] photo, byte[] text) {
         this.adoptionId = adoptionId;
-        this.reportDate = reportDate;
+        this.date = date;
         this.photo = photo;
         this.text = text;
     }
@@ -36,16 +36,12 @@ public abstract class Report {
         return adoptionId;
     }
 
-    public void setAdoptionId(int adoptionId) {
-        this.adoptionId = adoptionId;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public LocalDate getReportDate() {
-        return reportDate;
-    }
-
-    public void setReportDate(LocalDate reportDate) {
-        this.reportDate = reportDate;
+    public void setReportDate(LocalDate date) {
+        this.date = date;
     }
 
     public byte[] getPhoto() {
@@ -82,7 +78,7 @@ public abstract class Report {
         return "Report{" +
                 "id=" + id +
                 ", adoptionId=" + adoptionId +
-                ", reportDate=" + reportDate +
+                ", date=" + date +
                 ", text='" + text + '\'' +
                 '}';
     }

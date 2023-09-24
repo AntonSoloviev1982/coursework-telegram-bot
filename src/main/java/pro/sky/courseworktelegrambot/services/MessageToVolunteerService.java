@@ -1,9 +1,11 @@
 package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
+import pro.sky.courseworktelegrambot.exceptions.TelegramException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 
 import java.time.LocalDateTime;
@@ -15,14 +17,14 @@ import java.util.List;
  */
 @Service
 public class MessageToVolunteerService {
-
-    private final TelegramBot telegramBot;
-
+    //вызывает циклическую ссылку private final TelegramBot telegramBot;
     private final MessageToVolunteerRepository messageToVolunteerRepository;
 
 
-    public MessageToVolunteerService(TelegramBot telegramBot, MessageToVolunteerRepository messageToVolunteerRepository) {
-        this.telegramBot = telegramBot;
+    public MessageToVolunteerService(
+            //TelegramBot telegramBot,
+            MessageToVolunteerRepository messageToVolunteerRepository) {
+        //this.telegramBot = telegramBot;
         this.messageToVolunteerRepository = messageToVolunteerRepository;
     }
 
@@ -51,43 +53,28 @@ public class MessageToVolunteerService {
         return messageToVolunteerRepository.findAllByAnswerIsNull();
     }
 
+
     /**
      * Получает строку с ответом, находим по id нужный объект MessageToVolunteer в БД,
      * присваивает строку полю answer и заполняет поле answerTime.
      *
      * @param id идентификатор объекта MessageToVolunteer.
      * @param answer строка с ответом.
+     * @param AnswerToMessage если True, то уйдет сообщение с включенным в ответ вопросом
      * @throws MessageToVolunteerNotFoundException если объект не найден.
      */
-    public void updateAnswer(int id, String answer) {
+
+    public void updateAnswer (int id, String answer, boolean AnswerToMessage) {
         MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
                 .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
         messageToVolunteer.setAnswerTime(LocalDateTime.now());
         messageToVolunteer.setAnswer(answer);
+        //try {
+        //    вызывает циклическую ссылку telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
+        //} catch(TelegramApiException e) {
+        //    throw new TelegramException();
+        //}
         messageToVolunteerRepository.save(messageToVolunteer);
     }
-
-    /**
-     * Отправляет ответ пользователю. Находит нужный объект MessageToVolunteer по id в БД.
-     * Добавляет в метод {@link TelegramBot#sendMessage(long, String)} chatId пользователя и ответ.
-     * Добавляет время отправки ответа пользователю в поле sentTime.
-     *
-     * @param id идентификатор объекта MessageToVolunteer.
-     * @throws MessageToVolunteerNotFoundException если объект не найден.
-     */
-
-    //надо сделать поле user вместо chatId,
-    //поставить связь в базе и в хибернете и посылать через sendMessageToUser, чтобы не стереть кнопки
-
-//    public void sendAnswer(int id) {
-//        MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
-//                .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
-//        long chatId = messageToVolunteer.getChatId();
-//        String answer = messageToVolunteer.getAnswer();
-//        telegramBot.sendMessageToUser(chatId, answer);
-//        //и надо бы отработать ошибку отправки. Если она есть, то sentTime не обновлять
-//        messageToVolunteer.setSentTime(LocalDateTime.now());
-//        messageToVolunteerRepository.save(messageToVolunteer);
-//    }
 
 }

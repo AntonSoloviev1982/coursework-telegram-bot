@@ -5,10 +5,10 @@ import pro.sky.courseworktelegrambot.entities.CatReport;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface CatReportRepository extends JpaRepository<CatReport, Long> {
+public interface CatReportRepository extends JpaRepository<CatReport, Integer> {
 
-    List<CatReport> findAllById(Long id);
+    //List<CatReport> findAllById(Long id);
 
-    List<CatReport> findAllByReportDate(LocalDate localDate);
+    List<CatReport> findAllByDate(LocalDate date);
 
 }
