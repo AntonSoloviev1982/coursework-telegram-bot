@@ -65,7 +65,6 @@ public class MessageToVolunteerControllerTest {
         messageToVolunteer1.setQuestion("Вопрос 1");
         messageToVolunteer1.setAnswerTime(null);
         messageToVolunteer1.setAnswer(null);
-        messageToVolunteer1.setSentTime(null);
 
         messageToVolunteer2.setId(2);
         messageToVolunteer2.setUser(user2);
@@ -73,7 +72,6 @@ public class MessageToVolunteerControllerTest {
         messageToVolunteer2.setQuestion("Вопрос 2");
         messageToVolunteer2.setAnswerTime(null);
         messageToVolunteer2.setAnswer(null);
-        messageToVolunteer2.setSentTime(null);
     }
 
     @Test
@@ -103,13 +101,14 @@ public class MessageToVolunteerControllerTest {
     public void updateAnswerTest() throws Exception {
         int id = 1;
         String answer = "Answer";
+        boolean answerToMessage = true;
         when(messageToVolunteerRepository.findById(id)).thenReturn(Optional.of(messageToVolunteer1));
         messageToVolunteer1.setAnswerTime(LocalDateTime.now());
         messageToVolunteer1.setAnswer(answer);
         when(messageToVolunteerRepository.save(any())).thenReturn(messageToVolunteer1);
 
         mockMvc.perform(
-                put("/message_to_volunteer/1/answer/?answer={Answer}", answer)
+                put("/message_to_volunteer/1/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
 
@@ -117,7 +116,7 @@ public class MessageToVolunteerControllerTest {
         when(messageToVolunteerRepository.findById(2)).thenReturn(Optional.empty());
 
         mockMvc.perform(
-                put("/message_to_volunteer/2/answer/?answer={Answer}", answer)
+                put("/message_to_volunteer/2/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isNotFound())
                 .andExpect(result -> {

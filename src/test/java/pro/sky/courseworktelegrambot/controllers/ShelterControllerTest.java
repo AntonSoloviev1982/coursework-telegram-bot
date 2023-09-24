@@ -36,8 +36,6 @@ public class ShelterControllerTest {
     @MockBean
     private ShelterRepository shelterRepository;
 
-//    @MockBean
-//    private ShelterService mockShelterService;
 
     @SpyBean
     private ShelterService shelterService;

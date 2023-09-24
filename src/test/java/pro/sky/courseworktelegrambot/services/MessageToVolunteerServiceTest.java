@@ -47,7 +47,6 @@ public class MessageToVolunteerServiceTest {
         messageToVolunteer1.setQuestion("Вопрос 1");
         messageToVolunteer1.setAnswerTime(null);
         messageToVolunteer1.setAnswer(null);
-        messageToVolunteer1.setSentTime(null);
 
         messageToVolunteer2.setId(2);
         messageToVolunteer2.setUser(user2);
@@ -55,7 +54,6 @@ public class MessageToVolunteerServiceTest {
         messageToVolunteer2.setQuestion("Вопрос 2");
         messageToVolunteer2.setAnswerTime(null);
         messageToVolunteer2.setAnswer(null);
-        messageToVolunteer2.setSentTime(null);
     }
 
     @Test
@@ -86,8 +84,9 @@ public class MessageToVolunteerServiceTest {
     public void updateAnswerTest() {
         int id = 1;
         String answer = "answer";
+        boolean answerToMessage = true;
         when(messageToVolunteerRepository.findById(any())).thenReturn(Optional.of(messageToVolunteer1));
-        messageToVolunteerService.updateAnswer(id, answer);
+        messageToVolunteerService.updateAnswer(id, answer, answerToMessage);
         verify(messageToVolunteerRepository, atLeast(1)).save(messageToVolunteer1);
     }
 
@@ -95,9 +94,10 @@ public class MessageToVolunteerServiceTest {
     public void updateAnswerNegativeTest() {
         int id = 1;
         String answer = "answer";
+        boolean answerToMessage = true;
         when(messageToVolunteerRepository.findById(any())).thenReturn(Optional.empty());
         assertThatExceptionOfType(MessageToVolunteerNotFoundException.class)
-                .isThrownBy(() -> messageToVolunteerService.updateAnswer(id, answer));
+                .isThrownBy(() -> messageToVolunteerService.updateAnswer(id, answer, answerToMessage));
         verify(messageToVolunteerRepository, atLeast(0)).save(messageToVolunteer1);
     }
 

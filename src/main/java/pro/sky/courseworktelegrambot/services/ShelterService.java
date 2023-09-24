@@ -92,7 +92,7 @@ public class ShelterService {
      * @return возвращает список всех объектов Shelter.
      */
     public List<Shelter> findAll() {
-        return shelterRepository.findAll();
+        return List.copyOf(shelterRepository.findAll());
     }
 
     /**
