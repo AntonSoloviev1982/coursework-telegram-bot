@@ -46,6 +46,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private MessageToVolunteerService messageToVolunteerService;
     @Autowired
+    private ReportService reportService;
+    @Autowired
     private DogRepository dogRepository;
     @Autowired
     private CatRepository catRepository;
@@ -119,7 +121,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             oldState = user.getState();
             //Последующие действия возможно назначат новое состояние
             if (oldState.isTextInput()) {
-                if (message.getText().equals(returnButtonForTextInput)) {
+                //в сообщении может не быть текста и message.getText() будет null
+                if (returnButtonForTextInput.equals(message.getText())) {
                     user.setState(user.getPreviousState());
                 } else {
                     try {
@@ -189,7 +192,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            //log.error("Error occurred: " + e.getMessage());
+            //log.error("Error occurred: " + e.getMessage());  надо разбираться
             System.out.println("Error occurred: " + e.getMessage());
             throw e;
         }
@@ -356,13 +359,24 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void acceptReport(User user, Message message) {
-        JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
+        //JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
+        byte[] photo = null; //пока так
+        if (message.hasPhoto()) {
+            photo = message.getPhoto().get(0).toString().getBytes(); //пока так
+        }
+        byte[] text = null; //пока так
+        if (message.hasDocument()) {
+            text = message.getDocument().toString().getBytes(); //пока так
+        }
 
-        //принимаем отчет из message
+        Report report = reportService.saveReport(user, photo, text);
+        //если после сохранения report=null, значит у юзера не было испытательного срока
+        //в этом случае reportRequestText вернет его предыдущее состояние
+        String requestText = reportRequestText(user, user.getPreviousState(), report);
 
         //используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
         try {
-            sendMessageToUser(user, "Принято", 0);
+            sendMessageToUser(user, requestText, 0);
         } catch(TelegramApiException e) {
             //если не удалось послать подтверждение приема, то ничего страшного.
             //Главное - отчет принят. Ничего не делаем
