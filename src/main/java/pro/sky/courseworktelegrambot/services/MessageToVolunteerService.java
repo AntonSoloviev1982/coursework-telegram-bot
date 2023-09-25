@@ -53,7 +53,7 @@ public class MessageToVolunteerService {
      * @return список объектов MessageToVolunteer.
      */
     public List<MessageToVolunteer> findAllWithoutAnswer() {
-        return messageToVolunteerRepository.findAllByAnswerIsNull();
+        return List.copyOf(messageToVolunteerRepository.findAllByAnswerIsNull());
     }
 
 
@@ -63,11 +63,11 @@ public class MessageToVolunteerService {
      *
      * @param id идентификатор объекта MessageToVolunteer.
      * @param answer строка с ответом.
-     * @param AnswerToMessage если True, то уйдет сообщение с включенным в ответ вопросом
+     * @param answerToMessage если True, то уйдет сообщение с включенным в ответ вопросом
      * @throws MessageToVolunteerNotFoundException если объект не найден.
      */
 
-    public void updateAnswer (int id, String answer, boolean AnswerToMessage) {
+    public void updateAnswer (int id, String answer, boolean answerToMessage) {
         MessageToVolunteer messageToVolunteer = messageToVolunteerRepository.findById(id)
                 .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
         messageToVolunteer.setAnswerTime(LocalDateTime.now());

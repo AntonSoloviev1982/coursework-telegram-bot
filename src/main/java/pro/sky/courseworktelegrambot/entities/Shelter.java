@@ -1,6 +1,7 @@
 package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "shelter")
@@ -25,13 +26,13 @@ public class Shelter {
     private String cynologists;
     private String refusalReasons;
 
-    public String getId() {
+    public String getId() { // для тестов
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
-    }
+    } // для тестов
 
     public String getName() {
         return name;
@@ -151,5 +152,18 @@ public class Shelter {
 
     public void setRefusalReasons(String refusalReasons) {
         this.refusalReasons = refusalReasons;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Shelter shelter = (Shelter) o;
+        return Objects.equals(id, shelter.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
