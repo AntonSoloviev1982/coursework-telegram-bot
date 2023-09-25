@@ -17,12 +17,14 @@ import java.util.List;
  */
 @Service
 public class MessageToVolunteerService {
-    //вызывает циклическую ссылку private final TelegramBot telegramBot;
+    //если будет инжектить спринг, то процесс вызывает циклическую ссылку
+    //поэтому установим это поле из TelegramBot в методе @PostConstruct
+    TelegramBot telegramBot;  //для посылки ответов
     private final MessageToVolunteerRepository messageToVolunteerRepository;
 
 
     public MessageToVolunteerService(
-            //TelegramBot telegramBot,
+            //TelegramBot telegramBot, такой инжект запрещаем, чтобы не возникло циклической ссылки
             MessageToVolunteerRepository messageToVolunteerRepository) {
         //this.telegramBot = telegramBot;
         this.messageToVolunteerRepository = messageToVolunteerRepository;
@@ -35,8 +37,9 @@ public class MessageToVolunteerService {
      * @param user        Юзер, от которого поступает вопрос.
      * @param question    Текст вопроса.
      */
-    public void create(User user, String question) {
+    public void create(int id, User user, String question) {
         MessageToVolunteer messageToVolunteer = new MessageToVolunteer();
+        messageToVolunteer.setId(id);
         messageToVolunteer.setUser(user);
         messageToVolunteer.setQuestionTime(LocalDateTime.now());
         messageToVolunteer.setQuestion(question);
@@ -69,11 +72,11 @@ public class MessageToVolunteerService {
                 .orElseThrow(() -> new MessageToVolunteerNotFoundException(id));
         messageToVolunteer.setAnswerTime(LocalDateTime.now());
         messageToVolunteer.setAnswer(answer);
-        //try {
-        //    вызывает циклическую ссылку telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
-        //} catch(TelegramApiException e) {
-        //    throw new TelegramException();
-        //}
+        try {
+            telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
+        } catch(TelegramApiException e) {
+            throw new TelegramException();
+        }
         messageToVolunteerRepository.save(messageToVolunteer);
     }
 

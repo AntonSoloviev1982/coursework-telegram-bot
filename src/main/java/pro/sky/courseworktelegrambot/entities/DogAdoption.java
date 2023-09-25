@@ -24,11 +24,11 @@ public class DogAdoption extends Adoption {
     @Override
     public String toString() {
         return "DogAdoption{" +
-                "id=" + super.getId() +
-                ", user=" + super.getUser() +
+                "id=" + getId() +
+                ", user=" + getUser() +
                 ", pet=" + pet +
-                ", date=" + super.getDate() +
-                ", trialDate=" + super.getTrialDate() +
+                ", date=" + getDate() +
+                ", trialDate=" + getTrialDate() +
                 "}";
     }
 

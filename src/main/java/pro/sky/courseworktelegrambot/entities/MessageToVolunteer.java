@@ -10,8 +10,8 @@ import java.util.Objects;
 public class MessageToVolunteer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY) возьмем от message_id от бота
+    private int id; //возьмем от message_id от бота
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -25,8 +25,10 @@ public class MessageToVolunteer {
 
     private String answer;
 
-
-    public void setId(int id) { // нужен для тестов
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {  // нужен для тестов
         this.id = id;
     }
 

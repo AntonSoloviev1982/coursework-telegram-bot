@@ -49,7 +49,8 @@ public class MessageToVolunteerController {
                     )
             }
     )
-    @PutMapping(value = "{id}/")
+
+    @PutMapping(value = "{id}/", params = {"answer", "replyToMessage"})
     public void updateAnswer(@Parameter(description = "Идентификатор объекта MessageToVolunteer")
                              @PathVariable("id") int id,
                              @Parameter(description = "Ответ волонтера")

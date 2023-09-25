@@ -62,4 +62,8 @@ public class AdoptionController {
     public Collection<Adoption> getAllAdoptions(String shelterId) {
         return adoptionService.getAllAdoptions(shelterId);
     }
+    @GetMapping("{shelter_id}/active")
+    public Collection<Adoption> getAllActiveAdoptions(String shelterId) {
+        return adoptionService.getAllActiveAdoptions(shelterId);
+    }
 }
