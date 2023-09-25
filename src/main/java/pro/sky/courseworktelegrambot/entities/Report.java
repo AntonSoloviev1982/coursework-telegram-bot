@@ -1,5 +1,7 @@
 package pro.sky.courseworktelegrambot.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -10,16 +12,14 @@ import java.util.Objects;
 public abstract class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected int id;
-    private int adoptionId; // ID усыновления
+    private int id;
     private LocalDate date; // дата отчета
     @Lob
     private byte[] photo; // фото отчета
     @Lob
     private byte[] text; // комментарий отчета
 
-    public Report(int adoptionId, LocalDate date, byte[] photo, byte[] text) {
-        this.adoptionId = adoptionId;
+    public Report(LocalDate date, byte[] photo, byte[] text) {
         this.date = date;
         this.photo = photo;
         this.text = text;
@@ -32,9 +32,7 @@ public abstract class Report {
         return id;
     }
 
-    public int getAdoptionId() {
-        return adoptionId;
-    }
+    public abstract Adoption getAdoption();
 
     public LocalDate getDate() {
         return date;
@@ -43,17 +41,24 @@ public abstract class Report {
     public void setReportDate(LocalDate date) {
         this.date = date;
     }
-
+    @JsonIgnore
     public byte[] getPhoto() {
         return photo;
+    }
+
+    public boolean photoIsPresent(){
+        return photo != null;
     }
 
     public void setPhoto(byte[] photo) {
         this.photo = photo;
     }
-
+    @JsonIgnore
     public byte[]  getText() {
         return text;
+    }
+    public boolean textIsPresent(){
+        return text != null;
     }
 
     public void setText(byte[]  text) {
@@ -77,9 +82,9 @@ public abstract class Report {
     public String toString() {
         return "Report{" +
                 "id=" + id +
-                ", adoptionId=" + adoptionId +
                 ", date=" + date +
-                ", text='" + text + '\'' +
+                ", textIsPresent=" + textIsPresent() +
+                ", photoIsPresent=" + photoIsPresent() +
                 '}';
     }
 }
