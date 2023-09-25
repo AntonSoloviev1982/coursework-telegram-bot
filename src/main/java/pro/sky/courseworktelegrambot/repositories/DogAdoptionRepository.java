@@ -11,8 +11,16 @@ import java.util.List;
 
 @Repository
 public interface DogAdoptionRepository extends JpaRepository<DogAdoption,Integer> {
-    //поиск усыновлений с пересекающимся испытательным сроком,
-    List<DogAdoption> findByUserAndPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+    //поиск усыновлений пользователя с пересекающимся испытательным сроком,
+    List<DogAdoption> findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
             //trialDate_parameter >= date_base AND date_parameter <= trialDate_base
-            User user, Pet pet, LocalDate trialDate, LocalDate Date);
+            User user, LocalDate trialDate, LocalDate Date);
+    //поиск усыновлений животного с пересекающимся испытательным сроком,
+    List<DogAdoption> findByPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+            //trialDate_parameter >= date_base AND date_parameter <= trialDate_base
+            Pet pet, LocalDate trialDate, LocalDate Date);
+    //поиск активных, действующих на дату усыновлений
+    List<DogAdoption> findByDateLessThanEqualAndTrialDateGreaterThanEqual(
+            //date_parameter >= date_base AND date_parameter <= trialDate_base
+            LocalDate date1, LocalDate date2);
 }

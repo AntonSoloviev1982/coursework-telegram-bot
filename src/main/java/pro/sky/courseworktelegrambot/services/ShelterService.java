@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.
@@ -156,4 +157,11 @@ public class ShelterService {
         return shelter;
     }
 
+    //для проверки параметра API запросов
+    public void checkShelterId(String shelterId) {
+        //если shelterId в коллекции не найдется, то бросаем исключение
+        if (!shelters.stream().map(Shelter::getId).toList().contains(shelterId)) {
+            throw new ShelterNotFoundException(shelterId);
+        }
+    }
 }
