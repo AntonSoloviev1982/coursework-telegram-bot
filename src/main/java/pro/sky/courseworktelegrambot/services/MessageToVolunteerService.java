@@ -73,7 +73,7 @@ public class MessageToVolunteerService {
         messageToVolunteer.setAnswerTime(LocalDateTime.now());
         messageToVolunteer.setAnswer(answer);
         try {
-            telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, AnswerToMessage ? id : 0);
+            telegramBot.sendMessageToUser(messageToVolunteer.getUser(), answer, answerToMessage ? id : 0);
         } catch(TelegramApiException e) {
             throw new TelegramException();
         }
