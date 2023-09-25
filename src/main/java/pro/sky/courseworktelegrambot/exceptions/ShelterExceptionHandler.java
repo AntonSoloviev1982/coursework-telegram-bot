@@ -18,23 +18,27 @@ public class ShelterExceptionHandler {
 
     @ExceptionHandler({NoSuchElementException.class})
     public ResponseEntity<?> handlerNotFoundItem(NoSuchElementException e){
-        logger.error("Element by this Id is absent.");
+        logger.error("Element by this Id is absent. " + e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Element by this Id is absent. " + e.getMessage());
     }
     @ExceptionHandler({EntityNotFoundException.class})
     public ResponseEntity<?> handlerEntityNotFound(EntityNotFoundException e){
-        logger.error(e.getMessage());
+        logger.error("Entity by this Id not found. " + e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity by this Id not found. " + e.getMessage());
     }
     @ExceptionHandler({TelegramApiException.class})
     public ResponseEntity<?> handlerTelegramError(TelegramApiException e){
-        logger.error(e.getMessage());
+        logger.error("TelegramError " + e.getMessage());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("TelegramError " + e.getMessage());
     }
-    @ExceptionHandler({UserIsBusyException.class})
-    public ResponseEntity<?> UserIsBusyError(UserIsBusyException e){
-        logger.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User already has a trial period. " + e.getMessage());
+    @ExceptionHandler({UserOrPetIsBusyException.class})
+    public ResponseEntity<?> UserOrPetIsBusyError(UserOrPetIsBusyException e){
+        logger.error("User or pet already has a trial period. " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User or pet already has a trial period. " + e.getMessage());
     }
-
+    @ExceptionHandler({ShelterNotFoundException.class})
+    public ResponseEntity<?> ShelterNotFoundError(ShelterNotFoundException e){
+        logger.error("Shelter not found. " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Shelter not found. " + e.getMessage());
+    }
 }

@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 public class MessageToVolunteer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY) возьмем от message_id от бота
+    private int id; //возьмем от message_id от бота
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -23,6 +23,13 @@ public class MessageToVolunteer {
     private LocalDateTime answerTime;
 
     private String answer;
+
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public User getUser() {
         return user;

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Table(name = "cat_adoption")
 public class CatAdoption extends Adoption {
     //Питомец. не pet_id, а целый Pet, чтобы возвратить в коллекции описание тоже
-    @ManyToOne()
+    @ManyToOne
     private Cat pet;
 
     @Override
@@ -27,11 +27,11 @@ public class CatAdoption extends Adoption {
     @Override
     public String toString() {
         return "CatAdoption{" +
-                "id=" + super.getId() +
-                ", user=" + super.getUser() +
+                "id=" + getId() +
+                ", user=" + getUser() +
                 ", pet=" + pet +
-                ", date=" + super.getDate() +
-                ", trialDate=" + super.getTrialDate() +
+                ", date=" + getDate() +
+                ", trialDate=" + getTrialDate() +
                 "}";
     }
 }

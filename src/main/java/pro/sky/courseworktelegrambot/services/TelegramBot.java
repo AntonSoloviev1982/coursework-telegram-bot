@@ -14,12 +14,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.repositories.CatRepository;
-import pro.sky.courseworktelegrambot.repositories.DogRepository;
-import pro.sky.courseworktelegrambot.repositories.StateRepository;
-import pro.sky.courseworktelegrambot.repositories.UserRepository;
+import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
+import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.replace;
@@ -50,6 +49,14 @@ public class TelegramBot extends TelegramLongPollingBot {
     private DogRepository dogRepository;
     @Autowired
     private CatRepository catRepository;
+    @Autowired
+    private DogAdoptionRepository dogAdoptionRepository;
+    @Autowired
+    private CatAdoptionRepository catAdoptionRepository;
+    @Autowired
+    private DogReportRepository dogReportRepository;
+    @Autowired
+    private CatReportRepository catReportRepository;
 
     private JpaRepository<? extends Pet, Integer> petRepository(String shelterId) {
         return (shelterId.equals("Dog")) ? dogRepository : catRepository;
@@ -65,6 +72,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         initialState = stateRepository.findById("Shelter").get();
         badChoiceState = stateRepository.findById("BadChoice").get();
         afterShelterChoiceState = stateRepository.findById("Stage").get();
+        messageToVolunteerService.telegramBot=this;
     }
 
     private final String returnButtonForTextInput = "Назад к кнопкам";
@@ -245,10 +253,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(user.getId(), text, replyKeyboardMarkup, replyToMessageId);
      }
 
-
     private void goToInitialState(User user) {
     //Сообщение берем из initialState
-    //а кнопки из shelter.name
+    //а кнопки из shelter.name - пока не сделано
     //sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
     }
 
@@ -256,18 +263,22 @@ public class TelegramBot extends TelegramLongPollingBot {
         //если сменилось состояние
         State state = user.getState(); //новое состояние. Если нет кнопок, то мы его откатим к oldState
         String text = state.getText(); //предстоящее сообщение - текст нового состояния
-        String shelterId = user.getShelterId();
-        String informationType;
+
+        //Дальше текст может быть подменен в специальных случаях
+        if (state.getId().equals("Report")) {
+            text = reportRequestText(user, oldState, null);
+        }
         if (text.startsWith("@")) {
-            informationType = text.substring(1);
+            String shelterId = user.getShelterId();
+            String informationType = text.substring(1);
             try {
                 text = shelterService.getInformation(shelterId, informationType);
             } catch (IllegalAccessException e) {
+                //Антон, может быть здесь InformationTypeByShelterNotFound?
                 throw new RuntimeException(e);
             }
         }
 
-        if (state.getId().equals("AnimalList")) showAnimalList(user);
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
         if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
@@ -279,6 +290,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         //бросает TelegramApiException
         sendMessageToUser(user, text, 0);
+        if (state.getId().equals("AnimalList")) showAnimalList(user);  //пока ничего не делает
     }
 
     private void checkButton(User user, Message message) {
@@ -316,7 +328,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             return;
         }
         //сохраняем в табл MessageToVolonteer пришедший текст
-        messageToVolunteerService.create(user, message.getText());
+        messageToVolunteerService.create(message.getMessageId(), user, message.getText());
         //message.getMessageId() - тоже сохраняем
         //чтобы у волонтера была возможность ответить на конкретный вопрос, а не просто послать сообщение
         //состояние не меняем. Пользователь может слать следующие сообщения волонтеру.
@@ -360,11 +372,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
 
-    private void showAnimalList(User user) {
+    private void showAnimalList(User user) throws TelegramApiException  {
+        //вызывается после вывода сообщения состояния AnimalList - Наши питомцы
         String searchTerm; //можно запросить условия отбора, но пока не сделали
-
-        //посылаем картинки из базы. Почти то же, что информация из Shelter
-
+        //посылаем картинки из базы. Пока только toString животных.
+        String text = petRepository(user.getShelterId()).findAll().toString();
+        sendMessageToUser(user, text, 0);
     }
 
     private void showAnimal (User user, Message message) throws TelegramApiException {
@@ -390,5 +403,59 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessageToUser(user, "Введите следующий номер животного:", 0);
         //состояние не меняем. Пользователь может слать следующие ID животных.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
+    }
+
+    private String reportRequestText(User user, State oldState, Report report) {
+        //oldState - состояние при входе в обработчик сообщений бота
+        //Если поиск активного усыновления будет неудачным, то вернемся в него
+        //Если report<>null, т.е. отчет сдан до какой-то степени, то oldState будет не востребован
+
+        //Пользователь выбрал, что хочет сдать отчет (report=null)
+        //или чего-то прислал в состоянии сдачи отчета (report<>null)
+        //что будем ему писать?
+
+        if (report == null) {  //состояние сдачи отчета - неизвестно. Извлечем его из базы
+            //сначала проверим активный испытательный срок
+            LocalDate date = LocalDate.now();
+            String shelterId = user.getShelterId();
+
+            if (shelterId.equals("Dog")) {
+                //Ищем у пользователя активный испытательный срок на сегодня
+                List<DogAdoption> adoptionList = dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user, date, date);
+                if (adoptionList.isEmpty()) {
+                    user.setState(oldState);
+                    return "В приюте " + shelterId + " у Вас нет активного испытательного срока";
+                } else { //Ищем отчет за сегодня
+                    //если список усыновлений не пустой, то в нем должна найтись ровно 1 запись
+                    DogAdoption adoption = adoptionList.get(0);
+                    List<DogReport> reportList = dogReportRepository.findByAdoptionAndDate(adoption, date);
+                    if (!reportList.isEmpty()) report = reportList.get(0);
+                }
+            } else {
+                List<CatAdoption> adoptionList = catAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user, date, date);
+                if (adoptionList.isEmpty()) {
+                    user.setState(oldState);
+                    return "В приюте " + shelterId + " у Вас нет активного испытательного срока";
+                } else {
+                    CatAdoption adoption = adoptionList.get(0);
+                    List<CatReport> reportList = catReportRepository.findByAdoptionAndDate(adoption, date);
+                    if (!reportList.isEmpty()) report = reportList.get(0);
+                }
+            }
+        }
+        //если отчет в базе не найден, значит он еще не сдан. report будет == null
+
+        //потом узнаем состояние сдачи отчета и сформируем сообщение
+        if (report==null || !report.photoIsPresent() && !report.photoIsPresent()) {
+            return "Пришлите, пожалуйста, фото (.jpeg) и текстовый отчет (.docx)";
+        } else if (!report.photoIsPresent() && report.textIsPresent()){
+            return "Осталось прислать фото";
+        } else if (report.photoIsPresent() && !report.textIsPresent()) {
+            return "Осталось прислать текст";
+        } else {
+            return "Отчет уже получен. Можете послать еще раз";
+        }
     }
 }
