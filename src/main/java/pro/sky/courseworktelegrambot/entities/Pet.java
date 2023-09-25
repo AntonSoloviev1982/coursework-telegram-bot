@@ -5,18 +5,45 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Object Pet
+ * Класс Pet является родительским классом, дочерние Cat и Dog.
+ * Имеет наследуемые свойства <b>id</b>, <b>name</b> , <b>breed</b> , <b>age</b> , <b>photo</b> , <b>isAdopted</b>
  */
+
 @MappedSuperclass
 public abstract class Pet {
+
+    /**
+     * Уникальный значение, которое присваивается Cat либо Dog.
+     * Этот номер используется,
+     * чтобы идентифицировать объект и осуществлять доступ к его свойствам и методам.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    /**
+     * Поле имени животного
+     */
     private String name;
+
+    /**
+     * Порода животного
+     */
     private String breed;
+
+    /**
+     * Возраст животного
+     */
     private int age;
+    /**
+     * Фото животного
+     */
     @Lob
     private byte[] photo;
+
+    /**
+     * Поле статуса усыновления
+     */
     private boolean isAdopted;
 
     public Pet() {

@@ -17,6 +17,7 @@ import pro.sky.courseworktelegrambot.entities.Pet;
 import pro.sky.courseworktelegrambot.entities.State;
 import pro.sky.courseworktelegrambot.entities.StateButton;
 import pro.sky.courseworktelegrambot.entities.User;
+import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.CatRepository;
 import pro.sky.courseworktelegrambot.repositories.DogRepository;
 import pro.sky.courseworktelegrambot.repositories.StateRepository;
@@ -27,6 +28,10 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.replace;
 //import pro.sky.courseworktelegrambot.config.BotConfig;
+
+/**
+ * Унаследуем TelegramBot от метод TelegramLongPollingBot, который не требует сертификатов шифрования и запускаться может с любой машины
+ */
 
 @Slf4j
 @Service
@@ -52,11 +57,27 @@ public class TelegramBot extends TelegramLongPollingBot {
         return (shelterId.equals("Dog")) ? dogRepository : catRepository;
     }
 
-    private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
-    //остальные будут приходить вместе с пользователем при извлечении его из репозитория
-    private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
-    private State afterShelterChoiceState;  //состояние после выбора приюта.
-                              // Нужно, если решим кнопки приютов создавать из табл Shelter
+
+    /**
+     * Начальное состояние для новых пользователей извлечем заранее,
+     * остальные будут приходить вместе с пользователем при извлечении его из репозитория
+     */
+    private State initialState;
+
+    /**
+     * Если пришло сообщение, не соответствующее кнопкам
+     */
+    private State badChoiceState;
+    /**
+     * Состояние после выбора приюта.
+     */
+    private State afterShelterChoiceState;
+
+
+    /**
+     * Создание кнопок приюта из таблицы Shelter
+     */
+    // Нужно, если решим кнопки приютов создавать из табл Shelter
     @PostConstruct
     public void initStates() {
         initialState = stateRepository.findById("Shelter").get();
@@ -64,8 +85,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         afterShelterChoiceState = stateRepository.findById("Stage").get();
     }
 
+
     private final String returnButtonForTextInput = "Назад к кнопкам";
-    //Для состояний ожидания ввода текста создадим заранее клавиатуру. Получилось одной строкой
+
+    /**
+     * Для состояний ожидания ввода текста создадим заранее клавиатуру. Получилось одной строкой
+     */
     private final List<KeyboardRow> keyboardForTextInput =
             Collections.singletonList(new KeyboardRow(
                     Collections.singletonList(new KeyboardButton(
@@ -87,6 +112,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         return token;//botConfig.getBotToken();
     }
 
+    /**
+     * @param update Кчаждое такое сообщение обрабатывается библиотекой и приходит
+     *               в метод OnUpdateReceived(Update update) объектом Update
+     */
     @Override
     public void onUpdateReceived(Update update) {
         if (!update.hasMessage()) return;
@@ -147,7 +176,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //при посылке подчеркивания возникает ошибка
         //[400] Bad Request: can't parse entities: Can't find end of the entity starting at byte offset - место подчеркивания
         //поэтому заменяю подчеркивания на тире
-        sendMessage.setText(replace(textToSend,"_","_"));
+        sendMessage.setText(replace(textToSend, "_", "_"));
         if (replyKeyboardMarkup != null) {
             sendMessage.enableMarkdown(true);
             sendMessage.setReplyMarkup(replyKeyboardMarkup);
@@ -162,13 +191,18 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    /**
+     * Отправляет user сообщение
+     * @param user     Идентификатор юзера, кому нужно отправить сообщение.
+     * @param text Текст сообщения, который следует отправить.
+     */
     public void sendMessageToUser(User user, String text, int replyToMessageId) {
         //задача - послать юзеру текст, но снабдить его кнопками в соответствии с состоянием
         //этом метод вызываем откуда угодно и любой момент общения с ботом,
         //например, после получения ответа от волонтера
         //если текст в параметре пустой, то используется текст состояния из State
         State state = user.getState();
-        if (text==null) text = state.getText();
+        if (text == null) text = state.getText();
 
         //т.е. можно посылать все что угодно и сколько угодно раз с помощью SendMessage,
         //но завершать переписку надо обязательно через sendMessageToUser(user, null, 0)
@@ -179,8 +213,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<KeyboardRow> keyboard;
         if (state.isTextInput()) {
             keyboard = keyboardForTextInput; //прикрепим только кнопку Назад к кнопкам
-        //else if (state.equals(initialState)) {
-        //    //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
+            //else if (state.equals(initialState)) {
+            //    //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
         } else {
             //если не текстовый ввод и не список приютов,
             //то должны быть кнопки в таблице state_button. Делаем спец клавиатуру
@@ -199,7 +233,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         buttons.stream()
                                 .filter(button -> button.getRow() == row
                                         && (button.getShelterId() == null
-                                            || button.getShelterId().equals(user.getShelterId())))
+                                        || button.getShelterId().equals(user.getShelterId())))
                                 .sorted(Comparator.comparingInt(StateButton::getCol))
                                 .forEach(button -> keyboardRow.add(button.getCaption()));
                         customKeyboard.add(keyboardRow);
@@ -220,9 +254,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 
     private void goToInitialState(User user) {
-    //Сообщение берем из initialState
-    //а кнопки из shelter.name
-    //sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
+        //Сообщение берем из initialState
+        //а кнопки из shelter.name
+        //sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
     }
 
     private void goToNextState(User user, State oldState) {
@@ -233,7 +267,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (state.getId().equals("AnimalList")) showAnimalList(user);
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
+        if (buttons.isEmpty() && !state.isTextInput() && !state.equals(initialState)) {
             //если кнопок нет и нет состояния текстового ввода и не список приютов
             //возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
@@ -258,13 +292,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                 user.setState(badChoiceState);
                 return;
             }
-            user.setShelterId((textFromUser.equals("Собаки"))?"Dog":"Cat");
+            user.setShelterId((textFromUser.equals("Собаки")) ? "Dog" : "Cat");
             user.setState(afterShelterChoiceState);
             return;
         }
         List<StateButton> buttons = user.getState().getButtons();
         for (StateButton button : buttons) {
-            if (button.getCaption().equals(textFromUser)){
+            if (button.getCaption().equals(textFromUser)) {
                 user.setState(button.getNextState());
                 return;
             }

@@ -3,20 +3,38 @@ package pro.sky.courseworktelegrambot.entities;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Objects;
+
 /**
- * Object Report
+ * Класс Report является родительским классом, дочерние CatReport и DogReport,
+ * Имеет свойства <b>id</b>, <b>adoptionID</b> , <b reportDate</b> , <b>photo</b> , <b>text</b> >
  */
 @MappedSuperclass
 public abstract class Report {
+    /**
+     * Уникальное значение, которое присваивается в ходе предоставлении отчета.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected int id;
-    private int adoptionId; // ID усыновления
-    private LocalDate reportDate; // дата отчета
+
+    /**
+     * ID усыновления
+     */
+    private int adoptionId;
+    /**
+     * дата отчета
+     */
+    private LocalDate reportDate;
+    /**
+     * фото отчета
+     */
     @Lob
-    private byte[] photo; // фото отчета
+    private byte[] photo;
+    /**
+     * комментарии отчета
+     */
     @Lob
-    private byte[] text; // комментарий отчета
+    private byte[] text;
 
     public Report(int adoptionId, LocalDate reportDate, byte[] photo, byte[] text) {
         this.adoptionId = adoptionId;
@@ -56,11 +74,11 @@ public abstract class Report {
         this.photo = photo;
     }
 
-    public byte[]  getText() {
+    public byte[] getText() {
         return text;
     }
 
-    public void setText(byte[]  text) {
+    public void setText(byte[] text) {
         this.text = text;
     }
 

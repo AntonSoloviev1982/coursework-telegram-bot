@@ -6,18 +6,37 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
 
+/**
+ * Класс User Описывает объект Пользователь
+ * Имеет свойства <b>id</b>, <b>name</b> , <b>shelterID</b> , <b>state</b> , <b>previousState</b> , <b>stateTime</b>
+ */
 @Entity
 @Table(name = "users")
 public class User {
-    @Id
-    private long id; //id чата
 
+    /**
+     * id чата
+     */
+    @Id
+    private long id;
+    /**
+     * имя
+     */
     private String name;
     private String shelterId;
+    /**
+     * текущее состояние
+     */
     @ManyToOne
     private State state;
+    /**
+     * предыдущее состояние
+     */
     @ManyToOne
     private State previousState;
+    /**
+     * текущее время состояния
+     */
     private LocalDateTime stateTime;
 
     public User(long id, String name, State state) {  //для создания нового
@@ -25,6 +44,7 @@ public class User {
         this.name = name;
         this.state = state;
     }
+
     public User() {  //для JPA репозитория
     }
 

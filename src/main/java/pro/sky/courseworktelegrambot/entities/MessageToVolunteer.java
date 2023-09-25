@@ -4,24 +4,47 @@ import javax.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Класс MessageToVolunteer
+ * Имеет свойства <b>id</b> , <b>chatID</b> , <b>questionTime</b> , <b>question</b> , <b>answerTime</b> <b>answer</b>
+ */
+
 @Entity
 @Table(name = "message_to_volunteer")
 public class MessageToVolunteer {
-
+    /**
+     * Уникальное значение, которое присваивается в ходе чата.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
+    /**
+     * Для каждой беседы между юзером и Ботом  создаем чат-комнату и
+     * для ее идентификации генерируем уникальный chatId
+     */
     long chatId;
-
+    /**
+     * Отслеживание вопросов по времени
+     * Имеет тип {@link LocalDateTime}
+     */
     private LocalDateTime questionTime;
-
+    /**
+     * Текст вопросов
+     */
     private String question;
-
+    /**
+     * Отслеживание ответов по времени
+     * Имеет тип {@link LocalDateTime}
+     */
     private LocalDateTime answerTime;
-
+    /**
+     * Текст ответов
+     */
     private String answer;
 
+    /**
+     * Отслеживание по времени
+     */
     private LocalDateTime sentTime;
 
 

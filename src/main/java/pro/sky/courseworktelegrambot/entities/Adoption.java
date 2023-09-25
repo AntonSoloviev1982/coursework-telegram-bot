@@ -7,16 +7,40 @@ import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * Класс Adoptoin является родительским классом, дочерние CatAdoption и DogAdoption.
+ * Имеет свойства <b>id</b>, <b>userID</b> , <b>petID</b> , <b>date</b> , <b>trialDate</b> , <b>trialDecision</b>
+ */
+
 @MappedSuperclass
 public abstract class Adoption {
+    /**
+     * Уникальное значение, которое присваивается в ходе усыновления.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private long userId; //усыновитель
-    private int petId; //питомец
-    private LocalDateTime date; //дата усыновления
-    private LocalDateTime trialDate; //дата окончания испытательного срока
-    private int trialDecision; //количество дополнительных дней
+    /**
+     * ID Усыновителя
+     */
+    private long userId;
+    /**
+     * ID питомца
+     */
+    private int petId;
+    /**
+     * Дата усыновления
+     */
+    private LocalDateTime date;
+    /**
+     * Дата окончания испытательного срока
+     */
+    private LocalDateTime trialDate;
+    /**
+     * Количество дополнительных дней
+     */
+    private int trialDecision;
+
 
     public Adoption() {
     }

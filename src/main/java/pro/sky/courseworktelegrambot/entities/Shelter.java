@@ -2,27 +2,85 @@ package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.*;
 
+/**
+ * Класс Shelter. Описывает объект приюта
+ * Имеет свойства <b>id</b>, <b>name</b> , <b>information</b> , <b>timetable</b>,
+ * <b>address</b> , <b>security</b>, <b>safetyPrecautions</b>, <b>rules</b>,
+ * <b>documents</b>, <b>transportation</b>, <b>childAccomodation</b>,
+ * <b>adultAccomodation</b>, <b>invalidAccomodation</b>, <b>communication</b>, <b>cynologists</b>,
+ * <b>refusalReasons</b>,
+ */
+
 @Entity
 @Table(name = "shelter")
 public class Shelter {
-
+    /**
+     * Уникальное значение, которое присваивается при создании нового приюта.
+     */
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private String id;
+    /**
+     * Название приюта
+     */
     private String name;
+    /**
+     * Краткая информация о приюте
+     */
     private String information;
+    /**
+     * график работы
+     */
     private String timetable;
+    /**
+     * адресс приюта
+     */
     private String address;
+    /**
+     * безопасность
+     */
     private String security;
+    /**
+     * Техника безопасности
+     */
     private String safetyPrecautions;
+
+    /**
+     * Правила
+     */
     private String rules;
+    /**
+     * Документы приюта
+     */
     private String documents;
+    /**
+     * Услуги по перевозки
+     */
     private String transportation;
+    /**
+     * отделение молодых питомцев
+     */
     private String childAccomodation;
+    /**
+     * отделение взрослых питомцев
+     */
     private String adultAccomodation;
+    /**
+     * отделение питомцев с инвалидностью
+     */
     private String invalidAccomodation;
+    /**
+     * как связаться с приютом
+     */
     private String communication;
+    /**
+     * ответственное лицо за воспитание и уход питомца
+     */
     private String cynologists;
+    /**
+     * причина отказа
+     */
     private String refusalReasons;
 
 

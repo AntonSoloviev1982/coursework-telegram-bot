@@ -3,6 +3,7 @@ package pro.sky.courseworktelegrambot.entities;
 import javax.persistence.*;
 import java.util.List;
 
+
 @Entity
 public class State {
     @Id
