@@ -83,8 +83,8 @@ public class ReportService {
                     report = new CatReport(adoption, date, photo, text);
                 } else {
                     report = reportList.get(0);
-                    if (photo == null) report.setPhoto(photo);
-                    if (text == null) report.setText(text);
+                    if (photo != null) report.setPhoto(photo);
+                    if (text != null) report.setText(text);
                 }
                 return catReportRepository.save(report);
             }
@@ -92,16 +92,19 @@ public class ReportService {
     }
 
     public Report getReportById(String shelterId, int reportId) {
+        shelterService.checkShelterId(shelterId);
         return reportRepository(shelterId).findById(reportId).orElseThrow();
     }
 
     public Report deleteReportById(String shelterId, int reportId) {
+        shelterService.checkShelterId(shelterId);
         Report report = getReportById(shelterId, reportId);
         reportRepository(shelterId).deleteById(reportId);
         return report;
     }
 
     public List<Report> getAllReportsByDate(String shelterId, LocalDate date){
+        shelterService.checkShelterId(shelterId);
         if (shelterId.equals("Dog")) {
             return List.copyOf(dogReportRepository.findByDate(date));
         } else {
@@ -110,6 +113,7 @@ public class ReportService {
     }
 
     public List<Report> getAllReports(String shelterId){
+        shelterService.checkShelterId(shelterId);
         return List.copyOf(reportRepository(shelterId).findAll());
     }
 

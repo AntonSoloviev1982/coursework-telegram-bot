@@ -7,8 +7,10 @@ import java.util.Objects;
 /**
  * Object Pet
  */
+//Класс не абстрактный.
+//Объекты этого класса Spring будет собирать из тела запросов на создание и обновление
 @MappedSuperclass
-public abstract class Pet {
+public class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -19,19 +21,13 @@ public abstract class Pet {
     private byte[] photo;
     private boolean isAdopted;
 
-    public Pet() {
-    }
-
-    public Pet(String name, String breed, int age, byte[] photo) {
-        this.name = name;
-        this.breed = breed;
-        this.age = age;
-        this.photo = photo;
-        this.isAdopted = false;
-    }
+    //конструкторы не нужны, создавать будет Spring из запросов
 
     public int getId() {
         return id;
+    }
+    public void setId(int id) { //для преобразования из Pet в Dog или Cat
+        this.id = id;
     }
 
     public String getName() {
@@ -66,12 +62,16 @@ public abstract class Pet {
         this.photo = photo;
     }
 
+    public boolean getHasPhoto() {
+        return photo != null;
+    }
+
     public boolean isAdopted() {
         return isAdopted;
     }
 
     public void setAdopted(boolean adopted) {
-        isAdopted = adopted;
+        this.isAdopted = adopted;
     }
 
     @Override
@@ -94,7 +94,6 @@ public abstract class Pet {
                 ", name='" + name + '\'' +
                 ", breed='" + breed + '\'' +
                 ", age=" + age +
-                ", photo=" + Arrays.toString(photo) +
                 ", isAdopted=" + isAdopted +
                 '}';
     }
