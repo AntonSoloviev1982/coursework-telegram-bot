@@ -98,8 +98,9 @@ public class ShelterService {
 
     /**
      * Получает необходимое значение поля из объекта Shelter, находящегося в листе shelters.
-     * @param id                идентификатор объекта Shelter.
-     * @param informationType   тип информации о приюте..
+     *
+     * @param id              идентификатор объекта Shelter.
+     * @param informationType тип информации о приюте..
      * @return возвращает нужную информацию о приюте.
      * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
      */
@@ -130,9 +131,10 @@ public class ShelterService {
 
     /**
      * Изменяет значение типа информации (поля) о приюте. Изменения записываются в лист shelters.
-     * @param id                идентификатор объекта Shelter.
-     * @param informationType   тип информации о приюте..
-     * @param newInformation    новая информация.
+     *
+     * @param id              идентификатор объекта Shelter.
+     * @param informationType тип информации о приюте..
+     * @param newInformation  новая информация.
      * @return возвращает обновленный объект Shelter.
      * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
      */
@@ -157,7 +159,14 @@ public class ShelterService {
         return shelter;
     }
 
-    //для проверки параметра API запросов
+
+    /**
+     * Метод предназначен для проверки API запросов
+     *
+     * @param shelterId идентификатор объекта Shelter.
+     * @throws ShelterNotFoundException выбрасывается если базовое поле не найдено.
+     */
+
     public void checkShelterId(String shelterId) {
         //если shelterId в коллекции не найдется, то бросаем исключение
         if (!shelters.stream().map(Shelter::getId).toList().contains(shelterId)) {

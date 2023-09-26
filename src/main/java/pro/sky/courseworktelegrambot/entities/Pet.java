@@ -16,6 +16,9 @@ public class Pet {
     private int id;
     private String name;
     private String breed;
+    /**
+     * Возраст животного
+     */
     private int age;
     @Lob
     private byte[] photo;
