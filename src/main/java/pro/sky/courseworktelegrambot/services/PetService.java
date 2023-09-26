@@ -7,20 +7,18 @@ import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.Cat;
 import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.Pet;
-import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
+import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.CatRepository;
 import pro.sky.courseworktelegrambot.repositories.DogRepository;
-import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 
 /**
  * Сервис управления данными питомца
  * В этом сервисе находятся методы удаления, создания, и
- * обновления данных о питомце (собаке или кошки)
+ * обновления данных о питомце (собаке или кошке)
  */
 @Service
 public class PetService {
@@ -36,17 +34,22 @@ public class PetService {
         this.shelterService = shelterService;
     }
 
+    //из такого репозитория удается прочитать, возвращается Pet
+    //но в него ничего не удается сохранить
     private JpaRepository<? extends Pet, Integer> petRepository(String shelterId) {
         return (shelterId.equals("Dog")) ? dogRepository : catRepository;
     }
 
     /**
-     * Метод создает систему усыновления и сохраняет данные в таблицу Adoption
+     * Метод создает нового питомца (собаку или кошку) в БД
+     * на основе объекта Pet, получаемого из тела http-запроса.
+     * Поле id переданного о объекта игнорируется
      * Используется метод репозитория {@link JpaRepository#save(Object)}
      *
      * @param shelterId идентификатор приюта.
      * @param pet       данные о питомце
-     * @return cat или dog
+     * @return Pet
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      */
     public Pet createPet(String shelterId, Pet pet) {
         shelterService.checkShelterId(shelterId);
@@ -61,30 +64,37 @@ public class PetService {
         }
     }
     /**
-     * Метод создает систему усыновления и сохраняет данные в таблицу Adoption
+     * Метод возвращает данные о питомце
      * Используется метод репозитория {@link JpaRepository#findById(Object)}
      *
      * @param shelterId идентификатор приюта.
-     * @param id     индификатор питомца который вводит пользователь
-     * @throws  EntityNotFoundException
+     * @param id        индификатор питомца, данные которого необходимо вернуть
+     * @throws ShelterNotFoundException если id приюта не найден в базе
+     * @throws EntityNotFoundException если id питомца не найден в базе
      */
     public Pet getPet(String shelterId, int id) {
+        shelterService.checkShelterId(shelterId);
         return petRepository(shelterId).findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Pet with id " + id + " in shelter " + shelterId + " not found"));
     }
     /**
-     * Метод создает систему усыновления и сохраняет данные в таблицу Adoption
+     * Метод обновляет данные о питомце в БД, на основе переданного объекта Pet
      * Используется метод репозитория {@link JpaRepository#save(Object)}
      * @param shelterId идентификатор приюта.
-     * @param pet    данные о питомце которые нужно обновить
-     * @return  сохраненные данные питомца
+     * @param pet       данные о питомце которые нужно обновить по его id
+     * @return          сохраненные данные питомца
+     * @throws ShelterNotFoundException если id приюта не найден в базе
+     * @throws EntityNotFoundException если id питомца не найден в базе
      * */
     public Pet updatePet(String shelterId, Pet pet) {
-        //Dog dog=(Dog)pet;  //Pet cannot be cast to class Dog
+        //Dog dog=(Dog)pet;  //Pet cannot be cast to class Dog. Поэтому вызываем new
         shelterService.checkShelterId(shelterId);
+        //если ключ не найден или 0, то save создает новую запись.
+        //Поэтому проверим существование id
+        getPet(shelterId, pet.getId());  //если id не существует, здесь будет исключение
         if (shelterId.equals("Dog")) {
-            return dogRepository.save(new Dog(pet));
+            return dogRepository.save(new Dog(pet));  //обертываем Pet
         } else {
             return catRepository.save(new Cat(pet));
         }
@@ -94,10 +104,13 @@ public class PetService {
      * Метод удаляет питомца из БД
      * Используется метод репозитория {@link JpaRepository#deleteById(Object)}
      * @param shelterId идентификатор приюта.
-     * @param id   индификатор питомца который удаляем
-     * @return  сохраненные данные питомца
+     * @param id        индификатор питомца, который удаляем
+     * @return          данные удаленного питомца
+     * @throws ShelterNotFoundException если id приюта не найден в базе
+     * @throws EntityNotFoundException если id питомца не найден в базе
      * */
     public Pet deletePet(String shelterId, int id) {
+        shelterService.checkShelterId(shelterId);
         Pet pet = getPet(shelterId, id);
         petRepository(shelterId).deleteById(id);
         return pet;
@@ -108,8 +121,10 @@ public class PetService {
      * Используется метод репозитория {@link JpaRepository#findAll()}
      * @param shelterId идентификатор приюта.
      * @return  Список питомцев в приюте
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      * */
     public Collection<Pet> getAllPets(String shelterId) {
+        shelterService.checkShelterId(shelterId);
         return List.copyOf(petRepository(shelterId).findAll());
     }
 }

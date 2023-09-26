@@ -66,7 +66,7 @@ public class MessageToVolunteerServiceTest {
         messageToVolunteer3.setQuestionTime(questionTime);
         messageToVolunteer3.setQuestion(question);
         when(messageToVolunteerRepository.save(messageToVolunteer3)).thenReturn(messageToVolunteer3);
-        messageToVolunteerService.create(user3, question);
+        messageToVolunteerService.create(0, user3, question);
         verify(messageToVolunteerRepository, atLeast(1)).save(any());
     }
 
