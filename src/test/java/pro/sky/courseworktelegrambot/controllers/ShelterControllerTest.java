@@ -143,14 +143,15 @@ public class ShelterControllerTest {
         mockMvc.perform(
                         get("/shelter/Cat")
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
+                ).andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("Shelter with id: Cat is not found!");
+                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: Cat is not found!");
                 });
 
     }
 
+    // проблема с методом setInformation (рефлексия)
 //    @Test
 //    public void updateTest() throws Exception {
 //        String informationType = "address";
@@ -189,10 +190,10 @@ public class ShelterControllerTest {
         mockMvc.perform(
                         delete("/shelter/Cat")
                                 .contentType(MediaType.APPLICATION_JSON)
-                ).andExpect(status().isNotFound())
+                ).andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("Shelter with id: Cat is not found!");
+                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: Cat is not found!");
                 });
     }
 

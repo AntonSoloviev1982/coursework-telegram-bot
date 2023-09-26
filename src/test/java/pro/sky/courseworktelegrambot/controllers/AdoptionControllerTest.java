@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
 import pro.sky.courseworktelegrambot.services.AdoptionService;
+import pro.sky.courseworktelegrambot.services.ShelterService;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public class AdoptionControllerTest {
     private CatRepository catRepository;
 
     @MockBean
+    private ShelterRepository shelterRepository;
+
+    @MockBean
     private DogAdoptionRepository dogAdoptionRepository;
 
     @MockBean
@@ -51,6 +55,9 @@ public class AdoptionControllerTest {
 
     @SpyBean
     private AdoptionService adoptionService;
+
+    @SpyBean
+    private ShelterService shelterService;
 
     @InjectMocks
     private AdoptionController adoptionController;
@@ -83,8 +90,8 @@ public class AdoptionControllerTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
-                .findByUserAndPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, pet, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         mockMvc.perform(
@@ -106,7 +113,7 @@ public class AdoptionControllerTest {
     @Test
     public void getAdoptionTest() throws Exception {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         mockMvc.perform(
                 get("/adoption/Dog/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +150,7 @@ public class AdoptionControllerTest {
     @Test
     public void deleteAdoption() throws Exception {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         mockMvc.perform(
                 delete("/adoption/Dog/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,6 +169,7 @@ public class AdoptionControllerTest {
     public void getAllAdoptionsTest() throws Exception {
         List<DogAdoption> adoptions = new ArrayList<>();
         adoptions.add(adoption);
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findAll()).thenReturn(adoptions);
 
         mockMvc.perform(

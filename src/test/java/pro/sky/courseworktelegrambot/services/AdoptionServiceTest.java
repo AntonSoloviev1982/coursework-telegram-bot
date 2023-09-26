@@ -5,12 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.DogAdoption;
 import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.entities.User;
-import pro.sky.courseworktelegrambot.exceptions.UserIsBusyException;
+import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -41,6 +42,9 @@ public class AdoptionServiceTest {
     @Mock
     private CatAdoptionRepository catAdoptionRepository;
 
+    @Mock
+    private ShelterService shelterService;
+
     @InjectMocks
     private AdoptionService adoptionService;
 
@@ -66,11 +70,12 @@ public class AdoptionServiceTest {
         long userId = 123L;
         int petId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
-                .findByUserAndPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, pet, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         assertThat(adoptionService.createAdoption(shelterId, userId, petId, trialDate)).isEqualTo(adoption);
@@ -82,13 +87,14 @@ public class AdoptionServiceTest {
         long userId = 123L;
         int petId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
-                .findByUserAndPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, pet, trialDate, LocalDate.now())).thenReturn(List.of(adoption));
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user, trialDate, LocalDate.now())).thenReturn(List.of(adoption));
 
-        assertThatExceptionOfType(UserIsBusyException.class)
+        assertThatExceptionOfType(UserOrPetIsBusyException.class)
                 .isThrownBy(() -> adoptionService.createAdoption(shelterId, userId, petId, trialDate));
         verify(dogAdoptionRepository, atLeast(0)).save(adoption);
     }
@@ -97,6 +103,7 @@ public class AdoptionServiceTest {
     public void getAdoptionTest() {
         int adoptionId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
 
         assertThat(adoptionService.getAdoption(shelterId, adoptionId)).isEqualTo(adoption);
@@ -107,6 +114,7 @@ public class AdoptionServiceTest {
     public void getAdoptionNegativeTest() {
         int adoptionId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatExceptionOfType(EntityNotFoundException.class)
@@ -118,6 +126,7 @@ public class AdoptionServiceTest {
     public void setTrialDateTest() {
         int adoptionId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
         adoption.setTrialDate(trialDate);
         when(dogAdoptionRepository.save(any())).thenReturn(adoption);
@@ -130,6 +139,7 @@ public class AdoptionServiceTest {
     public void setTrialDateNegativeTest() {
         int adoptionId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatExceptionOfType(EntityNotFoundException.class)
@@ -141,6 +151,7 @@ public class AdoptionServiceTest {
     public void deleteAdoptionTest() {
         int adoptionId = 1;
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
 
         assertThat(adoptionService.deleteAdoption(shelterId, adoptionId)).isEqualTo(adoption);
@@ -150,6 +161,7 @@ public class AdoptionServiceTest {
     @Test
     public void getAllAdoptionsTest() {
         String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         List<DogAdoption> dogAdoptionList = new ArrayList<>();
         dogAdoptionList.add(adoption);
         when(dogAdoptionRepository.findAll()).thenReturn(dogAdoptionList);
