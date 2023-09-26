@@ -55,13 +55,13 @@ public class AdoptionService {
 
         //Проверяем, что заданный User есть
         User user = userRepository.findById(userId).orElseThrow(() ->
-                new EntityNotFoundException("User with id " + id + " not found"));
+                new EntityNotFoundException("User with id " + userId + " not found"));
 
         if (shelterId.equals("Dog")) {
             //Проверяем, что заданный Dog есть
             //Dog pet = dogRepository.getReferenceById(petId);  //так не идет обращение к  БД. Оно будет позже
             Dog pet = dogRepository.findById(petId).orElseThrow(() ->
-                    new EntityNotFoundException("Dog with id " + id + " not found"));
+                    new EntityNotFoundException("Dog with id " + petId + " not found"));
             //Проверяем, что у пользователя нет другого испытательного срока
             if (!dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                     user, trialDate, LocalDate.now()).isEmpty()) {
@@ -76,7 +76,7 @@ public class AdoptionService {
             return dogAdoptionRepository.save(adoption);
         } else {
             Cat pet = catRepository.findById(petId).orElseThrow(() ->
-                    new EntityNotFoundException("Cat with id " + id + " not found"));
+                    new EntityNotFoundException("Cat with id " + petId + " not found"));
             if (!catAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                     user, trialDate, LocalDate.now()).isEmpty()) {
                 throw new UserOrPetIsBusyException();
