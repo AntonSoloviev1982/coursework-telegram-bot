@@ -16,7 +16,7 @@ import pro.sky.courseworktelegrambot.services.FeedbackRequestService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/feedback_request")
+@RequestMapping("feedback_request")
 @Tag(name = "FeedbackRequest")
 public class FeedbackRequestController {
 
@@ -39,7 +39,7 @@ public class FeedbackRequestController {
                     )
             }
     )
-    @GetMapping("/waiting_list")
+    @GetMapping("waiting_list")
     public List<FeedbackRequest> getWaitingList() {
         return feedbackRequestService.getWaitingList();
     }
@@ -61,7 +61,7 @@ public class FeedbackRequestController {
                     )
             }
     )
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<FeedbackRequest> getFeedbackRequest(
             @Parameter(description = "Идентификатор объекта") @PathVariable("id") int id) {
         return ResponseEntity.ok(feedbackRequestService.getFeedbackRequest(id));
@@ -79,7 +79,7 @@ public class FeedbackRequestController {
                     )
             }
     )
-    @PutMapping("/{id}")
+    @PutMapping("{id}")
     public void updateExecutionTime(@Parameter(description = "Идентификатор объекта") @PathVariable("id") int id) {
         feedbackRequestService.updateExecutionTime(id);
     }
