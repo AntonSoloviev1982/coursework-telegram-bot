@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import pro.sky.courseworktelegrambot.entities.Shelter;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 import pro.sky.courseworktelegrambot.services.ShelterService;
 
@@ -51,7 +52,7 @@ public class ShelterControllerTest {
     @BeforeEach
     public void beforeEach() {
         shelter = new Shelter();
-        shelter.setId("Dog");
+        shelter.setId(ShelterId.DOG);
         shelter.setName("Dogs");
         shelter.setInformation("information");
         shelter.setTimetable("timetable");
@@ -106,7 +107,7 @@ public class ShelterControllerTest {
 
     @Test
     public void getTest() throws Exception {
-        when(shelterRepository.findById(eq("Dog"))).thenReturn(Optional.of(shelter));
+        when(shelterRepository.findById(eq(ShelterId.DOG))).thenReturn(Optional.of(shelter));
 
         mockMvc.perform(
                         get("/shelter/Dog")
@@ -135,11 +136,11 @@ public class ShelterControllerTest {
                     assertThat(shelter1.getCynologists()).isEqualTo(shelter.getCynologists());
                     assertThat(shelter1.getRefusalReasons()).isEqualTo(shelter.getRefusalReasons());
                 });
-        verify(shelterRepository, new Times(1)).findById(eq("Dog"));
+        verify(shelterRepository, new Times(1)).findById(eq(ShelterId.DOG));
 
         //not found checking
 
-        when(shelterRepository.findById(eq("Cat"))).thenReturn(Optional.empty());
+        when(shelterRepository.findById(eq(ShelterId.CAT))).thenReturn(Optional.empty());
         mockMvc.perform(
                         get("/shelter/Cat")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -175,17 +176,17 @@ public class ShelterControllerTest {
 
     @Test
     public void deleteTest() throws Exception {
-        when(shelterRepository.findById(eq("Dog"))).thenReturn(Optional.of(shelter));
+        when(shelterRepository.findById(eq(ShelterId.DOG))).thenReturn(Optional.of(shelter));
 
         mockMvc.perform(
                 delete("/shelter/Dog")
         ).andExpect(status().isOk());
-        verify(shelterRepository, new Times(1)).deleteById(eq("Dog"));
+        verify(shelterRepository, new Times(1)).deleteById(eq(ShelterId.DOG));
         Mockito.reset(shelterRepository);
 
         //not found checking
 
-        when(shelterRepository.findById(eq("Cat"))).thenReturn(Optional.empty());
+        when(shelterRepository.findById(eq(ShelterId.CAT))).thenReturn(Optional.empty());
 
         mockMvc.perform(
                         delete("/shelter/Cat")

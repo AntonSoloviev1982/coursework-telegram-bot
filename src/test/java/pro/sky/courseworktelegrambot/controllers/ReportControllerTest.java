@@ -12,10 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import pro.sky.courseworktelegrambot.entities.Dog;
-import pro.sky.courseworktelegrambot.entities.DogAdoption;
-import pro.sky.courseworktelegrambot.entities.DogReport;
-import pro.sky.courseworktelegrambot.entities.User;
+import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
@@ -64,7 +61,7 @@ public class ReportControllerTest {
 
     @BeforeEach
     public void beforeEach() {
-        shelterId = "Dog";
+        ShelterId shelterId = ShelterId.DOG;
         user = new User();
         user.setId(1L);
         user.setName("Ivan");
@@ -78,7 +75,7 @@ public class ReportControllerTest {
 
     @Test
     public void getReportTest() throws Exception {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
 
         mockMvc.perform(
@@ -97,7 +94,7 @@ public class ReportControllerTest {
 
     @Test
     public void deleteReport() throws Exception {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
 
         mockMvc.perform(
@@ -116,7 +113,7 @@ public class ReportControllerTest {
 
     @Test
     public void getAllReportsTest() throws Exception {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         List<DogReport> dogReportList = List.of(report);
         when(dogReportRepository.findAll()).thenReturn(dogReportList);
 
@@ -138,7 +135,7 @@ public class ReportControllerTest {
     @Test
     public void getReportsByDate() throws Exception {
         LocalDate date = LocalDate.of(2023, 9, 27);
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         List<DogReport> dogReportList = List.of(report);
         when(dogReportRepository.findByDate(date)).thenReturn(dogReportList);
 

@@ -86,7 +86,7 @@ public class AdoptionControllerTest {
     public void createAdoptionTest() throws Exception {
         long userId = 123L;
         int petId = 1;
-        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
@@ -116,7 +116,7 @@ public class AdoptionControllerTest {
     @Test
     public void getAdoptionTest() throws Exception {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         mockMvc.perform(
                 get("/adoption/Dog/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +153,7 @@ public class AdoptionControllerTest {
     @Test
     public void deleteAdoption() throws Exception {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         mockMvc.perform(
                 delete("/adoption/Dog/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -172,7 +172,7 @@ public class AdoptionControllerTest {
     public void getAllAdoptionsTest() throws Exception {
         List<DogAdoption> adoptions = new ArrayList<>();
         adoptions.add(adoption);
-        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
+        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogAdoptionRepository.findAll()).thenReturn(adoptions);
 
         mockMvc.perform(

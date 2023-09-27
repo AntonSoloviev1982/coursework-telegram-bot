@@ -43,12 +43,12 @@ public class ReportServiceTest {
     private Dog pet;
     private LocalDate trialDate;
     private DogReport report;
-    private String shelterId;
+    private ShelterId shelterId;
 
 
     @BeforeEach
     public void beforeEach() {
-        shelterId = "Dog";
+        shelterId = ShelterId.DOG;
         user = new User();
         user.setId(1L);
         user.setName("Ivan");

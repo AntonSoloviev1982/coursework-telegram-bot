@@ -28,6 +28,10 @@ public abstract class Report {
     public Report() {
     }
 
+    public void setId(int id) {
+        this.id = id;
+    } // для тестов
+
     public int getId() {
         return id;
     }
