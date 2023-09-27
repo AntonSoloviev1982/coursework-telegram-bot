@@ -1,7 +1,8 @@
 package pro.sky.courseworktelegrambot.services;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+//import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -14,75 +15,79 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.replace;
-//import pro.sky.courseworktelegrambot.config.BotConfig;
 
-@Slf4j
+//@Slf4j
 @Service
 public class TelegramBot extends TelegramLongPollingBot {
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
-    //private final BotConfig botConfig;
-
-    //public TelegramBot(BotConfig botConfig) {
-    //    this.botConfig = botConfig;
-    //}
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private StateRepository stateRepository;
-
-    @Autowired
-    private ShelterService shelterService;
-
-    @Autowired
-    private FeedbackRequestService feedbackRequestService;
-    @Autowired
-    private MessageToVolunteerService messageToVolunteerService;
-    @Autowired
-    private ReportService reportService;
-    @Autowired
-    private DogRepository dogRepository;
-    @Autowired
-    private CatRepository catRepository;
-    @Autowired
-    private DogAdoptionRepository dogAdoptionRepository;
-    @Autowired
-    private CatAdoptionRepository catAdoptionRepository;
-    @Autowired
-    private DogReportRepository dogReportRepository;
-    @Autowired
-    private CatReportRepository catReportRepository;
-
-    private JpaRepository<? extends Pet, Integer> petRepository(String shelterId) {
-        return (shelterId.equals("Dog")) ? dogRepository : catRepository;
+    private final UserRepository userRepository;
+    private final StateRepository stateRepository;
+    private final ShelterService shelterService;
+    private final FeedbackRequestService feedbackRequestService;
+    private final MessageToVolunteerRepository messageToVolunteerRepository;
+    private final ReportService reportService;
+    private final DogRepository dogRepository;
+    private final CatRepository catRepository;
+    private final DogAdoptionRepository dogAdoptionRepository;
+    private final CatAdoptionRepository catAdoptionRepository;
+    private final DogReportRepository dogReportRepository;
+    private final CatReportRepository catReportRepository;
+    public TelegramBot(UserRepository userRepository,
+                       StateRepository stateRepository,
+                       ShelterService shelterService,
+                       FeedbackRequestService feedbackRequestService,
+                       MessageToVolunteerRepository messageToVolunteerRepository,
+                       ReportService reportService,
+                       DogRepository dogRepository,
+                       CatRepository catRepository,
+                       DogAdoptionRepository dogAdoptionRepository,
+                       CatAdoptionRepository catAdoptionRepository,
+                       DogReportRepository dogReportRepository,
+                       CatReportRepository catReportRepository) {
+        this.userRepository = userRepository;
+        this.stateRepository = stateRepository;
+        this.shelterService = shelterService;
+        this.feedbackRequestService = feedbackRequestService;
+        this.messageToVolunteerRepository = messageToVolunteerRepository;
+        this.reportService = reportService;
+        this.dogRepository = dogRepository;
+        this.catRepository = catRepository;
+        this.dogAdoptionRepository = dogAdoptionRepository;
+        this.catAdoptionRepository = catAdoptionRepository;
+        this.dogReportRepository = dogReportRepository;
+        this.catReportRepository = catReportRepository;
     }
 
+    private JpaRepository<? extends Pet, Integer> petRepository(ShelterId shelterId) {
+        return (shelterId == ShelterId.DOG) ? dogRepository : catRepository;
+    }
     private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
     private State afterShelterChoiceState;  //состояние после выбора приюта.
-                              // Нужно, если решим кнопки приютов создавать из табл Shelter
+    // Нужно, если решим кнопки приютов создавать из табл Shelter
     @PostConstruct
     public void initStates() {
-        initialState = stateRepository.findById("Shelter").get();
-        badChoiceState = stateRepository.findById("BadChoice").get();
-        afterShelterChoiceState = stateRepository.findById("Stage").get();
-        messageToVolunteerService.telegramBot=this;
+        initialState = stateRepository.findByNamedState(NamedState.INITIAL_STATE);//.get();
+        badChoiceState = stateRepository.findByNamedState(NamedState.BAD_CHOICE);//.get();
+        afterShelterChoiceState = stateRepository.findByNamedState(NamedState.AFTER_SHELTER_CHOICE_STATE);//.get();
     }
-
-    private final String returnButtonForTextInput = "Назад к кнопкам";
+    
+    private final String RETURN_BUTTON_FOR_TEXT_INPUT = "Назад к кнопкам";
     //Для состояний ожидания ввода текста создадим заранее клавиатуру. Получилось одной строкой
-    private final List<KeyboardRow> keyboardForTextInput =
+    private final List<KeyboardRow> KEYBOARD_FOR_TEXT_INPUT =
             Collections.singletonList(new KeyboardRow(
                     Collections.singletonList(new KeyboardButton(
-                            returnButtonForTextInput))));
+                            RETURN_BUTTON_FOR_TEXT_INPUT))));
 
     @Value("${telegram.bot.name}")
     private String botName;
@@ -102,7 +107,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage()) return;
+        if (!update.hasMessage()) {return;}
         Message message = update.getMessage();
         long chatId = message.getChatId();
         User user = userRepository.findById(chatId).orElse(null);
@@ -122,17 +127,17 @@ public class TelegramBot extends TelegramLongPollingBot {
             //Последующие действия возможно назначат новое состояние
             if (oldState.isTextInput()) {
                 //в сообщении может не быть текста и message.getText() будет null
-                if (returnButtonForTextInput.equals(message.getText())) {
+                if (RETURN_BUTTON_FOR_TEXT_INPUT.equals(message.getText())) {
                     user.setState(user.getPreviousState());
                 } else {
                     try {
                         //хорошо бы сделать рефлексией, т.е. поместить имена методов в табл State
-                        switch (user.getState().getId()) {
+                        switch (user.getState().getNamedState()) {
                             //проверяем, не нужны ли спец действия для определенных состояний
-                            case "MessageToVolonteer" -> createMessageToVolonteer(user, message);
-                            case "FeedbackRequest" -> createFeedbackRequest(user, message);
-                            case "Report" -> acceptReport(user, message);
-                            case "AnimalByNumber" -> showAnimal(user, message);
+                            case MESSAGE_TO_VOLUNTEER -> createMessageToVolonteer(user, message);
+                            case FEEDBACK_REQUEST -> createFeedbackRequest(user, message);
+                            case REPORT -> acceptReport(user, message);
+                            case ANIMAL_BY_NUMBER -> showAnimal(user, message);
                         }
                     } catch (TelegramApiException e) {
                         //при невозможности послать ответ, ничего не делаем
@@ -192,8 +197,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            //log.error("Error occurred: " + e.getMessage());  надо разбираться
-            System.out.println("Error occurred: " + e.getMessage());
+            logger.error("Error occurred: " + e.getMessage());
             throw e;
         }
     }
@@ -206,7 +210,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //например, после получения ответа от волонтераthrows TelegramApiException
         //если текст в параметре пустой, то используется текст состояния из State
         State state = user.getState();
-        if (text==null) text = state.getText();
+        if (text==null) {text = state.getText();}
 
         //т.е. можно посылать все что угодно и сколько угодно раз с помощью SendMessage,
         //но завершать переписку надо обязательно через sendMessageToUser(user, null, 0)
@@ -216,7 +220,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         List<KeyboardRow> keyboard;
         if (state.isTextInput()) {
-            keyboard = keyboardForTextInput; //прикрепим только кнопку Назад к кнопкам
+            keyboard = KEYBOARD_FOR_TEXT_INPUT; //прикрепим только кнопку Назад к кнопкам
         //else if (state.equals(initialState)) {
         //    //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
         } else {
@@ -225,8 +229,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             //для использования переменных в лямбде они должны быть final
             final List<KeyboardRow> customKeyboard = new ArrayList<>();
             final List<StateButton> buttons = state.getButtons();
-            //вывести в лог
-            if (buttons.isEmpty()) System.out.println("State " + state.getId() + " has no button");
+            if (buttons.isEmpty()) {
+                logger.error("State " + state.getId() + " has no button");
+            }
             buttons.stream()
                     .filter(button -> button.getShelterId() == null
                             || button.getShelterId().equals(user.getShelterId()))
@@ -268,11 +273,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         String text = state.getText(); //предстоящее сообщение - текст нового состояния
 
         //Дальше текст может быть подменен в специальных случаях
-        if (state.getId().equals("Report")) {
+        if (state.getNamedState()==NamedState.REPORT) {
             text = reportRequestText(user, oldState, null);
         }
         if (text.startsWith("@")) {
-            String shelterId = user.getShelterId();
+            ShelterId shelterId = user.getShelterId();
             String informationType = text.substring(1);
             try {
                 text = shelterService.getInformation(shelterId, informationType);
@@ -284,16 +289,16 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
-            //если кнопок нет и нет состояния текстового ввода и не список приютов
-            //возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
+        if (buttons.isEmpty()  && !state.isTextInput() && state.getNamedState()!=NamedState.INITIAL_STATE) {
+            //если кнопок нет и не состояние текстового ввода и не список приютов
+            //то возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
             user.setState(oldState);
             //выводим текст нового и кнопки старого состояния
         }
         //бросает TelegramApiException
         sendMessageToUser(user, text, 0);
-        if (state.getId().equals("AnimalList")) showAnimalList(user);  //пока ничего не делает
+        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}  //пока ничего не делает
     }
 
     private void checkButton(User user, Message message) {
@@ -311,7 +316,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 user.setState(badChoiceState);
                 return;
             }
-            user.setShelterId((textFromUser.equals("Собаки"))?"Dog":"Cat");
+            user.setShelterId((textFromUser.equals("Собаки"))?ShelterId.DOG:ShelterId.CAT);
             user.setState(afterShelterChoiceState);
             return;
         }
@@ -325,13 +330,27 @@ public class TelegramBot extends TelegramLongPollingBot {
         user.setState(badChoiceState);
     }
 
+
+    /**
+     * Создает новый объект MessageToVolunteer с пользователем, вопросом от пользователя
+     * , временем когда вопрос был задан. Остальные поля остаются пустыми.
+     *
+     * @param user        Юзер, от которого поступает вопрос.
+     * @param message     Сообщение от пользователя.
+     */
+
     private void createMessageToVolonteer(User user, Message message) {
         if (!message.hasText()) {
             user.setState(badChoiceState);
             return;
         }
         //сохраняем в табл MessageToVolonteer пришедший текст
-        messageToVolunteerService.create(message.getMessageId(), user, message.getText());
+        MessageToVolunteer messageToVolunteer = new MessageToVolunteer();
+        messageToVolunteer.setId(message.getMessageId());
+        messageToVolunteer.setUser(user);
+        messageToVolunteer.setQuestionTime(LocalDateTime.now());
+        messageToVolunteer.setQuestion(message.getText());
+        messageToVolunteerRepository.save(messageToVolunteer);
         //message.getMessageId() - тоже сохраняем
         //чтобы у волонтера была возможность ответить на конкретный вопрос, а не просто послать сообщение
         //состояние не меняем. Пользователь может слать следующие сообщения волонтеру.
@@ -345,7 +364,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
 
         //сохраняем в табл FeedbackRequest пришедший текст
-        feedbackRequestService.save(user, message.getText());
+        feedbackRequestService.createFeedbackRequest(user, message.getText());
 
          user.setState(user.getPreviousState());
         //состояние изменилось, поэтому вызовется goToNextState
@@ -404,7 +423,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         String text = message.getText();
         //проверить, что число
-        int id = Integer.valueOf(text);
+        int id = Integer.parseInt(text);
         JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
         Pet pet = repository.findById(id).orElse(null);
 
@@ -431,9 +450,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (report == null) {  //состояние сдачи отчета - неизвестно. Извлечем его из базы
             //сначала проверим активный испытательный срок
             LocalDate date = LocalDate.now();
-            String shelterId = user.getShelterId();
+            ShelterId shelterId = user.getShelterId();
 
-            if (shelterId.equals("Dog")) {
+            if (shelterId == ShelterId.DOG) {
                 //Ищем у пользователя активный испытательный срок на сегодня
                 List<DogAdoption> adoptionList = dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                         user, date, date);

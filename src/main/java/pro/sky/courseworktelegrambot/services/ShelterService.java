@@ -2,17 +2,14 @@ package pro.sky.courseworktelegrambot.services;
 
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.Shelter;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.exceptions.InformationTypeByShelterNotFoundException;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.
@@ -30,6 +27,12 @@ public class ShelterService {
 
     public ShelterService(ShelterRepository shelterRepository) {
         this.shelterRepository = shelterRepository;
+        //Если в таблице найдутся лишние, несоответствующие перечислению ключи,
+        //то spring не сможет создать этот бин. Будет ошибка
+        //No enum constant pro.sky.courseworktelegrambot.entities.ShelterId.aaa
+        //Если в таблице будут отсутствовать некоторые элементы перечисления
+        //то список shelters будет короче, но это не страшно,
+        //т.к. у пользователя и кнопок для выбора приюта будет меньше
         this.shelters = shelterRepository.findAll();
     }
 
@@ -51,10 +54,11 @@ public class ShelterService {
      * @return возвращает объект Shelter.
      * @throws ShelterNotFoundException Если Shelter с указанным идентификатором не найдено.
      */
-    public Shelter get(String id) {
-        Optional<Shelter> optionalShelter = Optional.ofNullable(id)
-                .flatMap(shelterRepository::findById);
-        return optionalShelter.orElseThrow(() -> new ShelterNotFoundException(id));
+    public Shelter get(ShelterId id) {
+        //Optional<Shelter> optionalShelter = Optional.ofNullable(id)
+        //        .flatMap(shelterRepository::findById);
+        //return optionalShelter.orElseThrow(() -> new ShelterNotFoundException(id));
+        return shelterRepository.findById(id).orElseThrow(() -> new ShelterNotFoundException(id.toString()));
     }
 
     /**
@@ -66,7 +70,7 @@ public class ShelterService {
      * @return возвращает обновленный объект Shelter.
      * @throws ShelterNotFoundException если объект Shelter с указанным идентификатором не найден.
      */
-    public Shelter update(String id, String informationType, String newInformation) throws IllegalAccessException {
+    public Shelter update(ShelterId id, String informationType, String newInformation) throws IllegalAccessException {
         Shelter shelter = setInformation(id, informationType, newInformation);
         shelterRepository.save(shelter);
         return shelter;
@@ -78,12 +82,12 @@ public class ShelterService {
      * @param id идентификатор объекта Shelter для удаления.
      * @throws ShelterNotFoundException Если объект Shelter с указанным идентификатором не найден.
      */
-    public void delete(String id) {
+    public void delete(ShelterId id) {
         Optional<Shelter> shelterOptional = shelterRepository.findById(id);
         if (shelterOptional.isPresent()) {
             shelterRepository.deleteById(id);
         } else {
-            throw new ShelterNotFoundException(id);
+            throw new ShelterNotFoundException(id.toString());
         }
     }
 
@@ -98,12 +102,13 @@ public class ShelterService {
 
     /**
      * Получает необходимое значение поля из объекта Shelter, находящегося в листе shelters.
-     * @param id                идентификатор объекта Shelter.
-     * @param informationType   тип информации о приюте..
+     *
+     * @param id              идентификатор объекта Shelter.
+     * @param informationType тип информации о приюте..
      * @return возвращает нужную информацию о приюте.
      * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
      */
-    public String getInformation(String id, String informationType)
+    public String getInformation(ShelterId id, String informationType)
             throws IllegalAccessException {
         Shelter shelter = null;
         for (Shelter myShelter : shelters) {
@@ -111,8 +116,9 @@ public class ShelterService {
                 shelter = myShelter;
             }
         }
+
         if (shelter == null) {
-            throw new ShelterNotFoundException(id);
+            throw new ShelterNotFoundException(id.toString());
         }
         Field field = null;
         Field[] fields = shelter.getClass().getDeclaredFields();
@@ -130,13 +136,14 @@ public class ShelterService {
 
     /**
      * Изменяет значение типа информации (поля) о приюте. Изменения записываются в лист shelters.
-     * @param id                идентификатор объекта Shelter.
-     * @param informationType   тип информации о приюте..
-     * @param newInformation    новая информация.
+     *
+     * @param id              идентификатор объекта Shelter.
+     * @param informationType тип информации о приюте..
+     * @param newInformation  новая информация.
      * @return возвращает обновленный объект Shelter.
      * @throws IllegalAccessException выбрасывается если базовое поле не доступно.
      */
-    public Shelter setInformation(String id, String informationType, String newInformation)
+    public Shelter setInformation(ShelterId id, String informationType, String newInformation)
             throws IllegalAccessException {
         Shelter shelter = null;
         for (Shelter myShelter : shelters) {
@@ -145,7 +152,7 @@ public class ShelterService {
             }
         }
         if (shelter == null) {
-            throw new ShelterNotFoundException(id);
+            throw new ShelterNotFoundException(id.toString());
         }
         Field[] fields = shelter.getClass().getDeclaredFields();
         for (Field field : fields) {
@@ -157,11 +164,22 @@ public class ShelterService {
         return shelter;
     }
 
-    //для проверки параметра API запросов
-    public void checkShelterId(String shelterId) {
+
+    /**
+     * Метод предназначен для проверки API запросов
+     * Для такого невероятного случая,
+     * когда пришел запрос с валидным элементом перечисления ShelterId,
+     * но в базе такого приюта нет
+     * Проверка была актуальна, когда ShelterId был String
+     *
+     * @param shelterId идентификатор объекта Shelter.
+     * @throws ShelterNotFoundException выбрасывается если базовое поле не найдено.
+     */
+
+    public void checkShelterId(ShelterId shelterId) {
         //если shelterId в коллекции не найдется, то бросаем исключение
         if (!shelters.stream().map(Shelter::getId).toList().contains(shelterId)) {
-            throw new ShelterNotFoundException(shelterId);
+            throw new ShelterNotFoundException(shelterId.toString());
         }
     }
 }

@@ -9,13 +9,14 @@ public class StateButton {
     private String state_id; //в работе не потребуется. Поле существует, только для hibernate
     @Id
     private String caption;
-    @ManyToOne   //(fetch = FetchType.LAZY)
+    @ManyToOne   //по умолчанию (fetch = FetchType.EAGER)
     private State nextState;
     @Column(name="button_row") //имя колонки row запрещено в базе
     private byte row;
     @Column(name="button_col")
     private byte col;
-    private String shelterId;  //если пусто, то для любого приюта. если заполнено, то кнопка только для указанного
+    @Enumerated(EnumType.STRING)
+    private ShelterId shelterId;  //если пусто, то для любого приюта. если заполнено, то кнопка только для указанного
 
     public String getState_id() {  //думаю, никогда не потребуется
         return state_id;
@@ -37,7 +38,7 @@ public class StateButton {
         return col;
     }
 
-    public String getShelterId() {
+    public ShelterId getShelterId() {
         return shelterId;
     }
 }

@@ -3,12 +3,12 @@ package pro.sky.courseworktelegrambot.services;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -36,17 +36,17 @@ public class ReportService {
     //из такого репозитория удается прочитать, возвращается предок
     //но в него ничего не удается сохранить уже при компиляции, при подстановке любого типа возникает
     //method save in interface org.springframework.data.repository.CrudRepository<T,ID> cannot be applied to given types;
-    private JpaRepository<? extends Report, Integer> reportRepository(String shelterId) {
-        return (shelterId.equals("Dog")) ? dogReportRepository : catReportRepository;
+    private JpaRepository<? extends Report, Integer> reportRepository(ShelterId shelterId) {
+        return (shelterId == ShelterId.DOG) ? dogReportRepository : catReportRepository;
     }
 
     public Report saveReport(User user, byte[] photo, byte[] text) {
         //вызывается из бота, волонтер отчеты только читает
 
         LocalDate date = LocalDate.now();
-        String shelterId = user.getShelterId();
+        ShelterId shelterId = user.getShelterId();
 
-        if (shelterId.equals("Dog")) {
+        if (shelterId == ShelterId.DOG) {
             //Ищем у пользователя активный испытательный срок на сегодня
             List<DogAdoption> adoptionList = dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                     user, date, date);
@@ -65,8 +65,8 @@ public class ReportService {
                     report = new DogReport(adoption, date, photo, text);
                 } else {
                     report = reportList.get(0);
-                    if (photo == null) report.setPhoto(photo);
-                    if (text == null) report.setText(text);
+                    if (photo != null) {report.setPhoto(photo);}
+                    if (text != null) {report.setText(text);}
                 }
                 return dogReportRepository.save(report);
             }
@@ -83,36 +83,37 @@ public class ReportService {
                     report = new CatReport(adoption, date, photo, text);
                 } else {
                     report = reportList.get(0);
-                    if (photo != null) report.setPhoto(photo);
-                    if (text != null) report.setText(text);
+                    if (photo != null) {report.setPhoto(photo);}
+                    if (text != null) {report.setText(text);}
                 }
                 return catReportRepository.save(report);
             }
         }
     }
 
-    public Report getReportById(String shelterId, int reportId) {
+    public Report getReportById(ShelterId shelterId, int reportId) {
         shelterService.checkShelterId(shelterId);
-        return reportRepository(shelterId).findById(reportId).orElseThrow();
+        return reportRepository(shelterId).findById(reportId).orElseThrow(() ->
+                new EntityNotFoundException("Report with id " + reportId + " in shelter " + shelterId + " not found"));
     }
 
-    public Report deleteReportById(String shelterId, int reportId) {
+    public Report deleteReportById(ShelterId shelterId, int reportId) {
         shelterService.checkShelterId(shelterId);
         Report report = getReportById(shelterId, reportId);
         reportRepository(shelterId).deleteById(reportId);
         return report;
     }
 
-    public List<Report> getAllReportsByDate(String shelterId, LocalDate date){
+    public List<Report> getAllReportsByDate(ShelterId shelterId, LocalDate date){
         shelterService.checkShelterId(shelterId);
-        if (shelterId.equals("Dog")) {
+        if (shelterId==ShelterId.DOG) {
             return List.copyOf(dogReportRepository.findByDate(date));
         } else {
             return List.copyOf(catReportRepository.findByDate(date));
         }
     }
 
-    public List<Report> getAllReports(String shelterId){
+    public List<Report> getAllReports(ShelterId shelterId){
         shelterService.checkShelterId(shelterId);
         return List.copyOf(reportRepository(shelterId).findAll());
     }

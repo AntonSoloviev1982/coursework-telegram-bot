@@ -1,9 +1,6 @@
 package pro.sky.courseworktelegrambot.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -14,8 +11,9 @@ public class User {
     private long id; //пока не придумали авторизацию, в качестве id пользователя используем id чата
                      //когда будет авторизация, тогда введем отдельно поле chatId
     private String name;
-    private String shelterId;
-    @ManyToOne
+    @Enumerated(EnumType.STRING)
+    private ShelterId shelterId;
+    @ManyToOne  //по умолчанию (fetch = FetchType.EAGER)
     private State state;
     @ManyToOne
     private State previousState;
@@ -55,11 +53,11 @@ public class User {
     }
 
     @JsonIgnore
-    public String getShelterId() {
+    public ShelterId getShelterId() {
         return shelterId;
     }
 
-    public void setShelterId(String shelterId) {
+    public void setShelterId(ShelterId shelterId) {
         this.shelterId = shelterId;
     }
 
