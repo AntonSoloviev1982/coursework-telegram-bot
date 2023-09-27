@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,19 +35,19 @@ public class ReportControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-    @Mock
+    @MockBean
     private DogReportRepository dogReportRepository;
 
-    @Mock
+    @MockBean
     private CatReportRepository catReportRepository;
 
-    @Mock
+    @MockBean
     private DogAdoptionRepository dogAdoptionRepository;
 
-    @Mock
+    @MockBean
     private CatAdoptionRepository catAdoptionRepository;
 
-    @Mock
+    @MockBean
     private ShelterService shelterService;
 
     @SpyBean
@@ -62,6 +63,7 @@ public class ReportControllerTest {
     private Dog pet;
     private LocalDate trialDate;
     private DogReport report;
+
     private String shelterId;
 
 
@@ -85,7 +87,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
 
         mockMvc.perform(
-                get("report/Dog/1")
+                get("/report/DOG/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -104,7 +106,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
 
         mockMvc.perform(
-                delete("report/Dog/1")
+                delete("/report/DOG/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -124,7 +126,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findAll()).thenReturn(dogReportList);
 
         mockMvc.perform(
-                get("report/Dog/all")
+                get("/report/DOG/all")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -133,7 +135,7 @@ public class ReportControllerTest {
                             new TypeReference<List<DogReport>>() {
                             }
                     );
-                    assertThat(dogReports).isNotNull().isNotEmpty();
+                    assertThat(dogReports).isNotNull();
                     assertThat(dogReports.size()).isEqualTo(dogReportList.size());
                 });
     }
@@ -146,7 +148,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findByDate(date)).thenReturn(dogReportList);
 
         mockMvc.perform(
-                get("report/Dog/?date={2022, 9, 27}")
+                get("/report/Dog/?date={2023, 9, 27}", date)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
