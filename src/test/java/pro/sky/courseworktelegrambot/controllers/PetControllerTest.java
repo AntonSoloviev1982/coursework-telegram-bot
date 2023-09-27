@@ -91,12 +91,18 @@ public class PetControllerTest {
 
     @Test
     void getAllPetsTest() throws Exception {
-        Collection<Pet> pets = Arrays.asList(pet);
+        Pet pet1;
+        pet1 = new Pet();
+        pet1.setId(2);
+        pet1.setName("Басик");
+        Collection<Pet> pets = Arrays.asList(pet,pet1);
         when(petService.getAllPets(any(ShelterId.class))).thenReturn(pets);
 
         mockMvc.perform(get("/pet/{shelter_id}/all", "DOG"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Тузик"));
+                .andExpect(jsonPath("$[0].name").value("Тузик"))
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].name").value("Басик"));
     }
 }
