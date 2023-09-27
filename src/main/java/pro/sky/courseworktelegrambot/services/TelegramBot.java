@@ -364,7 +364,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
 
         //сохраняем в табл FeedbackRequest пришедший текст
-        feedbackRequestService.save(user, message.getText());
+        feedbackRequestService.createFeedbackRequest(user, message.getText());
 
          user.setState(user.getPreviousState());
         //состояние изменилось, поэтому вызовется goToNextState
