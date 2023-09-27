@@ -110,7 +110,7 @@ public class ShelterControllerTest {
         when(shelterRepository.findById(eq(ShelterId.DOG))).thenReturn(Optional.of(shelter));
 
         mockMvc.perform(
-                        get("/shelter/Dog")
+                        get("/shelter/DOG")
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -142,12 +142,12 @@ public class ShelterControllerTest {
 
         when(shelterRepository.findById(eq(ShelterId.CAT))).thenReturn(Optional.empty());
         mockMvc.perform(
-                        get("/shelter/Cat")
+                        get("/shelter/CAT")
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: Cat is not found!");
+                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: CAT is not found!");
                 });
 
     }
@@ -179,7 +179,7 @@ public class ShelterControllerTest {
         when(shelterRepository.findById(eq(ShelterId.DOG))).thenReturn(Optional.of(shelter));
 
         mockMvc.perform(
-                delete("/shelter/Dog")
+                delete("/shelter/DOG")
         ).andExpect(status().isOk());
         verify(shelterRepository, new Times(1)).deleteById(eq(ShelterId.DOG));
         Mockito.reset(shelterRepository);
@@ -189,12 +189,12 @@ public class ShelterControllerTest {
         when(shelterRepository.findById(eq(ShelterId.CAT))).thenReturn(Optional.empty());
 
         mockMvc.perform(
-                        delete("/shelter/Cat")
+                        delete("/shelter/CAT")
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: Cat is not found!");
+                    assertThat(responseString).isEqualTo("Shelter not found. Shelter with id: CAT is not found!");
                 });
     }
 

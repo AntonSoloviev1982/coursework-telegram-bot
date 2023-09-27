@@ -36,16 +36,22 @@ public class ReportControllerTest {
     private MockMvc mockMvc;
     @Mock
     private DogReportRepository dogReportRepository;
+
     @Mock
     private CatReportRepository catReportRepository;
+
     @Mock
     private DogAdoptionRepository dogAdoptionRepository;
+
     @Mock
     private CatAdoptionRepository catAdoptionRepository;
+
     @Mock
     private ShelterService shelterService;
+
     @SpyBean
     private ReportService reportService;
+
     @InjectMocks
     private ReportController reportController;
     @Autowired

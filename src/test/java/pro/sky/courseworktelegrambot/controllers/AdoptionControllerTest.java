@@ -78,7 +78,7 @@ public class AdoptionControllerTest {
         user = new User();
         user.setId(123L);
         pet = new Dog();
-        trialDate = LocalDate.of(2022, 11, 22);
+        trialDate = LocalDate.of(2023, 9, 25);
         adoption = new DogAdoption(user, pet, trialDate);
     }
 
@@ -98,7 +98,7 @@ public class AdoptionControllerTest {
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         mockMvc.perform(
-                post("/adoption/Dog/?user_id={123L}&pet_id={1}&trial_date={2022, 11, 22}"
+                post("/adoption/DOG/?user_id={123L}&pet_id={1}&trial_date={2023, 09, 25}"
                         , userId, petId, trialDate)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
@@ -118,7 +118,7 @@ public class AdoptionControllerTest {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         mockMvc.perform(
-                get("/adoption/Dog/1")
+                get("/adoption/DOG/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -138,7 +138,7 @@ public class AdoptionControllerTest {
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         mockMvc.perform(
-                put("/adoption/Dog/1/?trial_date={2022, 11, 22}", trialDate)
+                put("/adoption/DOG/1/?trial_date={2022, 11, 22}", trialDate)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -155,7 +155,7 @@ public class AdoptionControllerTest {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         mockMvc.perform(
-                delete("/adoption/Dog/1")
+                delete("/adoption/DOG/1")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
@@ -176,7 +176,7 @@ public class AdoptionControllerTest {
         when(dogAdoptionRepository.findAll()).thenReturn(adoptions);
 
         mockMvc.perform(
-                get("/adoption/Dog")
+                get("/adoption/DOG")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
