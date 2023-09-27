@@ -14,7 +14,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.annotation.PostConstruct;
@@ -345,7 +344,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
 
         //сохраняем в табл FeedbackRequest пришедший текст
-        feedbackRequestService.save(user, message.getText());
+        feedbackRequestService.createFeedbackRequest(user, message.getText());
 
          user.setState(user.getPreviousState());
         //состояние изменилось, поэтому вызовется goToNextState

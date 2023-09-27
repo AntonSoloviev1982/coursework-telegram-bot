@@ -35,7 +35,7 @@ public class FeedbackRequestService {
      *  @param user пользователь
      *  @param contact контактная информация
      * */
-    public void save(User user, String contact) {
+    public void createFeedbackRequest(User user, String contact) {
         feedBackRequestRepository.save(new FeedbackRequest(user, LocalDateTime.now(), contact));
     }
 

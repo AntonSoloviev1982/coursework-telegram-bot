@@ -41,6 +41,7 @@ class FeedbackRequestControllerTest {
     private FeedbackRequestController feedbackRequestController;
 
     static List<FeedbackRequest> testList = new ArrayList<>();
+
     @BeforeAll
     static void setUp() {
         User user1 = new User();
@@ -56,7 +57,7 @@ class FeedbackRequestControllerTest {
     }
 
     @Test
-    void getWaitingList() throws Exception {
+    void getWaitingListTest() throws Exception {
         when(feedbackRequestRepository.findAllByExecutionTimeIsNull()).thenReturn(testList);
 
         mockMvc.perform(MockMvcRequestBuilders
@@ -71,7 +72,7 @@ class FeedbackRequestControllerTest {
     }
 
     @Test
-    void getFeedbackRequest() throws Exception {
+    void getFeedbackRequestTest() throws Exception {
         when(feedbackRequestRepository.findById(any(Integer.class))).thenReturn(Optional.of(testList.get(2)))
                 .thenReturn(Optional.empty());
 
@@ -96,7 +97,7 @@ class FeedbackRequestControllerTest {
     }
 
     @Test
-    void updateExecutionTime() throws Exception {
+    void updateExecutionTimeTest() throws Exception {
         when(feedbackRequestRepository.findById(any(Integer.class))).thenReturn(Optional.of(testList.get(2)));
 
         mockMvc.perform(
