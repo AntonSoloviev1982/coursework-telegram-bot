@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Shelter;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.services.ShelterService;
 
 import java.util.List;
@@ -60,7 +61,7 @@ public class ShelterController {
             })
     @GetMapping("{id}")
     public Shelter get(@Parameter(description = "Идентификатор приюта")
-                       @PathVariable("id") String id) {
+                       @PathVariable("id") ShelterId id) {
         return shelterService.get(id);
     }
 
@@ -79,7 +80,7 @@ public class ShelterController {
     )
     @PutMapping("{id}")
     public Shelter update(@Parameter(description = "Идентификатор приюта")
-                          @PathVariable("id") String id,
+                          @PathVariable("id")  ShelterId id,
                           @Parameter(description = "Тип информации о приюте")
                           @RequestParam String informationType,
                           @Parameter(description = "Новая информация")
@@ -97,7 +98,7 @@ public class ShelterController {
     )
     @DeleteMapping("{id}")
     public void delete(@Parameter(description = "Идентификатор приюта")
-                          @PathVariable("id") String id) {
+                       @PathVariable("id") ShelterId id) {
         shelterService.delete(id);
     }
 

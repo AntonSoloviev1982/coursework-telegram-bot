@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pro.sky.courseworktelegrambot.entities.Shelter;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
@@ -34,7 +35,7 @@ public class ShelterServiceTest {
     @BeforeEach
     public void beforeEach() {
         shelter1 = new Shelter();
-        shelter1.setId("Dog");
+        shelter1.setId(ShelterId.Dog);
         shelter1.setName("Dogs");
         shelter1.setInformation("information");
         shelter1.setTimetable("timetable");
@@ -61,32 +62,32 @@ public class ShelterServiceTest {
 
     @Test
     public void getTest() {
-        when(shelterRepository.findById("Dog")).thenReturn(Optional.of(shelter1));
-        assertThat(shelterService.get("Dog")).isEqualTo(shelter1);
-        verify(shelterRepository, atLeast(1)).findById("Dog");
+        when(shelterRepository.findById(ShelterId.Dog)).thenReturn(Optional.of(shelter1));
+        assertThat(shelterService.get(ShelterId.Dog)).isEqualTo(shelter1);
+        verify(shelterRepository, atLeast(1)).findById(ShelterId.Dog);
     }
 
     @Test
     public void getNegativeTest() {
-        when(shelterRepository.findById("Cat")).thenReturn(Optional.empty());
-        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.get("Cat"));
-        verify(shelterRepository, atLeast(1)).findById("Cat");
+        when(shelterRepository.findById(ShelterId.Cat)).thenReturn(Optional.empty());
+        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.get(ShelterId.Cat));
+        verify(shelterRepository, atLeast(1)).findById(ShelterId.Cat);
     }
 
 
     @Test
     public void deleteTest() {
-        when(shelterRepository.findById("Dog")).thenReturn(Optional.of(shelter1));
-        Mockito.doNothing().when(shelterRepository).deleteById("Dog");
-        shelterService.delete("Dog");
-        verify(shelterRepository, atLeast(1)).deleteById("Dog");
+        when(shelterRepository.findById(ShelterId.Dog)).thenReturn(Optional.of(shelter1));
+        Mockito.doNothing().when(shelterRepository).deleteById(ShelterId.Dog);
+        shelterService.delete(ShelterId.Dog);
+        verify(shelterRepository, atLeast(1)).deleteById(ShelterId.Dog);
     }
 
     @Test
     public void deleteNegativeTest() {
-        when(shelterRepository.findById("Cat")).thenReturn(Optional.empty());
-        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.delete("Cat"));
-        verify(shelterRepository, new Times(0)).deleteById("Dog");
+        when(shelterRepository.findById(ShelterId.Cat)).thenReturn(Optional.empty());
+        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.delete(ShelterId.Cat));
+        verify(shelterRepository, new Times(0)).deleteById(ShelterId.Dog);
     }
 
     @Test

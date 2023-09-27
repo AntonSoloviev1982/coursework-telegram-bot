@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Adoption;
 import pro.sky.courseworktelegrambot.entities.DogAdoption;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.services.AdoptionService;
 
 import java.time.LocalDate;
@@ -22,7 +23,7 @@ public class AdoptionController {
 
     @PostMapping("{shelter_id}")
     public ResponseEntity<Adoption> createAdoption(
-            @PathVariable(name="shelter_id") String shelterId,
+            @PathVariable(name="shelter_id") ShelterId shelterId,
             @RequestParam("user_id") long userId,
             @RequestParam("pet_id") int petId,
             //date возьмем сегодня
@@ -37,14 +38,14 @@ public class AdoptionController {
 
     @GetMapping("{shelter_id}/{adoption_id}")
     public Adoption getAdoption(
-            @PathVariable("shelter_id") String shelterId,
+            @PathVariable("shelter_id") ShelterId shelterId,
             @PathVariable("adoption_id") Integer adoptionId) {
         return adoptionService.getAdoption(shelterId, adoptionId);
       }
 
     @PutMapping(value = "{shelter_id}/{adoption_id}", params="trial_date")
     public Adoption setTrialDate(
-            @PathVariable("shelter_id") String shelterId,
+            @PathVariable("shelter_id") ShelterId shelterId,
             @PathVariable("adoption_id") Integer adoptionId,
             @RequestParam("trial_date") LocalDate trialDate
             ) {
@@ -53,17 +54,17 @@ public class AdoptionController {
 
     @DeleteMapping("{shelter_id}/{adoption_id}")
     public Adoption deleteAdoption(
-            @PathVariable("shelter_id") String shelterId,
+            @PathVariable("shelter_id") ShelterId shelterId,
             @PathVariable("adoption_id") Integer adoptionId) {
         return adoptionService.deleteAdoption(shelterId, adoptionId);
     }
 
     @GetMapping("{shelter_id}")
-    public Collection<Adoption> getAllAdoptions(String shelterId) {
+    public Collection<Adoption> getAllAdoptions(ShelterId shelterId) {
         return adoptionService.getAllAdoptions(shelterId);
     }
     @GetMapping("{shelter_id}/active")
-    public Collection<Adoption> getAllActiveAdoptions(String shelterId) {
+    public Collection<Adoption> getAllActiveAdoptions(ShelterId shelterId) {
         return adoptionService.getAllActiveAdoptions(shelterId);
     }
 }

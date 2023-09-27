@@ -8,8 +8,9 @@ import java.util.Objects;
 public class Shelter {
 
     @Id
+    @Enumerated(EnumType.STRING)
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private ShelterId id;
     private String name;
     private String information;
     private String timetable;
@@ -26,11 +27,11 @@ public class Shelter {
     private String cynologists;
     private String refusalReasons;
 
-    public String getId() { // для тестов
+    public ShelterId getId() { // для тестов
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(ShelterId id) {
         this.id = id;
     } // для тестов
 

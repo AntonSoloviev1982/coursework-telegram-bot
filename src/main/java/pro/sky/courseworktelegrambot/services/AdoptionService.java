@@ -2,7 +2,6 @@ package pro.sky.courseworktelegrambot.services;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
@@ -16,24 +15,33 @@ import java.util.List;
 
 @Service
 public class AdoptionService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private DogRepository dogRepository;
-    @Autowired
-    private CatRepository catRepository;
-    @Autowired
-    private DogAdoptionRepository dogAdoptionRepository;
-    @Autowired
-    private CatAdoptionRepository catAdoptionRepository;
-    @Autowired
-    private ShelterService shelterService;
+    private final UserRepository userRepository;
+    private final DogRepository dogRepository;
+    private final CatRepository catRepository;
+    private final DogAdoptionRepository dogAdoptionRepository;
+    private final CatAdoptionRepository catAdoptionRepository;
+    private final ShelterService shelterService;
+
+    public AdoptionService(
+            UserRepository userRepository,
+            DogRepository dogRepository,
+            CatRepository catRepository,
+            DogAdoptionRepository dogAdoptionRepository,
+            CatAdoptionRepository catAdoptionRepository,
+            ShelterService shelterService) {
+        this.userRepository = userRepository;
+        this.dogRepository = dogRepository;
+        this.catRepository = catRepository;
+        this.dogAdoptionRepository = dogAdoptionRepository;
+        this.catAdoptionRepository = catAdoptionRepository;
+        this.shelterService = shelterService;
+    }
 
     //из такого репозитория удается прочитать, возвращается предок
     //но в него ничего не удается сохранить уже при компиляции, при подстановке любого типа возникает
     //method save in interface org.springframework.data.repository.CrudRepository<T,ID> cannot be applied to given types;
-    private JpaRepository<? extends Adoption, Integer> adoptionRepository(String shelterId) {
-        return (shelterId.equals("Dog")) ? dogAdoptionRepository : catAdoptionRepository;
+    private JpaRepository<? extends Adoption, Integer> adoptionRepository(ShelterId shelterId) {
+        return (shelterId==ShelterId.DOG) ? dogAdoptionRepository : catAdoptionRepository;
     }
 
     /**
@@ -50,14 +58,14 @@ public class AdoptionService {
      * @throws EntityNotFoundException  если не найден пользователь или питомец
      * @throws UserOrPetIsBusyException если пользователь или питомец уже имеют испытательный срок.
      */
-    public Adoption createAdoption(String shelterId, long userId, int petId, LocalDate trialDate) {
+    public Adoption createAdoption(ShelterId shelterId, long userId, int petId, LocalDate trialDate) {
         shelterService.checkShelterId(shelterId);
 
         //Проверяем, что заданный User есть
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new EntityNotFoundException("User with id " + userId + " not found"));
 
-        if (shelterId.equals("Dog")) {
+        if (shelterId == ShelterId.DOG) {
             //Проверяем, что заданный Dog есть
             //Dog pet = dogRepository.getReferenceById(petId);  //так не идет обращение к  БД. Оно будет позже
             Dog pet = dogRepository.findById(petId).orElseThrow(() ->
@@ -99,13 +107,12 @@ public class AdoptionService {
      * @throws ShelterNotFoundException если приют не найден.
      * @throws EntityNotFoundException  если не найден id усыновления
      */
-    public Adoption getAdoption(String shelterId, int adoptionId) {
+    public Adoption getAdoption(ShelterId shelterId, int adoptionId) {
         shelterService.checkShelterId(shelterId);
-        Adoption adoption = adoptionRepository(shelterId).findById(adoptionId)
+        return adoptionRepository(shelterId).findById(adoptionId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
         //System.out.println(adoption.getClass());
-        return adoption;
     }
 
     /**
@@ -118,9 +125,9 @@ public class AdoptionService {
      * @throws ShelterNotFoundException если приют не найден.
      * @throws EntityNotFoundException  если не найден id усыновления
      */
-    public Adoption setTrialDate(String shelterId, Integer adoptionId, LocalDate trialDate) {
+    public Adoption setTrialDate(ShelterId shelterId, Integer adoptionId, LocalDate trialDate) {
         shelterService.checkShelterId(shelterId);
-        if (shelterId.equals("Dog")) {
+        if (shelterId==ShelterId.DOG) {
             DogAdoption adoption = dogAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
                     "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
             adoption.setTrialDate(trialDate);
@@ -143,7 +150,7 @@ public class AdoptionService {
      * @throws ShelterNotFoundException если приют не найден.
      * @throws EntityNotFoundException  если не найден id усыновления
      */
-    public Adoption deleteAdoption(String shelterId, int adoptionId) {
+    public Adoption deleteAdoption(ShelterId shelterId, int adoptionId) {
         shelterService.checkShelterId(shelterId);
         Adoption adoption = getAdoption(shelterId, adoptionId);
         adoptionRepository(shelterId).deleteById(adoptionId);
@@ -158,7 +165,7 @@ public class AdoptionService {
      * @return Collection<Adoption>
      * @throws ShelterNotFoundException если приют не найден.
      */
-    public Collection<Adoption> getAllAdoptions(String shelterId) {
+    public Collection<Adoption> getAllAdoptions(ShelterId shelterId) {
         shelterService.checkShelterId(shelterId);
         return List.copyOf(adoptionRepository(shelterId).findAll());
     }
@@ -170,9 +177,9 @@ public class AdoptionService {
      * @return Collection<Adoption>
      * @throws ShelterNotFoundException если приют не найден.
      * */
-    public Collection<Adoption> getAllActiveAdoptions(String shelterId) {
+    public Collection<Adoption> getAllActiveAdoptions(ShelterId shelterId) {
         shelterService.checkShelterId(shelterId);
-        if (shelterId.equals("Dog")) {
+        if (shelterId==ShelterId.DOG) {
             return List.copyOf(dogAdoptionRepository
                     .findByDateLessThanEqualAndTrialDateGreaterThanEqual(LocalDate.now(), LocalDate.now()));
         } else {

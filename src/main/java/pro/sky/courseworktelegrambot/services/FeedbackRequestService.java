@@ -10,7 +10,6 @@ import pro.sky.courseworktelegrambot.repositories.FeedbackRequestRepository;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * Сервис "запрос обратной связи".
@@ -52,10 +51,11 @@ public class FeedbackRequestService {
      *  Находит запись в БД в таблице "feedback_request" по ее идентификатору.<br>
      *  Используется метод репозитория {@link JpaRepository#findById(Object)}
      *  @param id идентификатор запроса.
-     *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
+     *  @throws EntityNotFoundException если запроса с таким идентификатором нет в БД.
      */
     public FeedbackRequest getFeedbackRequest(Integer id) {
-        return feedBackRequestRepository.findById(id).get();
+        return feedBackRequestRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
+                "FeedBackRequest with id = " + id + " not found"));
     }
 
     /**
@@ -63,11 +63,11 @@ public class FeedbackRequestService {
      *  Заполняет поле executionTime текущим временем после связи с пользователем.
      *  Используется метод репозитория {@link JpaRepository#save(Object)}
      *  @param id идентификатор запроса.
-     *  @throws NoSuchElementException если запроса с таким идентификатором нет в БД.
+     *  @throws EntityNotFoundException если запроса с таким идентификатором нет в БД.
      */
     public void updateExecutionTime(Integer id) {
         FeedbackRequest feedBackRequest = feedBackRequestRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
-                "feedBackRequest with id = " + id + " not found"));
+                "FeedBackRequest with id = " + id + " not found"));
         feedBackRequest.setExecutionTime(LocalDateTime.now());
         feedBackRequestRepository.save(feedBackRequest);
     }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.Cat;
 import pro.sky.courseworktelegrambot.entities.Dog;
 import pro.sky.courseworktelegrambot.entities.Pet;
+import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.CatRepository;
 import pro.sky.courseworktelegrambot.repositories.DogRepository;
@@ -36,8 +37,8 @@ public class PetService {
 
     //из такого репозитория удается прочитать, возвращается Pet
     //но в него ничего не удается сохранить
-    private JpaRepository<? extends Pet, Integer> petRepository(String shelterId) {
-        return (shelterId.equals("Dog")) ? dogRepository : catRepository;
+    private JpaRepository<? extends Pet, Integer> petRepository(ShelterId shelterId) {
+        return (shelterId==ShelterId.DOG) ? dogRepository : catRepository;
     }
 
     /**
@@ -51,9 +52,9 @@ public class PetService {
      * @return Pet
      * @throws ShelterNotFoundException если id приюта не найден в базе
      */
-    public Pet createPet(String shelterId, Pet pet) {
+    public Pet createPet(ShelterId shelterId, Pet pet) {
         shelterService.checkShelterId(shelterId);
-        if (shelterId.equals("Dog")) {
+        if (shelterId==ShelterId.DOG) {
             Dog dog = new Dog(pet);
             dog.setId(0);  //при создании id не указываем
             return dogRepository.save(dog);
@@ -72,7 +73,7 @@ public class PetService {
      * @throws ShelterNotFoundException если id приюта не найден в базе
      * @throws EntityNotFoundException если id питомца не найден в базе
      */
-    public Pet getPet(String shelterId, int id) {
+    public Pet getPet(ShelterId shelterId, int id) {
         shelterService.checkShelterId(shelterId);
         return petRepository(shelterId).findById(id)
                 .orElseThrow(() ->
@@ -87,13 +88,13 @@ public class PetService {
      * @throws ShelterNotFoundException если id приюта не найден в базе
      * @throws EntityNotFoundException если id питомца не найден в базе
      * */
-    public Pet updatePet(String shelterId, Pet pet) {
+    public Pet updatePet(ShelterId shelterId, Pet pet) {
         //Dog dog=(Dog)pet;  //Pet cannot be cast to class Dog. Поэтому вызываем new
         shelterService.checkShelterId(shelterId);
         //если ключ не найден или 0, то save создает новую запись.
         //Поэтому проверим существование id
         getPet(shelterId, pet.getId());  //если id не существует, здесь будет исключение
-        if (shelterId.equals("Dog")) {
+        if (shelterId==ShelterId.DOG) {
             return dogRepository.save(new Dog(pet));  //обертываем Pet
         } else {
             return catRepository.save(new Cat(pet));
@@ -109,7 +110,7 @@ public class PetService {
      * @throws ShelterNotFoundException если id приюта не найден в базе
      * @throws EntityNotFoundException если id питомца не найден в базе
      * */
-    public Pet deletePet(String shelterId, int id) {
+    public Pet deletePet(ShelterId shelterId, int id) {
         shelterService.checkShelterId(shelterId);
         Pet pet = getPet(shelterId, id);
         petRepository(shelterId).deleteById(id);
@@ -123,7 +124,7 @@ public class PetService {
      * @return  Список питомцев в приюте
      * @throws ShelterNotFoundException если id приюта не найден в базе
      * */
-    public Collection<Pet> getAllPets(String shelterId) {
+    public Collection<Pet> getAllPets(ShelterId shelterId) {
         shelterService.checkShelterId(shelterId);
         return List.copyOf(petRepository(shelterId).findAll());
     }

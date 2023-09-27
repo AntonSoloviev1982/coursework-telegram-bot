@@ -21,8 +21,8 @@ CREATE TABLE shelter(
     refusal_reasons TEXT
     );
 INSERT INTO shelter(id, name, information, timetable, address, security, safety_precautions, rules, documents, transportation
-, child_accomodation, adult_accomodation, invalid_accomodation, communication, cynologists, refusal_reasons) VALUES
-    ('Dog', 'Собаки', 'Текст: информация о приюте собак', 'Текст: расписание работы приюта собак и адрес, схема проезда'
+    , child_accomodation, adult_accomodation, invalid_accomodation, communication, cynologists, refusal_reasons) VALUES
+    ('DOG', 'Собаки', 'Текст: информация о приюте собак', 'Текст: расписание работы приюта собак и адрес, схема проезда'
     , 'Текст: адрес приюта собак', 'Текст: контактные данные охраны приюта собак для оформления пропуска на машину'
     , 'Текст: рекомендации по технике безопасности на территории приюта собак', 'Текст: правила знакомства с собаками'
     , 'Текст: список документов, чтобы взять собаку из приюта', 'Текст: транспортировка собаки'
@@ -30,7 +30,7 @@ INSERT INTO shelter(id, name, information, timetable, address, security, safety_
     , 'Текст: обустройство дома для собаки-инвалида', 'Текст: советы кинолога по первичному общению с собакой'
     , 'Текст: рекомендации по проверенным кинологам', 'Текст: причины отказа отдать собаку'),
 
-    ('Cat', 'Кошки', 'Текст: информация о приюте кошек', 'Текст: расписание работы приюта кошек и адрес, схему проезда'
+    ('CAT', 'Кошки', 'Текст: информация о приюте кошек', 'Текст: расписание работы приюта кошек и адрес, схему проезда'
     , 'Текст: адрес приюта кошек', 'Текст: контактные данные охраны приюта кошек для оформления пропуска на машину'
     , 'Текст: рекомендации по технике безопасности на территории приюта кошек', 'Текст: правила знакомства с кошкой'
     , 'Текст: список документов, чтобы взять кошку из приюта', 'Текст: транспортировка кошки'
@@ -41,39 +41,43 @@ INSERT INTO shelter(id, name, information, timetable, address, security, safety_
 DROP TABLE IF EXISTS state;
 CREATE TABLE state(
     id VARCHAR(30) PRIMARY KEY,
-    text VARCHAR(60),      --текст, который бот покажет при переходе в это состояние
-    text_input BOOLEAN);   --состояние текстового ввода.
-    --Если false, то ждем только нажатия кнопок и состояние не требует специальной обработки ответа
+    text VARCHAR(60),         --текст, который бот покажет при переходе в это состояние
+    text_input BOOLEAN,       --состояние текстового ввода.
+    --Если text_input=false, то ждем только нажатия кнопок и состояние не требует специальной обработки ответа
+    named_state VARCHAR(30));  --для некоторых полей это поле соответствует перечислению именованных состояний
+    --Если поле named_state заполнено, то методы могут проверить,
+    --не надо ли что-то сделать специальное при переходе в это состояние или в нем самом.
+    --Все состояния текстового ввода обязательно имеют заполненное named_state,
+    --т.к. требуют специального анализа ответа
 
-INSERT INTO state(id, text, text_input) VALUES
-    ('BadChoice', 'Нераспознанная команда. Выберите кнопку:', FALSE),
-    ('Shelter', 'Выберите приют:', FALSE),
-    ('Stage', 'Выберите этап:', FALSE),
-    ('Info', 'Выберите вид информации:', FALSE),
-    ('GetAnimal', 'Выберите вид информации:', FALSE),
-    ('Report', 'Здесь может быть разный текст. Пришлите/Осталось/Получено', TRUE),
+INSERT INTO state(id, text, text_input, named_state) VALUES
+    ('BadChoice', 'Нераспознанная команда. Выберите кнопку:', FALSE, 'BAD_CHOICE'),
+    ('Shelter', 'Выберите приют:', FALSE, 'INITIAL_STATE'),
+    ('Stage', 'Выберите этап:', FALSE, 'AFTER_SHELTER_CHOICE_STATE'),  --пригодится, когда кнопок приютов в StateButton не будет
+    ('Info', 'Выберите вид информации:', FALSE, Null),
+    ('GetAnimal', 'Выберите вид информации:', FALSE, Null),
+    ('Report', 'Здесь может быть разный текст. Пришлите/Осталось/Получено', True, 'REPORT'),
 
-    ('AboutShelter', '@information', FALSE),
-    ('TimeTable', '@timetable', FALSE),
-    ('Address', '@address', FALSE),
-    ('Security', '@security', FALSE),
-    ('SafetyPrecautions', '@safetyPrecautions', FALSE),
-    ('AnimalList', 'Наши питомцы:', FALSE),
-    ('AnimalByNumber', 'Введите номер животного', TRUE),
+    ('AboutShelter', '@information', FALSE, Null),
+    ('TimeTable', '@timetable', FALSE, Null),
+    ('Address', '@address', FALSE, Null),
+    ('Security', '@security', FALSE, Null),
+    ('SafetyPrecautions', '@safetyPrecautions', FALSE, Null),
+    ('AnimalList', 'Наши питомцы:', FALSE, 'ANIMAL_LIST'),
+    ('AnimalByNumber', 'Введите номер животного', TRUE, 'ANIMAL_BY_NUMBER'),
 
-    ('Rules', '@rules', FALSE),
-    ('Documents', '@documents', FALSE),
-    ('Tranportation', '@transportation', FALSE),
-    ('ChildAccomodation', '@childAccomodation', FALSE),
-    ('AdultAccomodation', '@adultAccomodation', FALSE),
-    ('InvalidAccomodation', '@invalidAccomodation', FALSE),
-    ('DogCommunication', '@communication', FALSE),
-    ('Cynologists', '@cynologists', FALSE),
-    ('RefusalReasons', '@refusalReasons', FALSE),
+    ('Rules', '@rules', FALSE, Null),
+    ('Documents', '@documents', FALSE, Null),
+    ('Tranportation', '@transportation', FALSE, Null),
+    ('ChildAccomodation', '@childAccomodation', FALSE, Null),
+    ('AdultAccomodation', '@adultAccomodation', FALSE, Null),
+    ('InvalidAccomodation', '@invalidAccomodation', FALSE, Null),
+    ('DogCommunication', '@communication', FALSE, Null),
+    ('Cynologists', '@cynologists', FALSE, Null),
+    ('RefusalReasons', '@refusalReasons', FALSE, Null),
 
-    ('MessageToVolonteer', 'Введите сообщение для волонтера', TRUE),
-    ('FeedbackRequest', 'Введите контакт для обратной связи', TRUE)
-    ;
+    ('MessageToVolunteer', 'Введите сообщение для волонтера', TRUE, 'MESSAGE_TO_VOLUNTEER'),
+    ('FeedbackRequest', 'Введите контакт для обратной связи', TRUE, 'FEEDBACK_REQUEST');
 
 -- changeset pavel:create_state_button
 DROP TABLE IF EXISTS state_button;
@@ -97,7 +101,7 @@ INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_co
     ('Stage', 'Как взять животное из приюта (этап 2)','GetAnimal', 2, 1, Null),
     ('Stage', 'Прислать отчет о питомце (этап 3)','Report', 3, 1, Null),
     ('Stage', 'Назад к выбору приюта','Shelter', 4, 1, Null),
-    ('Stage', 'Позвать волонтера','MessageToVolonteer', 5, 1, Null),
+    ('Stage', 'Позвать волонтера','MessageToVolunteer', 5, 1, Null),
     ('Stage', 'Запросить обратную свзь','FeedbackRequest', 5, 2, Null),
 
     ('Info', 'Рассказать о приюте','AboutShelter', 1, 1, Null),
@@ -107,21 +111,21 @@ INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_co
     ('Info', 'Наши питомцы','AnimalList', 5, 1, Null),
     ('Info', 'О питомце  (по номеру)','AnimalByNumber', 5, 2, Null),
     ('Info', 'Назад к выбору этапа','Stage', 6, 1, Null),
-    ('Info', 'Позвать волонтера','MessageToVolonteer', 7, 1, Null),
+    ('Info', 'Позвать волонтера','MessageToVolunteer', 7, 1, Null),
     ('Info', 'Запросить обратную свзь','FeedbackRequest', 7, 2, Null),
 
     ('GetAnimal', 'Правила знакомства с животным','Rules', 1, 1, Null),
     ('GetAnimal', 'Список документов, чтобы взять животное из приюта','Documents', 2, 1, Null),
     ('GetAnimal', 'Транспортировка животного','Tranportation', 3, 1, Null),
-    ('GetAnimal', 'Обустройство дома для щенка','ChildAccomodation', 4, 1, 'Dog'),
-    ('GetAnimal', 'Обустройство дома для котенка','ChildAccomodation', 4, 1, 'Cat'),
+    ('GetAnimal', 'Обустройство дома для щенка','ChildAccomodation', 4, 1, 'DOG'),
+    ('GetAnimal', 'Обустройство дома для котенка','ChildAccomodation', 4, 1, 'CAT'),
     ('GetAnimal', 'Обустройство дома для взрослого животного','AdultAccomodation', 5, 1, Null),
     ('GetAnimal', 'Обустройство дома для животного-инвалида','InvalidAccomodation', 6, 1, Null),
-    ('GetAnimal', 'Советы кинолога по первичному общению с собакой','DogCommunication', 7, 1, 'Dog'),
-    ('GetAnimal', 'Рекомендации по проверенным кинологам','Cynologists', 8, 1, 'Dog'),
+    ('GetAnimal', 'Советы кинолога по первичному общению с собакой','DogCommunication', 7, 1, 'DOG'),
+    ('GetAnimal', 'Рекомендации по проверенным кинологам','Cynologists', 8, 1, 'DOG'),
     ('GetAnimal', 'Причины отказа отдать животное','RefusalReasons', 9, 1, Null),
     ('GetAnimal', 'Назад к выбору этапа','Stage', 10, 1, Null),
-    ('GetAnimal', 'Позвать волонтера','MessageToVolonteer', 11, 1, Null),
+    ('GetAnimal', 'Позвать волонтера','MessageToVolunteer', 11, 1, Null),
     ('GetAnimal', 'Запросить обратную свзь','FeedbackRequest', 11, 2, Null);
 
 --changeset pavel:create_user

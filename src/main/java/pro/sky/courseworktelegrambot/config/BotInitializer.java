@@ -1,6 +1,8 @@
 package pro.sky.courseworktelegrambot.config;
 
-import lombok.extern.slf4j.Slf4j;
+//import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -10,12 +12,16 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import pro.sky.courseworktelegrambot.services.TelegramBot;
 
-@Slf4j
+//@Slf4j
 @Component
 public class BotInitializer {
+    private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
 
-    @Autowired
     TelegramBot bot;
+
+    public BotInitializer(TelegramBot bot) {
+        this.bot = bot;
+    }
 
     /**
      * Метод инициализации приложения, который реагирует на событие ContextRefreshedEvent.
@@ -31,8 +37,7 @@ public class BotInitializer {
             // Регистрация бота с TelegramBotsApi.
             telegramBotsApi.registerBot(bot);
         } catch (TelegramApiException e) {
-            //не могу найти ошибку log.error("Error occurred: " + e.getMessage());
-            System.out.println("Error occurred: " + e.getMessage());
+            logger.error("Error of creation or registration of bot occurred: " + e.getMessage());
         }
     }
 }
