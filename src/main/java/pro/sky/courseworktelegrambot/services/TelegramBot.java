@@ -107,7 +107,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage()) return;
+        if (!update.hasMessage()) {return;}
         Message message = update.getMessage();
         long chatId = message.getChatId();
         User user = userRepository.findById(chatId).orElse(null);
