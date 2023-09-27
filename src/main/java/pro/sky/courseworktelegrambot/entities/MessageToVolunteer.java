@@ -1,18 +1,21 @@
-package pro.sky.courseworktelegrambot.entity;
+package pro.sky.courseworktelegrambot.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "message_to_volunteer")
 public class MessageToVolunteer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    //@GeneratedValue(strategy = GenerationType.IDENTITY) возьмем от message_id от бота
+    private int id; //возьмем от message_id от бота
 
-    long chatId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     private LocalDateTime questionTime;
 
@@ -22,15 +25,19 @@ public class MessageToVolunteer {
 
     private String answer;
 
-    private LocalDateTime sentTime;
-
-
-    public long getChatId() {
-        return chatId;
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {  // нужен для тестов
+        this.id = id;
     }
 
-    public void setChatId(long chatId) {
-        this.chatId = chatId;
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public LocalDateTime getQuestionTime() {
@@ -65,11 +72,16 @@ public class MessageToVolunteer {
         this.answer = answer;
     }
 
-    public LocalDateTime getSentTime() {
-        return sentTime;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageToVolunteer that = (MessageToVolunteer) o;
+        return id == that.id;
     }
 
-    public void setSentTime(LocalDateTime sentTime) {
-        this.sentTime = sentTime;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

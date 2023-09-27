@@ -1,10 +1,14 @@
 package pro.sky.courseworktelegrambot.exceptions;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
 public class ShelterNotFoundException extends RuntimeException{
 
-    private final int id;
+    private final String id;
 
-    public ShelterNotFoundException(int id) {
+    public ShelterNotFoundException(String id) {
         this.id = id;
     }
 
