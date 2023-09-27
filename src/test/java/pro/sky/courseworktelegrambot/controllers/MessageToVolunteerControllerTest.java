@@ -121,7 +121,8 @@ public class MessageToVolunteerControllerTest {
         ).andExpect(status().isNotFound())
                 .andExpect(result -> {
                     String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("MessageToVolunteer with id: 2 is not found!");
+                    assertThat(responseString)
+                            .isEqualTo("MessageToVolunteer not found. MessageToVolunteer with id: 2 is not found!");
                 });
     }
 

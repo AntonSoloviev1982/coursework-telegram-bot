@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
@@ -27,6 +28,9 @@ public class MessageToVolunteerServiceTest {
 
     @Mock
     private MessageToVolunteerRepository messageToVolunteerRepository;
+
+    @Mock
+    private TelegramBot telegramBot;
 
     @InjectMocks
     private MessageToVolunteerService messageToVolunteerService;
