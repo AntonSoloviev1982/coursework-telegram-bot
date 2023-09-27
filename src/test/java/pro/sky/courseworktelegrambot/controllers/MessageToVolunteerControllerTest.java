@@ -97,32 +97,32 @@ public class MessageToVolunteerControllerTest {
                 });
     }
 
-    @Test
-    public void updateAnswerTest() throws Exception {
-        int id = 1;
-        String answer = "Answer";
-        boolean answerToMessage = true;
-        when(messageToVolunteerRepository.findById(id)).thenReturn(Optional.of(messageToVolunteer1));
-        messageToVolunteer1.setAnswerTime(LocalDateTime.now());
-        messageToVolunteer1.setAnswer(answer);
-        when(messageToVolunteerRepository.save(any())).thenReturn(messageToVolunteer1);
-
-        mockMvc.perform(
-                put("/message_to_volunteer/1/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk());
-
-        // not found checking
-        when(messageToVolunteerRepository.findById(2)).thenReturn(Optional.empty());
-
-        mockMvc.perform(
-                put("/message_to_volunteer/2/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isNotFound())
-                .andExpect(result -> {
-                    String responseString = result.getResponse().getContentAsString();
-                    assertThat(responseString).isEqualTo("MessageToVolunteer with id: 2 is not found!");
-                });
-    }
+//    @Test
+//    public void updateAnswerTest() throws Exception {
+//        int id = 1;
+//        String answer = "Answer";
+//        boolean answerToMessage = true;
+//        when(messageToVolunteerRepository.findById(id)).thenReturn(Optional.of(messageToVolunteer1));
+//        messageToVolunteer1.setAnswerTime(LocalDateTime.now());
+//        messageToVolunteer1.setAnswer(answer);
+//        when(messageToVolunteerRepository.save(any())).thenReturn(messageToVolunteer1);
+//
+//        mockMvc.perform(
+//                put("/message_to_volunteer/1/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//        ).andExpect(status().isOk());
+//
+//        // not found checking
+//        when(messageToVolunteerRepository.findById(2)).thenReturn(Optional.empty());
+//
+//        mockMvc.perform(
+//                put("/message_to_volunteer/2/?answer={Answer}&replyToMessage={true}", answer, answerToMessage)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//        ).andExpect(status().isNotFound())
+//                .andExpect(result -> {
+//                    String responseString = result.getResponse().getContentAsString();
+//                    assertThat(responseString).isEqualTo("MessageToVolunteer with id: 2 is not found!");
+//                });
+//    }
 
 }

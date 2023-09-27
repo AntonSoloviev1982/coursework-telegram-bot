@@ -86,12 +86,15 @@ public class AdoptionControllerTest {
     public void createAdoptionTest() throws Exception {
         long userId = 123L;
         int petId = 1;
-        String shelterId = "Dog";
+        Mockito.doNothing().when(shelterService).checkShelterId("Dog");
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
                 .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                         user, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
+        when(dogAdoptionRepository
+                .findByPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        pet, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         mockMvc.perform(
