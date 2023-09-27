@@ -5,8 +5,6 @@ import org.springframework.stereotype.Repository;
 import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.entities.ShelterId;
 
-import java.util.Optional;
-
 @Repository
 public interface ShelterRepository extends JpaRepository<Shelter, ShelterId> {
 

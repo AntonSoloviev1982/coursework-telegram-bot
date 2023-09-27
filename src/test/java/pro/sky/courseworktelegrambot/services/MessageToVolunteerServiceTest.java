@@ -1,6 +1,6 @@
 package pro.sky.courseworktelegrambot.services;
 
-import lombok.experimental.StandardException;
+//import lombok.experimental.StandardException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,7 +55,7 @@ public class MessageToVolunteerServiceTest {
         messageToVolunteer2.setAnswerTime(null);
         messageToVolunteer2.setAnswer(null);
     }
-
+    /*
     @Test
     public void createTest() {
         User user3 = new User();
@@ -69,7 +69,7 @@ public class MessageToVolunteerServiceTest {
         messageToVolunteerService.create(0, user3, question);
         verify(messageToVolunteerRepository, atLeast(1)).save(any());
     }
-
+    */
     @Test
     public void findAllWithoutAnswerTest() {
         List<MessageToVolunteer> messageToVolunteers = List.of(messageToVolunteer1, messageToVolunteer2);

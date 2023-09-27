@@ -3,7 +3,6 @@ package pro.sky.courseworktelegrambot.config;
 //import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -26,8 +25,6 @@ public class BotInitializer {
     /**
      * Метод инициализации приложения, который реагирует на событие ContextRefreshedEvent.
      * При вызове данного метода, он создает экземпляр TelegramBotsApi, затем регистрирует бота с этим API.
-     *
-     * @throws TelegramApiException если произошла ошибка при регистрации бота.
      */
     @EventListener({ContextRefreshedEvent.class})
     public void init() {

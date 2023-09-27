@@ -3,7 +3,6 @@ package pro.sky.courseworktelegrambot.services;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;

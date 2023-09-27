@@ -9,5 +9,5 @@ public interface StateRepository extends JpaRepository<State, String> {
     //для получения состояния неправильного выбора из кнопок
     //для получения начального состояния для нового пользователя
     //для получения начального состояния после выбора приюта
-    public State findByNamedState(NamedState namedState);
+    State findByNamedState(NamedState namedState);
 }

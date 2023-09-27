@@ -8,12 +8,8 @@ import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.ShelterRepository;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.

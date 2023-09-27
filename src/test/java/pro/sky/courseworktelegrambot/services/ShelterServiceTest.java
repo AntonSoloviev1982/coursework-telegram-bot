@@ -35,7 +35,7 @@ public class ShelterServiceTest {
     @BeforeEach
     public void beforeEach() {
         shelter1 = new Shelter();
-        shelter1.setId(ShelterId.Dog);
+        shelter1.setId(ShelterId.DOG);
         shelter1.setName("Dogs");
         shelter1.setInformation("information");
         shelter1.setTimetable("timetable");
@@ -62,32 +62,32 @@ public class ShelterServiceTest {
 
     @Test
     public void getTest() {
-        when(shelterRepository.findById(ShelterId.Dog)).thenReturn(Optional.of(shelter1));
-        assertThat(shelterService.get(ShelterId.Dog)).isEqualTo(shelter1);
-        verify(shelterRepository, atLeast(1)).findById(ShelterId.Dog);
+        when(shelterRepository.findById(ShelterId.DOG)).thenReturn(Optional.of(shelter1));
+        assertThat(shelterService.get(ShelterId.DOG)).isEqualTo(shelter1);
+        verify(shelterRepository, atLeast(1)).findById(ShelterId.DOG);
     }
 
     @Test
     public void getNegativeTest() {
-        when(shelterRepository.findById(ShelterId.Cat)).thenReturn(Optional.empty());
-        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.get(ShelterId.Cat));
-        verify(shelterRepository, atLeast(1)).findById(ShelterId.Cat);
+        when(shelterRepository.findById(ShelterId.CAT)).thenReturn(Optional.empty());
+        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.get(ShelterId.CAT));
+        verify(shelterRepository, atLeast(1)).findById(ShelterId.CAT);
     }
 
 
     @Test
     public void deleteTest() {
-        when(shelterRepository.findById(ShelterId.Dog)).thenReturn(Optional.of(shelter1));
-        Mockito.doNothing().when(shelterRepository).deleteById(ShelterId.Dog);
-        shelterService.delete(ShelterId.Dog);
-        verify(shelterRepository, atLeast(1)).deleteById(ShelterId.Dog);
+        when(shelterRepository.findById(ShelterId.DOG)).thenReturn(Optional.of(shelter1));
+        Mockito.doNothing().when(shelterRepository).deleteById(ShelterId.DOG);
+        shelterService.delete(ShelterId.DOG);
+        verify(shelterRepository, atLeast(1)).deleteById(ShelterId.DOG);
     }
 
     @Test
     public void deleteNegativeTest() {
-        when(shelterRepository.findById(ShelterId.Cat)).thenReturn(Optional.empty());
-        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.delete(ShelterId.Cat));
-        verify(shelterRepository, new Times(0)).deleteById(ShelterId.Dog);
+        when(shelterRepository.findById(ShelterId.CAT)).thenReturn(Optional.empty());
+        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.delete(ShelterId.CAT));
+        verify(shelterRepository, new Times(0)).deleteById(ShelterId.DOG);
     }
 
     @Test

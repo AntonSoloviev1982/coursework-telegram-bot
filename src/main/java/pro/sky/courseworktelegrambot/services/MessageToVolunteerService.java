@@ -3,7 +3,6 @@ package pro.sky.courseworktelegrambot.services;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
-import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
 import pro.sky.courseworktelegrambot.exceptions.TelegramException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;

@@ -1,10 +1,8 @@
 package pro.sky.courseworktelegrambot.controllers;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Adoption;
-import pro.sky.courseworktelegrambot.entities.DogAdoption;
 import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.services.AdoptionService;
 
