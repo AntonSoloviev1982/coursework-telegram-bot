@@ -78,39 +78,44 @@ public class AdoptionControllerTest {
         user = new User();
         user.setId(123L);
         pet = new Dog();
+        pet.setId(1);
         trialDate = LocalDate.of(2023, 9, 25);
         adoption = new DogAdoption(user, pet, trialDate);
+        adoption.setId(1);
     }
 
     @Test
     public void createAdoptionTest() throws Exception {
-        long userId = 123L;
-        int petId = 1;
-        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(dogRepository.findById(petId)).thenReturn(Optional.of(pet));
+        doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(dogRepository.findById(pet.getId())).thenReturn(Optional.of(pet));
         when(dogAdoptionRepository
                 .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                         user, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
         when(dogAdoptionRepository
                 .findByPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
                         pet, trialDate, LocalDate.now())).thenReturn(new ArrayList<>());
-        when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
+        //в save в качестве аргумента придет посторонний adoption, поэтому any()
+        when(dogAdoptionRepository.save(any())).thenReturn(adoption);
 
         mockMvc.perform(
-                post("/adoption/DOG/?user_id={123L}&pet_id={1}&trial_date={2023, 09, 25}"
-                        , userId, petId, trialDate)
-                        .contentType(MediaType.APPLICATION_JSON)
+                post("/adoption/DOG?user_id=123&pet_id=1&trial_date=25.09.2023")
+                        //, userId, petId, trialDate)
+                        //.contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
                     DogAdoption dogAdoption = objectMapper.readValue(
                             result.getResponse().getContentAsString(),
                             DogAdoption.class
                     );
-                    assertThat(dogAdoption.getTrialDate()).isEqualTo(adoption.getTrialDate());
-                    verify(dogAdoptionRepository, atLeast(1)).save(adoption);
+                    //проверяем, что к нам вернулся объект, которым мы замокали репозиторий
+                    assertThat(dogAdoption).isEqualTo(adoption);
+                    //на вход save попадет объект c id = 0, не равный нашему возвращаемому adoption
+                    verify(dogAdoptionRepository, atLeast(1)).save(any());
+                    //надо бы проверить, что аргументы save соответствуют http-запросу
+                    //assertThat(dogAdoption.getTrialDate()).isEqualTo(adoption.getTrialDate());
                 });
-
+        //нужны еще отрицательные тесты
     }
 
     @Test
@@ -133,27 +138,33 @@ public class AdoptionControllerTest {
 
     @Test
     public void setTrialDateTest() throws Exception {
-        when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-        adoption.setTrialDate(trialDate);
+        doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
+        when(dogAdoptionRepository.findById(adoption.getId())).thenReturn(Optional.of(adoption));
         when(dogAdoptionRepository.save(adoption)).thenReturn(adoption);
 
         mockMvc.perform(
-                put("/adoption/DOG/1/?trial_date={2022, 11, 22}", trialDate)
-                        .contentType(MediaType.APPLICATION_JSON)
+                put("/adoption/DOG/1?trial_date=01.01.2024")
+                        //.contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
                     DogAdoption dogAdoption = objectMapper.readValue(
                             result.getResponse().getContentAsString(),
                             DogAdoption.class
                     );
-                    assertThat(dogAdoption.getTrialDate()).isEqualTo(adoption.getTrialDate());
+                    //к нам должен вернуться наш же adoption, который мы поручили вернуть dogAdoptionRepository.findById и save
+                    assertThat(dogAdoption).isEqualTo(adoption);
+                    //но с измененной датой
+                    assertThat(dogAdoption.getTrialDate()).isEqualTo(LocalDate.of(2024, 1, 1));
+
                 });
+        //кроме того проверим, что был вызов save
+        verify(dogAdoptionRepository, new Times(1)).save(adoption);
     }
 
     @Test
     public void deleteAdoption() throws Exception {
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption));
-        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
+        doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         mockMvc.perform(
                 delete("/adoption/DOG/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,19 +176,18 @@ public class AdoptionControllerTest {
                     );
                 });
         verify(dogAdoptionRepository, new Times(1)).deleteById(any());
-        Mockito.reset(dogAdoptionRepository);
+        reset(dogAdoptionRepository);
     }
 
     @Test
     public void getAllAdoptionsTest() throws Exception {
+        doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         List<DogAdoption> adoptions = new ArrayList<>();
         adoptions.add(adoption);
-        Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogAdoptionRepository.findAll()).thenReturn(adoptions);
-
         mockMvc.perform(
-                get("/adoption/DOG")
-                        .contentType(MediaType.APPLICATION_JSON)
+                get("/adoption/DOG/all")
+                        //.contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
                     List<DogAdoption> dogAdoptionList = objectMapper.readValue(

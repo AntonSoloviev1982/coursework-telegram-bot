@@ -11,6 +11,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 /**
  * В классе ShelterService содержится бизнес логика для работы с информацией о приютах.
  */
@@ -177,6 +179,7 @@ public class ShelterService {
      */
 
     public void checkShelterId(ShelterId shelterId) {
+        if (shelterId == null) {throw new ShelterNotFoundException("NULL");}
         //если shelterId в коллекции не найдется, то бросаем исключение
         if (!shelters.stream().map(Shelter::getId).toList().contains(shelterId)) {
             throw new ShelterNotFoundException(shelterId.toString());

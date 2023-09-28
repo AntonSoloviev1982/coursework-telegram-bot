@@ -1,5 +1,6 @@
 package pro.sky.courseworktelegrambot.controllers;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Adoption;
@@ -57,12 +58,14 @@ public class AdoptionController {
         return adoptionService.deleteAdoption(shelterId, adoptionId);
     }
 
-    @GetMapping("{shelter_id}")
-    public Collection<Adoption> getAllAdoptions(ShelterId shelterId) {
+    @GetMapping("{shelter_id}/all")
+    public Collection<Adoption> getAllAdoptions(
+            @PathVariable("shelter_id") ShelterId shelterId) {
         return adoptionService.getAllAdoptions(shelterId);
     }
     @GetMapping("{shelter_id}/active")
-    public Collection<Adoption> getAllActiveAdoptions(ShelterId shelterId) {
+    public Collection<Adoption> getAllActiveAdoptions(
+            @PathVariable("shelter_id") ShelterId shelterId) {
         return adoptionService.getAllActiveAdoptions(shelterId);
     }
 }

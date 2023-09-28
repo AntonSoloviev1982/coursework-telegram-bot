@@ -45,6 +45,9 @@ public abstract class Adoption {
     public int getId() {
         return id;
     }
+    public void setId(int id) {
+        this.id = id;
+    } //для тестов
 
     public User getUser() {
         return user;
