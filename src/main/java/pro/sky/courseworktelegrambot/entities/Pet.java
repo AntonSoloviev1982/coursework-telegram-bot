@@ -1,35 +1,51 @@
 package pro.sky.courseworktelegrambot.entities;
 
 import javax.persistence.*;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Object Pet
+ * Базовый класс для сущностей, представляющих домашних животных.
  */
-//Класс не абстрактный.
-//Объекты этого класса Spring будет собирать из тела запросов на создание и обновление
 @MappedSuperclass
-public class Pet {
+public class Pet {    
+//Класс не абстрактный.
+//Объекты этого класса Spring будет собирать из тела запросов на создание и обновление 
+//и потом из них пересоздавать объекты класса Dog или Pet
+    /**
+     * Идентификатор животного.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    /**
+     * Имя животного.
+     */
     private String name;
+    /**
+     * Порода животного.
+     */
     private String breed;
     /**
-     * Возраст животного
+     * Возраст животного.
      */
     private int age;
+    /**
+     * Фотография животного.
+     */
     @Lob
     private byte[] photo;
+    /**
+     * Статус усыновления животного.
+     */
     private boolean isAdopted;
-
+    
     //конструкторы не нужны, создавать будет Spring из запросов
-
+    
     public int getId() {
         return id;
     }
-    public void setId(int id) { //для преобразования из Pet в Dog или Cat
+
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -44,6 +60,7 @@ public class Pet {
     public String getBreed() {
         return breed;
     }
+
 
     public void setBreed(String breed) {
         this.breed = breed;
@@ -65,6 +82,11 @@ public class Pet {
         this.photo = photo;
     }
 
+    /**
+     * Возвращает true, если у животного есть фотография.
+     *
+     * @return true, если фотография есть; false в противном случае
+     */
     public boolean getHasPhoto() {
         return photo != null;
     }
