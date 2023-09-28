@@ -17,7 +17,7 @@ public abstract class Report {
     @Lob
     private byte[] photo; // фото отчета
     @Lob
-    private byte[] text; // комментарий отчета
+    private byte[] text; // текст отчета
 
     public Report(LocalDate date, byte[] photo, byte[] text) {
         this.date = date;

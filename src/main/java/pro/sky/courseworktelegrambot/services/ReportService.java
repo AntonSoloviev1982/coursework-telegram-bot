@@ -44,12 +44,11 @@ public class ReportService {
     /**
      * Метод сохраняет отчет по собаке или кошке в ДБ .<br>
      * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
-     * Используется метод коллекции {@link List#isEmpty()}
      *
-     * @param user  идентификатор приюта.
+     * @param user  идентификатор пользователя.
      * @param photo фото отчета
-     * @param text  комментарий отчета
-     * @return сохраненные данные отчета для кошки или собаки
+     * @param text  текст отчета
+     * @return Report сохраненные данные отчета для кошки или собаки
      */
     public Report saveReport(User user, byte[] photo, byte[] text) {
         //вызывается из бота, волонтер отчеты только читает
@@ -112,13 +111,12 @@ public class ReportService {
 
     /**
      * Метод выводит отчет по индентификатору.<br>
-     * Используется если значение не найдено возвращает исключение {@link java.util.Optional#orElseThrow}.<br>
-     * Используется метод коллекции {@link List#isEmpty()}
+     * Используется метод репозитория {@link JpaRepository#findById(Object)} (Object)}
      *
      * @param shelterId идентификатор приюта.
-     * @param reportId  фото отчета
-     * @return возвращает отчет
-     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @param reportId  индентификатор отчета
+     * @return Report возвращает отчет
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      * @throws EntityNotFoundException  если id отчета не найден в базе
      */
     public Report getReportById(ShelterId shelterId, int reportId) {
@@ -128,12 +126,13 @@ public class ReportService {
     }
 
     /**
-     * Метод удаляет отчет по заданному индентификатору.<br>
+     * Метод удаляет отчет по заданному индентификатору.
+     * Используется метод репозитория {@link JpaRepository#deleteById(Object)}.<br><br>
      *
      * @param shelterId идентификатор приюта.
-     * @param reportId  фото отчета
-     * @return возвращает удаленный отчет
-     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @param reportId  идетификатор отчета
+     * @return Report возвращает удаленный отчет
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      * @throws EntityNotFoundException  если id отчета не найден в базе
      */
     public Report deleteReportById(ShelterId shelterId, int reportId) {
@@ -148,9 +147,8 @@ public class ReportService {
      *
      * @param shelterId идентификатор приюта.
      * @param date      дата отчета
-     * @return возвращает список отчетов кошек или собак
-     * @throws ShelterNotFoundException если id отчета не найден в базе
-     * @throws EntityNotFoundException  если id отчета не найден в базе
+     * @return List<Report> возвращает список отчетов кошек или собак
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      */
     public List<Report> getAllReportsByDate(ShelterId shelterId, LocalDate date) {
         shelterService.checkShelterId(shelterId);
@@ -163,11 +161,11 @@ public class ReportService {
 
     /**
      * Метод выводит все отчеты кошек и собак из БД.<br>
+     * Используется метод репозитория {@link JpaRepository#findAll()}.<br><br>
      *
      * @param shelterId идентификатор приюта.
      * @return возвращает список отчетов кошек и собак
-     * @throws ShelterNotFoundException если id отчета не найден в базе
-     * @throws EntityNotFoundException  если id отчета не найден в базе
+     * @throws ShelterNotFoundException если id приюта не найден в базе
      */
     public List<Report> getAllReports(ShelterId shelterId) {
         shelterService.checkShelterId(shelterId);

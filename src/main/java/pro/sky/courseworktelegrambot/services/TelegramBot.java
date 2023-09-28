@@ -70,6 +70,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     private JpaRepository<? extends Pet, Integer> petRepository(ShelterId shelterId) {
         return (shelterId == ShelterId.DOG) ? dogRepository : catRepository;
     }
+
+
     private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
@@ -202,6 +204,19 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+
+    /**
+     * Метод отправляет сообщение пользователю .<br>
+     * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
+     * Используется метод коллекции {@link List#isEmpty()}
+     *
+     * @param user  идентификатор приюта.
+     * @param text  комментарий отчета
+     * @param replyToMessageId  комментарий отчета
+     * @return сохраненные данные отчета для кошки или собаки
+     * @throws TelegramApiException выбрасывается если базовое поле не доступно.
+     *
+     */
     //replyToMessageId если не 0, то боту уйдет сообщение в виде - с включенным в ответ вопросом
     public void sendMessageToUser (User user, String text, int replyToMessageId)
         throws TelegramApiException {
