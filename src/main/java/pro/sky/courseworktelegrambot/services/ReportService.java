@@ -45,9 +45,9 @@ public class ReportService {
      * Метод сохраняет отчет по собаке или кошке в ДБ .<br>
      * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
      *
-     * @param user  идентификатор пользователя.
-     * @param photo фото отчета
-     * @param text  текст отчета
+     * @param user  объект пользователя.
+     * @param photo фото отчета, может быть null, если прислан текст
+     * @param text  текст отчета, может быть null, если прислано фото
      * @return Report сохраненные данные отчета для кошки или собаки
      */
     public Report saveReport(User user, byte[] photo, byte[] text) {
@@ -147,7 +147,7 @@ public class ReportService {
      *
      * @param shelterId идентификатор приюта.
      * @param date      дата отчета
-     * @return List<Report> возвращает список отчетов кошек или собак
+     * @return List<Report> возвращает список отчетов кошек или собак за заданную дату
      * @throws ShelterNotFoundException если id приюта не найден в базе
      */
     public List<Report> getAllReportsByDate(ShelterId shelterId, LocalDate date) {
@@ -164,7 +164,7 @@ public class ReportService {
      * Используется метод репозитория {@link JpaRepository#findAll()}.<br><br>
      *
      * @param shelterId идентификатор приюта.
-     * @return возвращает список отчетов кошек и собак
+     * @return List<Report> возвращает список всех отчетов кошек или собак
      * @throws ShelterNotFoundException если id приюта не найден в базе
      */
     public List<Report> getAllReports(ShelterId shelterId) {
