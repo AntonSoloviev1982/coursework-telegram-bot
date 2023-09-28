@@ -3,6 +3,7 @@ package pro.sky.courseworktelegrambot.services;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
+import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
@@ -40,6 +41,16 @@ public class ReportService {
         return (shelterId == ShelterId.DOG) ? dogReportRepository : catReportRepository;
     }
 
+    /**
+     * Метод сохраняет отчет по собаке или кошке в ДБ .<br>
+     * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
+     * Используется метод коллекции {@link List#isEmpty()}
+     *
+     * @param user  идентификатор приюта.
+     * @param photo фото отчета
+     * @param text  комментарий отчета
+     * @return сохраненные данные отчета для кошки или собаки
+     */
     public Report saveReport(User user, byte[] photo, byte[] text) {
         //вызывается из бота, волонтер отчеты только читает
 
@@ -65,8 +76,12 @@ public class ReportService {
                     report = new DogReport(adoption, date, photo, text);
                 } else {
                     report = reportList.get(0);
-                    if (photo != null) {report.setPhoto(photo);}
-                    if (text != null) {report.setText(text);}
+                    if (photo != null) {
+                        report.setPhoto(photo);
+                    }
+                    if (text != null) {
+                        report.setText(text);
+                    }
                 }
                 return dogReportRepository.save(report);
             }
@@ -83,20 +98,44 @@ public class ReportService {
                     report = new CatReport(adoption, date, photo, text);
                 } else {
                     report = reportList.get(0);
-                    if (photo != null) {report.setPhoto(photo);}
-                    if (text != null) {report.setText(text);}
+                    if (photo != null) {
+                        report.setPhoto(photo);
+                    }
+                    if (text != null) {
+                        report.setText(text);
+                    }
                 }
                 return catReportRepository.save(report);
             }
         }
     }
 
+    /**
+     * Метод выводит отчет по индентификатору.<br>
+     * Используется если значение не найдено возвращает исключение {@link java.util.Optional#orElseThrow}.<br>
+     * Используется метод коллекции {@link List#isEmpty()}
+     *
+     * @param shelterId идентификатор приюта.
+     * @param reportId  фото отчета
+     * @return возвращает отчет
+     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @throws EntityNotFoundException  если id отчета не найден в базе
+     */
     public Report getReportById(ShelterId shelterId, int reportId) {
         shelterService.checkShelterId(shelterId);
         return reportRepository(shelterId).findById(reportId).orElseThrow(() ->
                 new EntityNotFoundException("Report with id " + reportId + " in shelter " + shelterId + " not found"));
     }
 
+    /**
+     * Метод удаляет отчет по заданному индентификатору.<br>
+     *
+     * @param shelterId идентификатор приюта.
+     * @param reportId  фото отчета
+     * @return возвращает удаленный отчет
+     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @throws EntityNotFoundException  если id отчета не найден в базе
+     */
     public Report deleteReportById(ShelterId shelterId, int reportId) {
         shelterService.checkShelterId(shelterId);
         Report report = getReportById(shelterId, reportId);
@@ -104,19 +143,35 @@ public class ReportService {
         return report;
     }
 
-    public List<Report> getAllReportsByDate(ShelterId shelterId, LocalDate date){
+    /**
+     * Метод выводит все отчеты по дате из БД кошек или собак.<br>
+     *
+     * @param shelterId идентификатор приюта.
+     * @param date      дата отчета
+     * @return возвращает список отчетов кошек или собак
+     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @throws EntityNotFoundException  если id отчета не найден в базе
+     */
+    public List<Report> getAllReportsByDate(ShelterId shelterId, LocalDate date) {
         shelterService.checkShelterId(shelterId);
-        if (shelterId==ShelterId.DOG) {
+        if (shelterId == ShelterId.DOG) {
             return List.copyOf(dogReportRepository.findByDate(date));
         } else {
             return List.copyOf(catReportRepository.findByDate(date));
         }
     }
 
-    public List<Report> getAllReports(ShelterId shelterId){
+    /**
+     * Метод выводит все отчеты кошек и собак из БД.<br>
+     *
+     * @param shelterId идентификатор приюта.
+     * @return возвращает список отчетов кошек и собак
+     * @throws ShelterNotFoundException если id отчета не найден в базе
+     * @throws EntityNotFoundException  если id отчета не найден в базе
+     */
+    public List<Report> getAllReports(ShelterId shelterId) {
         shelterService.checkShelterId(shelterId);
         return List.copyOf(reportRepository(shelterId).findAll());
     }
-
 
 }
