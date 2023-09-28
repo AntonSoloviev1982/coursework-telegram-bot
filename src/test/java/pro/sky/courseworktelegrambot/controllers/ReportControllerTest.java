@@ -134,7 +134,9 @@ public class ReportControllerTest {
                             new TypeReference<List<DogReport>>() {
                             }
                     );
-                    assertThat(dogReports).isNotNull();
+                    assertThat(dogReports).isNotNull().isNotEmpty();
+                    assertThat(dogReports.get(0).getDate()).isEqualTo(LocalDate.of(2023, 9, 27));
+                    assertThat(dogReports.size()).isEqualTo(dogReportList.size());
                 });
     }
 
@@ -146,7 +148,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findByDate(date)).thenReturn(dogReportList);
 
         mockMvc.perform(
-                get("/report/DOG/?date={2023, 9, 27}", date)
+                get("/report/DOG/?date=27.09.2023", date)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
