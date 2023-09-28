@@ -92,7 +92,7 @@ class FeedbackRequestControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(result -> {
                     String resultAsString = result.getResponse().getContentAsString();
-                    Assertions.assertThat(resultAsString).isEqualTo("Element by this Id is absent. No value present");
+                    Assertions.assertThat(resultAsString).isEqualTo("Entity by this Id not found. FeedBackRequest with id = 4 not found");
                 });
     }
 
