@@ -346,14 +346,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
 
-    /**
-     * Создает новый объект MessageToVolunteer с пользователем, вопросом от пользователя
-     * , временем когда вопрос был задан. Остальные поля остаются пустыми.
-     *
-     * @param user        Юзер, от которого поступает вопрос.
-     * @param message     Сообщение от пользователя.
-     */
-
     private void createMessageToVolonteer(User user, Message message) {
         if (!message.hasText()) {
             user.setState(badChoiceState);
