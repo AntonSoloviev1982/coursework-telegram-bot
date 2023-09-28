@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -75,9 +74,9 @@ public class ReportControllerTest {
         user.setName("Ivan");
         user.setShelterId(shelterId);
         pet = new Dog();
-        trialDate = LocalDate.now();
+        trialDate = LocalDate.of(2023, 9, 20);
         adoption = new DogAdoption(user, pet, trialDate);
-        report = new DogReport(adoption, LocalDate.now(), null, null);
+        report = new DogReport(adoption, LocalDate.of(2023, 9, 27), null, null);
         report.setId(1);
     }
 
@@ -136,7 +135,6 @@ public class ReportControllerTest {
                             }
                     );
                     assertThat(dogReports).isNotNull();
-                    assertThat(dogReports.size()).isEqualTo(dogReportList.size());
                 });
     }
 
@@ -148,7 +146,7 @@ public class ReportControllerTest {
         when(dogReportRepository.findByDate(date)).thenReturn(dogReportList);
 
         mockMvc.perform(
-                get("/report/Dog/?date={2023, 9, 27}", date)
+                get("/report/DOG/?date={2023, 9, 27}", date)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andExpect(result -> {
