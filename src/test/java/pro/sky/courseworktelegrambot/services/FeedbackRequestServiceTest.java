@@ -10,8 +10,8 @@ import pro.sky.courseworktelegrambot.entities.FeedbackRequest;
 import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.repositories.FeedbackRequestRepository;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +46,7 @@ class FeedbackRequestServiceTest {
         verify(feedbackRequestRepository,only()).findById(any());
 
         when(feedbackRequestRepository.findById(any())).thenReturn(Optional.empty());
-        Assertions.assertThrows(NoSuchElementException.class, () -> feedbackRequestService.getFeedbackRequest(3));
+        Assertions.assertThrows(EntityNotFoundException.class, () -> feedbackRequestService.getFeedbackRequest(3));
         verify(feedbackRequestRepository,times(2)).findById(any());
     }
 

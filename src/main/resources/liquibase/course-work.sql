@@ -138,11 +138,12 @@ CREATE TABLE users(     --имя user не разрешает, зарезерв�
     previous_state_id VARCHAR(30),
     state_time TIMESTAMP,
     FOREIGN KEY (state_id) REFERENCES state(id),
-    FOREIGN KEY (previous_state_id) REFERENCES state(id)
+    FOREIGN KEY (previous_state_id) REFERENCES state(id),
+    FOREIGN KEY (shelter_id) REFERENCES shelter(id)
    );
 INSERT INTO users(id, name, shelter_id, state_id) VALUES
-    (11, 'User11', 'Dog', 'Shelter'),
-    (22, 'User22', 'Cat', 'Shelter');
+    (11, 'User11', 'DOG', 'Shelter'),
+    (22, 'User22', 'CAT', 'Shelter');
 
 --changeset anton:create_message_to_volunteer
 DROP TABLE IF EXISTS message_to_volunteer;

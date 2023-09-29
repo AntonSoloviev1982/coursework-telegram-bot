@@ -70,6 +70,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private JpaRepository<? extends Pet, Integer> petRepository(ShelterId shelterId) {
         return (shelterId == ShelterId.DOG) ? dogRepository : catRepository;
     }
+
     private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
@@ -118,7 +119,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             try {
                 sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
             } catch (TelegramApiException e) {
-                //в логах останется запись
+                logger.error("Ошибка посылки приветственного сообщения: " + e.getMessage());
                 return;
             }
         } else {
@@ -140,8 +141,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                             case ANIMAL_BY_NUMBER -> showAnimal(user, message);
                         }
                     } catch (TelegramApiException e) {
-                        //при невозможности послать ответ, ничего не делаем
-                        //в логах останется запись
+                        //при невозможности послать ответ, ничего не делаем. Но прерываем выполнение метода
+                        //в логах останется запись от sendMessage
                         return;
                     }
                 }
@@ -157,8 +158,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             if (!user.getState().equals(oldState)) goToNextState(user, oldState);
         } catch (TelegramApiException e) {
-            //при невозможности послать ответ, ничего не делаем
-            //в логах останется запись
+            //при невозможности послать ответ, ничего не делаем. Но прерываем выполнение метода
+            //в логах останется запись от sendMessage
             return;
         }
 
@@ -197,11 +198,23 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            logger.error("Error occurred: " + e.getMessage());
-            throw e;
+            logger.error("Error occurred by sending message: " + e.getMessage());
+            throw e; //пробрасываем в вызывающие методы, чтобы они прервали свою работу
         }
     }
 
+
+    /**
+     * Метод отправляет сообщение пользователю,
+     * учитывая его состояние кнопок (чтобы не стереть их, а повторить) .<br>
+     *
+     * @param user  пользователь, которому надо отправить соообщение.
+     * @param text  текст сообщения
+     * @param replyToMessageId  идентификатор предыдущего сообщения от пользователя,
+     *                          на которое надо отправить ответ
+     * @throws TelegramApiException выбрасывается, если отправка не состоялась.
+     *
+     */
     //replyToMessageId если не 0, то боту уйдет сообщение в виде - с включенным в ответ вопросом
     public void sendMessageToUser (User user, String text, int replyToMessageId)
         throws TelegramApiException {
@@ -331,14 +344,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
 
-    /**
-     * Создает новый объект MessageToVolunteer с пользователем, вопросом от пользователя
-     * , временем когда вопрос был задан. Остальные поля остаются пустыми.
-     *
-     * @param user        Юзер, от которого поступает вопрос.
-     * @param message     Сообщение от пользователя.
-     */
-
     private void createMessageToVolonteer(User user, Message message) {
         if (!message.hasText()) {
             user.setState(badChoiceState);
@@ -372,8 +377,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             sendMessage(user.getId(), "Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", null, 0);
         } catch (TelegramApiException e) {
-            //если не удалось послать подтверждение приема, то ничего страшного.
+            logger.error("Не удалось отправить подтверждение на прием запроса обратной связи." + e.getMessage());
             //Главное - запрос принят. Ничего не делаем
+            //даже не сообщаем в вызывающий метод
         }
     }
 
@@ -399,7 +405,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch(TelegramApiException e) {
             //если не удалось послать подтверждение приема, то ничего страшного.
             //Главное - отчет принят. Ничего не делаем
+            //даже не сообщаем в вызывающий метод
         }
+
 
         //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
