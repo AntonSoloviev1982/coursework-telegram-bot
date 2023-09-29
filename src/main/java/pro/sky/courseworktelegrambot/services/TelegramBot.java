@@ -71,7 +71,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         return (shelterId == ShelterId.DOG) ? dogRepository : catRepository;
     }
 
-
     private State initialState;  //начальное состояние для новых пользователей извлечем заранее,
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
@@ -120,7 +119,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             try {
                 sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
             } catch (TelegramApiException e) {
-                //в логах останется запись
+                logger.error("Ошибка посылки сообщения: " + e.getMessage());
                 return;
             }
         } else {
@@ -143,7 +142,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         }
                     } catch (TelegramApiException e) {
                         //при невозможности послать ответ, ничего не делаем
-                        //в логах останется запись
+                        logger.error("Ошибка посылки сообщения: " + e.getMessage());
                         return;
                     }
                 }

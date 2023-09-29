@@ -14,6 +14,23 @@ public class State {
     //некоторые состояния имеют спец имена и соответствуют перечислению NamedState
     @Enumerated(EnumType.STRING)
     private NamedState namedState;
+    //кнопки подтягиваем сразу
+    @OneToMany(fetch = FetchType.EAGER)  //по умолчанию (fetch = FetchType.LAZY)
+    @JoinColumn(name="state_id")
+    private List<StateButton> buttons;
+
+    //для тестов
+    public State(String id, String text, Boolean textInput, NamedState namedState, List<StateButton> buttons) {
+        this.id = id;
+        this.text = text;
+        this.textInput = textInput;
+        this.namedState = namedState;
+        this.buttons = buttons;
+    }
+
+    public State() {
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -22,14 +39,9 @@ public class State {
         return id.equals(state.id);
     }
 
-    //кнопки подтягиваем сразу
-    @OneToMany(fetch = FetchType.EAGER)  //по умолчанию (fetch = FetchType.LAZY)
-    @JoinColumn(name="state_id")
-    private List<StateButton> buttons;
     public String getId() {
         return id;
     }
-
     public String getText() {
         return text;
     }

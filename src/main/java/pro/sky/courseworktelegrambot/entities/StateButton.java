@@ -18,6 +18,19 @@ public class StateButton {
     @Enumerated(EnumType.STRING)
     private ShelterId shelterId;  //если пусто, то для любого приюта. если заполнено, то кнопка только для указанного
 
+    public StateButton() {
+    }
+
+    //для тестов
+    public StateButton(String state_id, String caption, State nextState, byte row, byte col, ShelterId shelterId) {
+        this.state_id = state_id;
+        this.caption = caption;
+        this.nextState = nextState;
+        this.row = row;
+        this.col = col;
+        this.shelterId = shelterId;
+    }
+
     public String getState_id() {  //думаю, никогда не потребуется
         return state_id;
     }
