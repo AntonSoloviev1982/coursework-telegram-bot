@@ -119,7 +119,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             try {
                 sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
             } catch (TelegramApiException e) {
-                logger.error("Ошибка посылки сообщения: " + e.getMessage());
+                logger.error("Ошибка посылки приветственного сообщения: " + e.getMessage());
                 return;
             }
         } else {
@@ -141,8 +141,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                             case ANIMAL_BY_NUMBER -> showAnimal(user, message);
                         }
                     } catch (TelegramApiException e) {
-                        //при невозможности послать ответ, ничего не делаем
-                        logger.error("Ошибка посылки сообщения: " + e.getMessage());
+                        //при невозможности послать ответ, ничего не делаем. Но прерываем выполнение метода
+                        //в логах останется запись от sendMessage
                         return;
                     }
                 }
@@ -158,8 +158,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             if (!user.getState().equals(oldState)) goToNextState(user, oldState);
         } catch (TelegramApiException e) {
-            //при невозможности послать ответ, ничего не делаем
-            //в логах останется запись
+            //при невозможности послать ответ, ничего не делаем. Но прерываем выполнение метода
+            //в логах останется запись от sendMessage
             return;
         }
 
@@ -198,22 +198,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            logger.error("Error occurred: " + e.getMessage());
-            throw e;
+            logger.error("Error occurred by sending message: " + e.getMessage());
+            throw e; //пробрасываем в вызывающие методы, чтобы они прервали свою работу
         }
     }
 
 
     /**
-     * Метод отправляет сообщение пользователю .<br>
-     * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
-     * Используется метод коллекции {@link List#isEmpty()}
+     * Метод отправляет сообщение пользователю,
+     * учитывая его состояние кнопок (чтобы не стереть их, а повторить) .<br>
      *
-     * @param user  идентификатор приюта.
-     * @param text  комментарий отчета
-     * @param replyToMessageId  комментарий отчета
-     * @return сохраненные данные отчета для кошки или собаки
-     * @throws TelegramApiException выбрасывается если базовое поле не доступно.
+     * @param user  пользователь, которому надо отправить соообщение.
+     * @param text  текст сообщения
+     * @param replyToMessageId  идентификатор предыдущего сообщения от пользователя,
+     *                          на которое надо отправить ответ
+     * @throws TelegramApiException выбрасывается, если отправка не состоялась.
      *
      */
     //replyToMessageId если не 0, то боту уйдет сообщение в виде - с включенным в ответ вопросом
@@ -378,8 +377,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             sendMessage(user.getId(), "Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", null, 0);
         } catch (TelegramApiException e) {
-            //если не удалось послать подтверждение приема, то ничего страшного.
+            logger.error("Не удалось отправить подтверждение на прием запроса обратной связи." + e.getMessage());
             //Главное - запрос принят. Ничего не делаем
+            //даже не сообщаем в вызывающий метод
         }
     }
 
@@ -405,7 +405,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch(TelegramApiException e) {
             //если не удалось послать подтверждение приема, то ничего страшного.
             //Главное - отчет принят. Ничего не делаем
+            //даже не сообщаем в вызывающий метод
         }
+
 
         //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
