@@ -176,9 +176,9 @@ CREATE TABLE cat(
     breed VARCHAR(30),
     age INTEGER,
     photo BLOB,
-    is_adopted BOOLEAN
+    adopted BOOLEAN
     );
-INSERT INTO cat(name, breed, age, is_adopted) VALUES
+INSERT INTO cat(name, breed, age, adopted) VALUES
     ('Кот', 'Дворовый', 5, FALSE),
     ('Котяра', 'Кошка', 10, TRUE);
 
@@ -189,9 +189,9 @@ CREATE TABLE dog(
     breed VARCHAR(30),
     age INTEGER,
     photo BLOB,
-    is_adopted BOOLEAN
+    adopted BOOLEAN
     );
-INSERT INTO dog(name, breed, age, is_adopted) VALUES
+INSERT INTO dog(name, breed, age, adopted) VALUES
     ('Пес', 'Дворняга', 5, FALSE),
     ('Барбос', 'Собака', 10, TRUE);
 

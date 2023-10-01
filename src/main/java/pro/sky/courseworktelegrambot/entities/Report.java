@@ -15,8 +15,10 @@ public abstract class Report {
     private int id;
     private LocalDate date; // дата отчета
     @Lob
+    @Column(columnDefinition = "oid")
     private byte[] photo; // фото отчета
     @Lob
+    @Column(columnDefinition = "oid")
     private byte[] text; // текст отчета
 
     public Report(LocalDate date, byte[] photo, byte[] text) {

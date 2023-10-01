@@ -33,11 +33,12 @@ public class Pet {
      * Фотография животного.
      */
     @Lob
+    @Column(columnDefinition = "oid")
     private byte[] photo;
     /**
      * Статус усыновления животного.
      */
-    private boolean isAdopted;
+    private boolean adopted;
     
     //конструкторы не нужны, создавать будет Spring из запросов
     
@@ -92,11 +93,11 @@ public class Pet {
     }
 
     public boolean isAdopted() {
-        return isAdopted;
+        return adopted;
     }
 
     public void setAdopted(boolean adopted) {
-        this.isAdopted = adopted;
+        this.adopted = adopted;
     }
 
     @Override
@@ -119,7 +120,7 @@ public class Pet {
                 ", name='" + name + '\'' +
                 ", breed='" + breed + '\'' +
                 ", age=" + age +
-                ", isAdopted=" + isAdopted +
+                ", isAdopted=" + adopted +
                 '}';
     }
 }
