@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface DogAdoptionRepository extends JpaRepository<DogAdoption,Integer> {
+public interface DogAdoptionRepository extends JpaRepository<DogAdoption,Integer>{
     //поиск усыновлений пользователя с пересекающимся испытательным сроком,
     List<DogAdoption> findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
             //trialDate_parameter >= date_base AND date_parameter <= trialDate_base
@@ -23,4 +23,7 @@ public interface DogAdoptionRepository extends JpaRepository<DogAdoption,Integer
     List<DogAdoption> findByDateLessThanEqualAndTrialDateGreaterThanEqual(
             //date_parameter >= date_base AND date_parameter <= trialDate_base
             LocalDate date1, LocalDate date2);
+
+    List<DogAdoption> findByTrialDateGreaterThanEqual(LocalDate date);
+
 }
