@@ -135,14 +135,16 @@ public class AdoptionService {
             DogAdoption adoption = dogAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
                     "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
             long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
-            notifier.sendNotification(adoption, days);
+            notifier.sendNotification(adoption, "ВНИМАНИЕ !!! " +
+                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString());
             adoption.setTrialDate(trialDate);
             return dogAdoptionRepository.save(adoption);
         } else {
             CatAdoption adoption = catAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
                     "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
             long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
-            notifier.sendNotification(adoption, days);
+            notifier.sendNotification(adoption, "ВНИМАНИЕ !!! " +
+                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString());
             adoption.setTrialDate(trialDate);
             return catAdoptionRepository.save(adoption);
         }

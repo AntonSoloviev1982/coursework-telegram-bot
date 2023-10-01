@@ -43,8 +43,7 @@ public class Notifier {
     }
 
     @Scheduled(cron = "0 1 21 * * *")
-    private void sendWarningNoReport() throws TelegramApiException {
-
+    private void sendWarningNoReport(){
         long today = ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.of(2022, 12,31));
         long dayLatestReport;
         LocalDate date;
@@ -68,8 +67,8 @@ public class Notifier {
                     notification.setQuestion("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней");
                     messageToVolunteerRepository.save(notification);
                 }else {
-                    telegramBot.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
-                            "Просим вас присылать ежедневный отчет до 21:00.", 1000000);
+                    sendNotification(adoption, "ВНИМАНИЕ !!! " +
+                            "Просим вас присылать ежедневный отчет до 21:00.");
                 }
             }
         }
@@ -92,8 +91,8 @@ public class Notifier {
                     notification.setQuestion("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней");
                     messageToVolunteerRepository.save(notification);
                 }else {
-                    telegramBot.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
-                            "Просим вас присылать ежедневный отчет до 21:00.", 1000000);
+                    sendNotification(adoption, "ВНИМАНИЕ !!! " +
+                                    "Просим вас присылать ежедневный отчет до 21:00.");
                 }
             }
         }
@@ -101,27 +100,26 @@ public class Notifier {
     }
 
     @Scheduled(cron = "0 0 23 * * *")
-    private void sendCongratulation() throws TelegramApiException {
+    private void sendCongratulation(){
         List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (DogAdoption adoption : currentDogAdoptionList) {
             if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                telegramBot.sendMessageToUser(adoption.getUser(), "Поздравляем !!! Вы успешно прошли " +
-                        "испытательный период. Всего наилучшего Вам и вашему питомцу.", 1000000);
+                sendNotification(adoption, "Поздравляем !!! Вы успешно прошли испытательный период. " +
+                        "Всего наилучшего Вам и вашему питомцу.");
             }
         }
         List<CatAdoption> currentCatAdoptionList = catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (CatAdoption adoption : currentCatAdoptionList) {
             if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                telegramBot.sendMessageToUser(adoption.getUser(), "Поздравляем !!! Вы успешно прошли " +
-                        "испытательный период. Всего наилучшего Вам и вашему питомцу.", 1000000);
+                sendNotification(adoption, "Поздравляем !!! Вы успешно прошли испытательный период. " +
+                        "Всего наилучшего Вам и вашему питомцу.");
             }
         }
     }
 
-    public void sendNotification(Adoption adoption, long days){
+    public void sendNotification(Adoption adoption, String notification){
         try {
-            telegramBot.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
-                    "Вам увеличен испытательный срок на" + days + " дней.", 1000000);
+            telegramBot.sendMessageToUser(adoption.getUser(), notification, 1000000);
         }catch (TelegramApiException e){
             logger.error("TelegramError " + e.getMessage());
         }
