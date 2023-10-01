@@ -41,9 +41,6 @@ public class ShelterControllerTest {
     @SpyBean
     private ShelterService shelterService;
 
-    @InjectMocks
-    private ShelterController shelterController;
-
     @Autowired
     private ObjectMapper objectMapper;
 

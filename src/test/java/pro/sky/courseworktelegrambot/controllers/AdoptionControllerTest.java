@@ -59,9 +59,6 @@ public class AdoptionControllerTest {
     @SpyBean
     private ShelterService shelterService;
 
-    @InjectMocks
-    private AdoptionController adoptionController;
-
     @Autowired
     private ObjectMapper objectMapper;
 

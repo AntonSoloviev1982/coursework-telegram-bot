@@ -16,7 +16,7 @@ import pro.sky.courseworktelegrambot.services.TelegramBot;
 public class BotInitializer {
     private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
 
-    TelegramBot bot;
+    private final TelegramBot bot;
 
     public BotInitializer(TelegramBot bot) {
         this.bot = bot;

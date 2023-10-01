@@ -52,8 +52,6 @@ public class ReportControllerTest {
     @SpyBean
     private ReportService reportService;
 
-    @InjectMocks
-    private ReportController reportController;
     @Autowired
     private ObjectMapper objectMapper;
 

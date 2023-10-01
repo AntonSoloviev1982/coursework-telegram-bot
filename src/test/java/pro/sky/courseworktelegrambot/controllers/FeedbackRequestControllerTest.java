@@ -37,8 +37,9 @@ class FeedbackRequestControllerTest {
     @SpyBean
     private FeedbackRequestService feedbackRequestService;
 
-    @InjectMocks
-    private FeedbackRequestController feedbackRequestController;
+    //@InjectMocks
+    //private FeedbackRequestController feedbackRequestController;
+    //Контроллер здесь не нужен. К нему нет обращений
 
     static List<FeedbackRequest> testList = new ArrayList<>();
 

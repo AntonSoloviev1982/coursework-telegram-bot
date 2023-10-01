@@ -15,8 +15,7 @@ public class State {
     @Enumerated(EnumType.STRING)
     private NamedState namedState;
     //кнопки подтягиваем сразу
-    @OneToMany(fetch = FetchType.EAGER)  //по умолчанию (fetch = FetchType.LAZY)
-    @JoinColumn(name="state_id")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "state")  //по умолчанию (fetch = FetchType.LAZY)
     private List<StateButton> buttons;
 
     //для тестов

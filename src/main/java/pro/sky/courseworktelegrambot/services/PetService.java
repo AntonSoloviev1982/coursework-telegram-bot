@@ -56,11 +56,13 @@ public class PetService {
         shelterService.checkShelterId(shelterId);
         if (shelterId==ShelterId.DOG) {
             Dog dog = new Dog(pet);
-            dog.setId(0);  //при создании id не указываем
+            //при создании id принудительно указываем = 0, чтобы save работал правильно
+            //переданный id игнорируем
+            dog.setId(0);
             return dogRepository.save(dog);
         } else {
             Cat cat = new Cat(pet);
-            cat.setId(0);  //при создании id не указываем
+            cat.setId(0);
             return catRepository.save(cat);
         }
     }

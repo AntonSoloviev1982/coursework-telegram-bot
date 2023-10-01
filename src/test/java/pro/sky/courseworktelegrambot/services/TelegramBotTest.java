@@ -53,7 +53,8 @@ public class TelegramBotTest {
         //создадим объект - начальное состояние с кнопкой
         State initialState = new State("1","Начало",false, NamedState.INITIAL_STATE,
                 Collections.singletonList(new StateButton(
-                        "1", "Первая кнопка", null, (byte)1,(byte)1 ,null)));
+                        null, "Первая кнопка", null, (byte)1,(byte)1 ,null)));
+
         //передадим созданное состояние в бот через мок репозитория состояний
         when(stateRepository.findByNamedState(NamedState.INITIAL_STATE)).thenReturn(initialState);
         spyTelegramBot.initStates();

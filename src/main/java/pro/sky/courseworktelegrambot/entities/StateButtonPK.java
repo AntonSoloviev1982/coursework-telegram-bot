@@ -3,7 +3,7 @@ package pro.sky.courseworktelegrambot.entities;
 import java.io.Serializable;
 
 public class StateButtonPK implements Serializable {
-        private String state_id;
+        private State state;
         private String caption;
 
     @Override
@@ -11,13 +11,13 @@ public class StateButtonPK implements Serializable {
         if (this == o) return true;
         if (!(o instanceof StateButtonPK that)) return false;
 
-        if (!state_id.equals(that.state_id)) return false;
+        if (!state.equals(that.state)) return false;
         return caption.equals(that.caption);
     }
 
     @Override
     public int hashCode() {
-        int result = state_id.hashCode();
+        int result = state.hashCode();
         result = 31 * result + caption.hashCode();
         return result;
     }

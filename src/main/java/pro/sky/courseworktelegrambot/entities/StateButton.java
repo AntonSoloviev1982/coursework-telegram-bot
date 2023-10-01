@@ -6,10 +6,13 @@ import javax.persistence.*;
 @IdClass(StateButtonPK.class)
 public class StateButton {
     @Id
-    private String state_id; //в работе не потребуется. Поле существует, только для hibernate
+    @ManyToOne
+    @JoinColumn(name="state_id")  //можно и не писать
+    private State state; //в работе не потребуется. Поле существует, только для hibernate
     @Id
     private String caption;
     @ManyToOne   //по умолчанию (fetch = FetchType.EAGER)
+    @JoinColumn(name="next_state_id") //можно и не писать
     private State nextState;
     @Column(name="button_row") //имя колонки row запрещено в базе
     private byte row;
@@ -22,8 +25,8 @@ public class StateButton {
     }
 
     //для тестов
-    public StateButton(String state_id, String caption, State nextState, byte row, byte col, ShelterId shelterId) {
-        this.state_id = state_id;
+    public StateButton(State state, String caption, State nextState, byte row, byte col, ShelterId shelterId) {
+        this.state = state;
         this.caption = caption;
         this.nextState = nextState;
         this.row = row;
@@ -31,8 +34,8 @@ public class StateButton {
         this.shelterId = shelterId;
     }
 
-    public String getState_id() {  //думаю, никогда не потребуется
-        return state_id;
+    public State getState() {  //думаю, никогда не потребуется
+        return state;
     }
 
     public String getCaption() {
