@@ -2,7 +2,6 @@ package pro.sky.courseworktelegrambot.timer;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
@@ -40,7 +39,6 @@ public class Notifier {
     }
 
     @Scheduled(cron = "0 1 21 * * *")
-    @Transactional(readOnly = true)
     private void sendWarningNoReport() throws TelegramApiException {
 
         long today = ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.of(2022, 12,31));
@@ -98,5 +96,22 @@ public class Notifier {
 
     }
 
+    @Scheduled(cron = "0 0 23 * * *")
+    private void sendCongratulation() throws TelegramApiException {
+        List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
+        for (DogAdoption adoption : currentDogAdoptionList) {
+            if (adoption.getTrialDate().isEqual(LocalDate.now())) {
+                telegramBot.sendMessageToUser(adoption.getUser(), "Поздравляем !!! Вы успешно прошли " +
+                        "испытательный период. Всего наилучшего Вам и вашему питомцу.", 1000000);
+            }
+        }
+        List<CatAdoption> currentCatAdoptionList = catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
+        for (CatAdoption adoption : currentCatAdoptionList) {
+            if (adoption.getTrialDate().isEqual(LocalDate.now())) {
+                telegramBot.sendMessageToUser(adoption.getUser(), "Поздравляем !!! Вы успешно прошли " +
+                        "испытательный период. Всего наилучшего Вам и вашему питомцу.", 1000000);
+            }
+        }
+    }
 
 }
