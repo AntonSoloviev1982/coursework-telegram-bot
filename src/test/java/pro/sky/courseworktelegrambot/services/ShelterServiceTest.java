@@ -100,4 +100,11 @@ public class ShelterServiceTest {
                 .containsExactlyInAnyOrder(shelter1);
     }
 
+    @Test
+    public void checkShelterIdNegativeShelterIdIsNullTest() {
+        ShelterId shelterId = null;
+        assertThatExceptionOfType(ShelterNotFoundException.class).isThrownBy(() -> shelterService.checkShelterId(shelterId));
+    }
+
+
 }
