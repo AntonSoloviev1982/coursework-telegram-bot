@@ -12,8 +12,11 @@ import pro.sky.courseworktelegrambot.repositories.FeedbackRequestRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +39,19 @@ class FeedbackRequestServiceTest {
     }
 
     @Test
+    void getWaitingListTest() {
+        User user1 = new User();
+        String contact1 = "contact1";
+        FeedbackRequest feedbackRequest = new FeedbackRequest(user1, LocalDateTime.now(), contact1);
+        List<FeedbackRequest> feedbackRequests = new ArrayList<>();
+        feedbackRequests.add(feedbackRequest);
+        when(feedbackRequestRepository.findAllByExecutionTimeIsNull()).thenReturn(feedbackRequests);
+
+        assertThat(feedbackRequestService.getWaitingList()).isEqualTo(feedbackRequests);
+        verify(feedbackRequestRepository, atLeast(1)).findAllByExecutionTimeIsNull();
+    }
+
+    @Test
     void getFeedbackRequestTest() {
         User user2 = new User();
         String contact2 = "contact2";
@@ -48,6 +64,29 @@ class FeedbackRequestServiceTest {
         when(feedbackRequestRepository.findById(any())).thenReturn(Optional.empty());
         Assertions.assertThrows(EntityNotFoundException.class, () -> feedbackRequestService.getFeedbackRequest(3));
         verify(feedbackRequestRepository,times(2)).findById(any());
+    }
+
+    @Test
+    public void updateExecutionTimeTest() {
+        int id = 1;
+        User user1 = new User();
+        String contact1 = "contact1";
+        FeedbackRequest feedbackRequest = new FeedbackRequest(user1,null, contact1);
+        when(feedbackRequestRepository.findById(any())).thenReturn(Optional.of(feedbackRequest));
+        feedbackRequest.setExecutionTime(LocalDateTime.now());
+        feedbackRequestService.updateExecutionTime(id);
+        verify(feedbackRequestRepository, atLeast(1)).save(feedbackRequest);
+    }
+
+    @Test
+    void updateExecutionTimeNegativeTest() {
+        User user1 = new User();
+        String contact1 = "contact1";
+        FeedbackRequest feedbackRequest = new FeedbackRequest(user1,null, contact1);
+        when(feedbackRequestRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> feedbackRequestService.updateExecutionTime(any()));
+        verify(feedbackRequestRepository, atLeast(0)).save(feedbackRequest);
     }
 
 }

@@ -13,6 +13,7 @@ import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,87 +40,186 @@ public class ReportServiceTest {
     @InjectMocks
     private ReportService reportService;
 
-    private DogAdoption adoption;
-    private User user;
-    private Dog pet;
+    private DogAdoption adoption1;
+
+    private CatAdoption adoption2;
+    private User user1;
+
+    private User user2;
+    private Dog pet1;
+    private Cat pet2;
     private LocalDate trialDate;
-    private DogReport report;
-    private ShelterId shelterId;
+    private DogReport report1;
+    private CatReport report2;
+    private ShelterId shelterIdDog;
+    private ShelterId shelterIdCat;
 
 
     @BeforeEach
     public void beforeEach() {
-        shelterId = ShelterId.DOG;
-        user = new User();
-        user.setId(1L);
-        user.setName("Ivan");
-        user.setShelterId(shelterId);
-        pet = new Dog();
+        shelterIdDog = ShelterId.DOG;
+        shelterIdCat = ShelterId.CAT;
+        user1 = new User();
+        user1.setId(1L);
+        user1.setName("Ivan");
+        user1.setShelterId(shelterIdDog);
+        user2 = new User();
+        user2.setId(2L);
+        user2.setName("Petr");
+        user2.setShelterId(shelterIdCat);
+        pet1 = new Dog();
+        pet2 = new Cat();
         trialDate = LocalDate.now();
-        adoption = new DogAdoption(user, pet, trialDate);
-        report = new DogReport(adoption, LocalDate.now(), null, null);
-        report.setId(1);
+        adoption1 = new DogAdoption(user1, pet1, trialDate);
+        adoption2 = new CatAdoption(user2, pet2, trialDate);
+        report1 = new DogReport(adoption1, LocalDate.now(), null, null);
+        report1.setId(1);
+        report2 = new CatReport(adoption2, LocalDate.now(), null, null);
+        report2.setId(2);
     }
 
     @Test
-    public void saveReportTest() {
+    public void saveDogReportTest() {
+        byte[] photo = new byte[5];
+        byte[] text = new byte[5];
         LocalDate date = LocalDate.now();
         List<DogAdoption> adoptionList = new ArrayList<>();
-        adoptionList.add(adoption);
+        adoptionList.add(adoption1);
         when(dogAdoptionRepository
                 .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+                        user1, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
         List<DogReport> reportList = new ArrayList<>();
-        reportList.add(report);
-        when(dogReportRepository.findByAdoptionAndDate(adoption, date)).thenReturn(reportList);
-        when(dogReportRepository.save(report)).thenReturn(report);
-        assertThat(reportService.saveReport(user, null, null)).isEqualTo(report);
-        verify(dogReportRepository, atLeast(1)).save(report);
+        reportList.add(report1);
+        when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
+        report1.setPhoto(photo);
+        report1.setPhoto(text);
+        when(dogReportRepository.save(report1)).thenReturn(report1);
+        assertThat(reportService.saveReport(user1, photo, text)).isEqualTo(report1);
+        verify(dogReportRepository, atLeast(1)).save(report1);
+    }
+
+    @Test
+    public void saveDogReportWhenReportListIsEmptyTest() {
+        LocalDate date = LocalDate.now();
+        List<DogAdoption> adoptionList = new ArrayList<>();
+        adoptionList.add(adoption1);
+        when(dogAdoptionRepository
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user1, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+        List<DogReport> reportList = new ArrayList<>();
+        when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
+        DogReport newReport = new DogReport(adoption1, date, null, null);
+
+        when(dogReportRepository.save(newReport)).thenReturn(newReport);
+        assertThat(reportService.saveReport(user1, null, null)).isEqualTo(newReport);
+        verify(dogReportRepository, atLeast(1)).save(newReport);
+    }
+
+    @Test
+    public void saveCatReportTest() {
+        byte[] photo = new byte[5];
+        byte[] text = new byte[5];
+        LocalDate date = LocalDate.now();
+        List<CatAdoption> adoptionList = new ArrayList<>();
+        adoptionList.add(adoption2);
+        when(catAdoptionRepository
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user2, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+        List<CatReport> reportList = new ArrayList<>();
+        reportList.add(report2);
+        when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
+        report2.setPhoto(photo);
+        report2.setPhoto(text);
+        when(catReportRepository.save(report2)).thenReturn(report2);
+        assertThat(reportService.saveReport(user2, photo, text)).isEqualTo(report2);
+        verify(catReportRepository, atLeast(1)).save(report2);
+    }
+
+    @Test
+    public void saveCatReportWhenReportListIsEmptyTest() {
+        LocalDate date = LocalDate.now();
+        List<CatAdoption> adoptionList = new ArrayList<>();
+        adoptionList.add(adoption2);
+        when(catAdoptionRepository
+                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
+                        user2, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+        List<CatReport> reportList = new ArrayList<>();
+        when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
+        CatReport newReport = new CatReport(adoption2, date, null, null);
+        when(catReportRepository.save(newReport)).thenReturn(newReport);
+
+        assertThat(reportService.saveReport(user2, null, null)).isEqualTo(newReport);
+        verify(catReportRepository, atLeast(1)).save(newReport);
     }
 
     @Test
     public void getReportByIdTest() {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
-        when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
-        assertThat(reportService.getReportById(shelterId, 1)).isEqualTo(report);
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdDog);
+        when(dogReportRepository.findById(any())).thenReturn(Optional.of(report1));
+        assertThat(reportService.getReportById(shelterIdDog, 1)).isEqualTo(report1);
         verify(dogReportRepository, atLeast(1)).findById(any());
     }
 
     @Test
+    public void getReportByIdNegativeTest() {
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdDog);
+        when(dogReportRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatExceptionOfType(EntityNotFoundException.class)
+                .isThrownBy(() -> reportService.getReportById(shelterIdDog, 1));
+        verify(dogReportRepository, atLeast(0)).findById(any());
+    }
+
+    @Test
     public void deleteReportByIdTest() {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
-        when(dogReportRepository.findById(any())).thenReturn(Optional.of(report));
-        reportService.deleteReportById(shelterId, 1);
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdDog);
+        when(dogReportRepository.findById(any())).thenReturn(Optional.of(report1));
+        reportService.deleteReportById(shelterIdDog, 1);
         verify(dogReportRepository, atLeast(1)).deleteById(any());
     }
 
     @Test
-    public void getAllReportsByDateTest() {
+    public void getAllDogReportsByDateTest() {
         LocalDate date = LocalDate.now();
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
-        List<DogReport> dogReportList = List.of(report);
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdDog);
+        List<DogReport> dogReportList = List.of(report1);
         when(dogReportRepository.findByDate(date)).thenReturn(dogReportList);
-        assertThat(reportService.getAllReportsByDate(shelterId, date))
+        assertThat(reportService.getAllReportsByDate(shelterIdDog, date))
                 .isNotNull()
                 .isNotEmpty();
-        assertThat(reportService.getAllReportsByDate(shelterId, date).size())
+        assertThat(reportService.getAllReportsByDate(shelterIdDog, date).size())
                 .isEqualTo(dogReportList.size());
-        assertThat(reportService.getAllReportsByDate(shelterId, date))
-                .containsExactlyInAnyOrder(report);
+        assertThat(reportService.getAllReportsByDate(shelterIdDog, date))
+                .containsExactlyInAnyOrder(report1);
+    }
+
+    @Test
+    public void getAllCatReportsByDateTest() {
+        LocalDate date = LocalDate.now();
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdCat);
+        List<CatReport> catReportList = List.of(report2);
+        when(catReportRepository.findByDate(date)).thenReturn(catReportList);
+        assertThat(reportService.getAllReportsByDate(shelterIdCat, date))
+                .isNotNull()
+                .isNotEmpty();
+        assertThat(reportService.getAllReportsByDate(shelterIdCat, date).size())
+                .isEqualTo(catReportList.size());
+        assertThat(reportService.getAllReportsByDate(shelterIdCat, date))
+                .containsExactlyInAnyOrder(report2);
     }
 
     @Test
     public void getAllReportsTest() {
-        Mockito.doNothing().when(shelterService).checkShelterId(shelterId);
-        List<DogReport> dogReportList = List.of(report);
+        Mockito.doNothing().when(shelterService).checkShelterId(shelterIdDog);
+        List<DogReport> dogReportList = List.of(report1);
         when(dogReportRepository.findAll()).thenReturn(dogReportList);
-        assertThat(reportService.getAllReports(shelterId))
+        assertThat(reportService.getAllReports(shelterIdDog))
                 .isNotNull()
                 .isNotEmpty();
-        assertThat(reportService.getAllReports(shelterId).size())
+        assertThat(reportService.getAllReports(shelterIdDog).size())
                 .isEqualTo(dogReportList.size());
-        assertThat(reportService.getAllReports(shelterId))
-                .containsExactlyInAnyOrder(report);
+        assertThat(reportService.getAllReports(shelterIdDog))
+                .containsExactlyInAnyOrder(report1);
     }
 
 }
