@@ -8,8 +8,10 @@ import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
+import pro.sky.courseworktelegrambot.timer.Notifier;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,6 +23,7 @@ public class AdoptionService {
     private final DogAdoptionRepository dogAdoptionRepository;
     private final CatAdoptionRepository catAdoptionRepository;
     private final ShelterService shelterService;
+    private final Notifier notifier;
 
     public AdoptionService(
             UserRepository userRepository,
@@ -28,13 +31,14 @@ public class AdoptionService {
             CatRepository catRepository,
             DogAdoptionRepository dogAdoptionRepository,
             CatAdoptionRepository catAdoptionRepository,
-            ShelterService shelterService) {
+            ShelterService shelterService, Notifier notifier) {
         this.userRepository = userRepository;
         this.dogRepository = dogRepository;
         this.catRepository = catRepository;
         this.dogAdoptionRepository = dogAdoptionRepository;
         this.catAdoptionRepository = catAdoptionRepository;
         this.shelterService = shelterService;
+        this.notifier = notifier;
     }
 
     //из такого репозитория удается прочитать, возвращается предок
@@ -125,16 +129,20 @@ public class AdoptionService {
      * @throws ShelterNotFoundException если приют не найден.
      * @throws EntityNotFoundException  если не найден id усыновления
      */
-    public Adoption setTrialDate(ShelterId shelterId, Integer adoptionId, LocalDate trialDate) {
+    public Adoption setTrialDate(ShelterId shelterId, Integer adoptionId, LocalDate trialDate){
         shelterService.checkShelterId(shelterId);
         if (shelterId==ShelterId.DOG) {
             DogAdoption adoption = dogAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
                     "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
+            long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
+            notifier.sendNotification(adoption, days);
             adoption.setTrialDate(trialDate);
             return dogAdoptionRepository.save(adoption);
         } else {
             CatAdoption adoption = catAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
                     "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
+            long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
+            notifier.sendNotification(adoption, days);
             adoption.setTrialDate(trialDate);
             return catAdoptionRepository.save(adoption);
         }

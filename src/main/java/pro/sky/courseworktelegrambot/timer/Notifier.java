@@ -1,5 +1,7 @@
 package pro.sky.courseworktelegrambot.timer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class Notifier {
+
+    private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
 
     private final CatAdoptionRepository catAdoptionRepository;
     private final DogAdoptionRepository dogAdoptionRepository;
@@ -111,6 +115,15 @@ public class Notifier {
                 telegramBot.sendMessageToUser(adoption.getUser(), "Поздравляем !!! Вы успешно прошли " +
                         "испытательный период. Всего наилучшего Вам и вашему питомцу.", 1000000);
             }
+        }
+    }
+
+    public void sendNotification(Adoption adoption, long days){
+        try {
+            telegramBot.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
+                    "Вам увеличен испытательный срок на" + days + " дней.", 1000000);
+        }catch (TelegramApiException e){
+            logger.error("TelegramError " + e.getMessage());
         }
     }
 
