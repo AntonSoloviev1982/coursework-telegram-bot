@@ -18,7 +18,7 @@ public interface DogReportRepository extends JpaRepository<DogReport, Integer> {
 
     List<DogReport> findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate date);
 
-    @Query(value = "SELECT * FROM dog_report where adoption =: 1 " +
+    @Query(value = "SELECT * FROM dog_report where adoption = ?1 " +
             "and photo is not null " +
             "and text is not null " +
             "order by date desc limit 1", nativeQuery = true)
