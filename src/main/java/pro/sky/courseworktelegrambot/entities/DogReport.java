@@ -25,8 +25,8 @@ public class DogReport extends Report {
                 "id=" + getId() +
                 ", adoption=" + adoption +
                 ", date=" + getDate() +
-                ", textIsPresent=" + textIsPresent() +
-                ", photoIsPresent=" + photoIsPresent() +
+                ", textPresented=" + getTextPresented() +
+                ", photoPresented=" + getPhotoPresented() +
                 "}";
     }
 }
