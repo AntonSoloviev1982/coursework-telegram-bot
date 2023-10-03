@@ -1,5 +1,7 @@
 package pro.sky.courseworktelegrambot.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
@@ -15,22 +17,16 @@ import java.util.List;
 
 @Service
 public class ReportService {
-
+    private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
     private final DogReportRepository dogReportRepository;
     private final CatReportRepository catReportRepository;
-    private final DogAdoptionRepository dogAdoptionRepository;
-    private final CatAdoptionRepository catAdoptionRepository;
     private final ShelterService shelterService;
 
     public ReportService(CatReportRepository catReportRepository,
                          DogReportRepository dogReportRepository,
-                         CatAdoptionRepository catAdoptionRepository,
-                         DogAdoptionRepository dogAdoptionRepository,
                          ShelterService shelterService) {
         this.dogReportRepository = dogReportRepository;
         this.catReportRepository = catReportRepository;
-        this.dogAdoptionRepository = dogAdoptionRepository;
-        this.catAdoptionRepository = catAdoptionRepository;
         this.shelterService = shelterService;
     }
 
@@ -42,70 +38,51 @@ public class ReportService {
     }
 
     /**
-     * Метод сохраняет отчет по собаке или кошке в ДБ .<br>
+     * Метод сохраняет отчет по питомцу в ДБ .<br>
      * Используется метод репозитория {@link JpaRepository#save(Object)}.<br>
+     * Если для заданного усыновления и даты отчет найден, то он дополняется,
+     * если нет, то создается новый
      *
-     * @param user  объект пользователя.
-     * @param photo фото отчета, может быть null, если прислан текст
-     * @param text  текст отчета, может быть null, если прислано фото
+     * @param adoption  активное усыновление пользователя
+     * @param date      дата отчета
+     * @param photo     фото отчета, может быть null, если прислан текст
+     * @param text      текст отчета, может быть null, если прислано фото
      * @return Report сохраненные данные отчета для кошки или собаки
      */
-    public Report saveReport(User user, byte[] photo, byte[] text) {
-        //вызывается из бота, волонтер отчеты только читает
-
-        LocalDate date = LocalDate.now();
-        ShelterId shelterId = user.getShelterId();
-
-        if (shelterId == ShelterId.DOG) {
-            //Ищем у пользователя активный испытательный срок на сегодня
-            List<DogAdoption> adoptionList = dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                    user, date, date);
-            if (adoptionList.isEmpty()) {
-                //если сюда попали - это ошибка алгоритма
-                //нельзя переводить пользователя в режим приема отчета,
-                //если у него нет активного испытательного срока
-                //Записать в лог
-                return null;
-            } else { //Ищем отчет за сегодня
-                //если список усыновлений не пустой, то в нем должна найтись ровно 1 запись
-                DogAdoption adoption = adoptionList.get(0);
-                List<DogReport> reportList = dogReportRepository.findByAdoptionAndDate(adoption, date);
-                DogReport report;  //объект для сохранения
-                if (reportList.isEmpty()) {
-                    report = new DogReport(adoption, date, photo, text);
-                } else {
-                    report = reportList.get(0);
-                    if (photo != null) {
-                        report.setPhoto(photo);
-                    }
-                    if (text != null) {
-                        report.setText(text);
-                    }
-                }
-                return dogReportRepository.save(report);
-            }
-        } else {
-            List<CatAdoption> adoptionList = catAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                    user, date, date);
-            if (adoptionList.isEmpty()) {
-                return null;
+    public Report saveReport(Adoption adoption, LocalDate date, byte[] photo, byte[] text) {
+        //вызывается из бота (дата в этом случае всегда now()), волонтер отчеты только читает
+        if (adoption.getUser().getShelterId() == ShelterId.DOG) {
+            DogAdoption dogAdoption = (DogAdoption) adoption;
+            List<DogReport> reportList = dogReportRepository.findByAdoptionAndDate(dogAdoption, date);
+            DogReport report;  //объект для сохранения
+            if (reportList.isEmpty()) {
+                report = new DogReport(dogAdoption, LocalDate.now(), photo, text);
             } else {
-                CatAdoption adoption = adoptionList.get(0);
-                List<CatReport> reportList = catReportRepository.findByAdoptionAndDate(adoption, date);
-                CatReport report;  //объект для сохранения
-                if (reportList.isEmpty()) {
-                    report = new CatReport(adoption, date, photo, text);
-                } else {
-                    report = reportList.get(0);
-                    if (photo != null) {
-                        report.setPhoto(photo);
-                    }
-                    if (text != null) {
-                        report.setText(text);
-                    }
+                report = reportList.get(0);
+                if (photo != null) {
+                    report.setPhoto(photo);
                 }
-                return catReportRepository.save(report);
+                if (text != null) {
+                    report.setText(text);
+                }
             }
+            return dogReportRepository.save(report);
+        } else {
+            CatAdoption catAdoption = (CatAdoption) adoption;
+            List<CatReport> reportList = catReportRepository.findByAdoptionAndDate(catAdoption, date);
+            CatReport report;  //объект для сохранения
+            if (reportList.isEmpty()) {
+                report = new CatReport(catAdoption, LocalDate.now(), photo, text);
+            } else {
+                report = reportList.get(0);
+                if (photo != null) {
+                    report.setPhoto(photo);
+                }
+                if (text != null) {
+                    report.setText(text);
+                }
+            }
+            return catReportRepository.save(report);
         }
     }
 
@@ -172,4 +149,27 @@ public class ReportService {
         return List.copyOf(reportRepository(shelterId).findAll());
     }
 
+    /**
+     * Метод находит отчет за сегодня для заданного усыновления.<br>
+     * Используется для определения полноты сданного отчета
+     * при выводе запроса пользователю, прислать оставшуюся чась отчета
+     *
+     * @param adoption усыновление, для которого ищем отчет за сегодня
+     * @return Report  найденный отчет, null - если не найден
+     */
+    public Report getReportForToday(Adoption adoption) {
+        List<? extends Report> reportList;
+        if (adoption.getUser().getShelterId() == ShelterId.DOG) {
+            DogAdoption dogAdoption = (DogAdoption) adoption;
+            reportList = dogReportRepository.findByAdoptionAndDate(dogAdoption, LocalDate.now());
+        } else {
+            CatAdoption catAdoption = (CatAdoption) adoption;
+            reportList = catReportRepository.findByAdoptionAndDate(catAdoption, LocalDate.now());
+        }
+        if (!reportList.isEmpty()) {
+            return reportList.get(0);
+        } else {
+            return null;
+        }
+    }
 }

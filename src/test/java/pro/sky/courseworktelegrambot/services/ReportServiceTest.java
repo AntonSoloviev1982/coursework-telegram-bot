@@ -31,12 +31,7 @@ public class ReportServiceTest {
     @Mock
     private CatReportRepository catReportRepository;
     @Mock
-    private DogAdoptionRepository dogAdoptionRepository;
-    @Mock
-    private CatAdoptionRepository catAdoptionRepository;
-    @Mock
     private ShelterService shelterService;
-
     @InjectMocks
     private ReportService reportService;
 
@@ -83,18 +78,14 @@ public class ReportServiceTest {
         byte[] photo = new byte[5];
         byte[] text = new byte[5];
         LocalDate date = LocalDate.now();
-        List<DogAdoption> adoptionList = new ArrayList<>();
-        adoptionList.add(adoption1);
-        when(dogAdoptionRepository
-                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user1, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+        //Пусть по заданному усыновлению и дате отчет уже есть
         List<DogReport> reportList = new ArrayList<>();
         reportList.add(report1);
         when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
         report1.setPhoto(photo);
         report1.setPhoto(text);
         when(dogReportRepository.save(report1)).thenReturn(report1);
-        assertThat(reportService.saveReport(user1, photo, text)).isEqualTo(report1);
+        assertThat(reportService.saveReport(adoption1, date, photo, text)).isEqualTo(report1);
         verify(dogReportRepository, atLeast(1)).save(report1);
     }
 
@@ -103,15 +94,13 @@ public class ReportServiceTest {
         LocalDate date = LocalDate.now();
         List<DogAdoption> adoptionList = new ArrayList<>();
         adoptionList.add(adoption1);
-        when(dogAdoptionRepository
-                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user1, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
+
         List<DogReport> reportList = new ArrayList<>();
         when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
         DogReport newReport = new DogReport(adoption1, date, null, null);
 
         when(dogReportRepository.save(newReport)).thenReturn(newReport);
-        assertThat(reportService.saveReport(user1, null, null)).isEqualTo(newReport);
+        assertThat(reportService.saveReport(adoption1, date, null, null)).isEqualTo(newReport);
         verify(dogReportRepository, atLeast(1)).save(newReport);
     }
 
@@ -122,16 +111,13 @@ public class ReportServiceTest {
         LocalDate date = LocalDate.now();
         List<CatAdoption> adoptionList = new ArrayList<>();
         adoptionList.add(adoption2);
-        when(catAdoptionRepository
-                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user2, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
         List<CatReport> reportList = new ArrayList<>();
         reportList.add(report2);
         when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
         report2.setPhoto(photo);
         report2.setPhoto(text);
         when(catReportRepository.save(report2)).thenReturn(report2);
-        assertThat(reportService.saveReport(user2, photo, text)).isEqualTo(report2);
+        assertThat(reportService.saveReport(adoption2, date, photo, text)).isEqualTo(report2);
         verify(catReportRepository, atLeast(1)).save(report2);
     }
 
@@ -140,15 +126,12 @@ public class ReportServiceTest {
         LocalDate date = LocalDate.now();
         List<CatAdoption> adoptionList = new ArrayList<>();
         adoptionList.add(adoption2);
-        when(catAdoptionRepository
-                .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user2, LocalDate.now(), LocalDate.now())).thenReturn(adoptionList);
         List<CatReport> reportList = new ArrayList<>();
         when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
         CatReport newReport = new CatReport(adoption2, date, null, null);
         when(catReportRepository.save(newReport)).thenReturn(newReport);
 
-        assertThat(reportService.saveReport(user2, null, null)).isEqualTo(newReport);
+        assertThat(reportService.saveReport(adoption2, date, null, null)).isEqualTo(newReport);
         verify(catReportRepository, atLeast(1)).save(newReport);
     }
 

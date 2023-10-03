@@ -1,6 +1,5 @@
 package pro.sky.courseworktelegrambot.services;
 
-//import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.replace;
 
-//@Slf4j
 @Service
 public class TelegramBot extends TelegramLongPollingBot {
     private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
@@ -34,37 +32,39 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final ShelterService shelterService;
     private final FeedbackRequestService feedbackRequestService;
     private final MessageToVolunteerRepository messageToVolunteerRepository;
-    private final ReportService reportService;
+
+    //для тестов оставим возможность заинжектить сюда
+    //реальные сервисы с моками после создания spyTelegramBot
+    //final - отсутствует
+    private AdoptionService adoptionService;
+    private ReportService reportService;
     private final DogRepository dogRepository;
     private final CatRepository catRepository;
-    private final DogAdoptionRepository dogAdoptionRepository;
-    private final CatAdoptionRepository catAdoptionRepository;
-    private final DogReportRepository dogReportRepository;
-    private final CatReportRepository catReportRepository;
+
     public TelegramBot(UserRepository userRepository,
                        StateRepository stateRepository,
                        ShelterService shelterService,
                        FeedbackRequestService feedbackRequestService,
                        MessageToVolunteerRepository messageToVolunteerRepository,
+                       AdoptionService adoptionService,
                        ReportService reportService,
                        DogRepository dogRepository,
-                       CatRepository catRepository,
-                       DogAdoptionRepository dogAdoptionRepository,
-                       CatAdoptionRepository catAdoptionRepository,
-                       DogReportRepository dogReportRepository,
-                       CatReportRepository catReportRepository) {
+                       CatRepository catRepository) {
         this.userRepository = userRepository;
         this.stateRepository = stateRepository;
         this.shelterService = shelterService;
         this.feedbackRequestService = feedbackRequestService;
         this.messageToVolunteerRepository = messageToVolunteerRepository;
+        this.adoptionService = adoptionService;
         this.reportService = reportService;
         this.dogRepository = dogRepository;
         this.catRepository = catRepository;
-        this.dogAdoptionRepository = dogAdoptionRepository;
-        this.catAdoptionRepository = catAdoptionRepository;
-        this.dogReportRepository = dogReportRepository;
-        this.catReportRepository = catReportRepository;
+    }
+
+    //для тестов
+    public void setServices( AdoptionService adoptionService, ReportService reportService) {
+        this.adoptionService = adoptionService;
+        this.reportService = reportService;
     }
 
     private JpaRepository<? extends Pet, Integer> petRepository(ShelterId shelterId) {
@@ -384,7 +384,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void acceptReport(User user, Message message) {
-        //JpaRepository<? extends Pet, Integer> repository = petRepository(user.getShelterId());
         byte[] photo = null; //пока так
         if (message.hasPhoto()) {
             photo = message.getPhoto().get(0).toString().getBytes(); //пока так
@@ -394,9 +393,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             text = message.getDocument().toString().getBytes(); //пока так
         }
 
-        Report report = reportService.saveReport(user, photo, text);
+        Report report = null;
+        //найдем активное усыновление пользователя
+        Adoption adoption = adoptionService.getActiveAdoption(user, LocalDate.now());
+        if (adoption != null) { //если усыновление найдено
+            report = reportService.saveReport(adoption, LocalDate.now(), photo, text);
+        }
         //если после сохранения report=null, значит у юзера не было испытательного срока
-        //в этом случае reportRequestText вернет его предыдущее состояние
+        //в этом случае reportRequestText побочным действием вернет его предыдущее состояние
         String requestText = reportRequestText(user, user.getPreviousState(), report);
 
         //используем sendMessageToUser, а не sendMessage, чтобы не смахнуть кнопку Возврат к кнопкам
@@ -446,6 +450,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
 
+    //Текст, отправляемый пользователю, с запросом того, что еще осталось прислать
+    //метод вызывается после приема отчета, а также если пользователь выбрал кнопку Сдать отчет
     private String reportRequestText(User user, State oldState, Report report) {
         //oldState - состояние при входе в обработчик сообщений бота
         //Если поиск активного усыновления будет неудачным, то вернемся в него
@@ -456,44 +462,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         //что будем ему писать?
 
         if (report == null) {  //состояние сдачи отчета - неизвестно. Извлечем его из базы
-            //сначала проверим активный испытательный срок
-            LocalDate date = LocalDate.now();
-            ShelterId shelterId = user.getShelterId();
-
-            if (shelterId == ShelterId.DOG) {
-                //Ищем у пользователя активный испытательный срок на сегодня
-                List<DogAdoption> adoptionList = dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, date, date);
-                if (adoptionList.isEmpty()) {
-                    user.setState(oldState);
-                    return "В приюте " + shelterId + " у Вас нет активного испытательного срока";
-                } else { //Ищем отчет за сегодня
-                    //если список усыновлений не пустой, то в нем должна найтись ровно 1 запись
-                    DogAdoption adoption = adoptionList.get(0);
-                    List<DogReport> reportList = dogReportRepository.findByAdoptionAndDate(adoption, date);
-                    if (!reportList.isEmpty()) report = reportList.get(0);
-                }
-            } else {
-                List<CatAdoption> adoptionList = catAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(
-                        user, date, date);
-                if (adoptionList.isEmpty()) {
-                    user.setState(oldState);
-                    return "В приюте " + shelterId + " у Вас нет активного испытательного срока";
-                } else {
-                    CatAdoption adoption = adoptionList.get(0);
-                    List<CatReport> reportList = catReportRepository.findByAdoptionAndDate(adoption, date);
-                    if (!reportList.isEmpty()) report = reportList.get(0);
-                }
+            Adoption adoption = adoptionService.getActiveAdoption(user, LocalDate.now());
+            if (adoption == null) {
+                user.setState(oldState);
+                return "В приюте " + user.getShelterId() + " у Вас нет активного испытательного срока";
             }
+            report = reportService.getReportForToday(adoption);
         }
         //если отчет в базе не найден, значит он еще не сдан. report будет == null
 
         //потом узнаем состояние сдачи отчета и сформируем сообщение
-        if (report==null || !report.photoIsPresent() && !report.photoIsPresent()) {
+        if (report==null || !report.getPhotoPresented() && !report.getPhotoPresented()) {
             return "Пришлите, пожалуйста, фото (.jpeg) и текстовый отчет (.docx)";
-        } else if (!report.photoIsPresent() && report.textIsPresent()){
+        } else if (!report.getPhotoPresented() && report.getTextPresented()){
             return "Осталось прислать фото";
-        } else if (report.photoIsPresent() && !report.textIsPresent()) {
+        } else if (report.getPhotoPresented() && !report.getTextPresented()) {
             return "Осталось прислать текст";
         } else {
             return "Отчет уже получен. Можете послать еще раз";

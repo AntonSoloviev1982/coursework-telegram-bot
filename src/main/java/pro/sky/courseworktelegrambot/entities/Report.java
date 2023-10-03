@@ -52,7 +52,7 @@ public abstract class Report {
         return photo;
     }
 
-    public boolean photoIsPresent(){
+    public boolean getPhotoPresented(){
         return photo != null;
     }
 
@@ -63,7 +63,7 @@ public abstract class Report {
     public byte[]  getText() {
         return text;
     }
-    public boolean textIsPresent(){
+    public boolean getTextPresented(){
         return text != null;
     }
 
@@ -89,8 +89,8 @@ public abstract class Report {
         return "Report{" +
                 "id=" + id +
                 ", date=" + date +
-                ", textIsPresent=" + textIsPresent() +
-                ", photoIsPresent=" + photoIsPresent() +
+                ", textPresented=" + getTextPresented() +
+                ", photoPresented=" + getPhotoPresented() +
                 '}';
     }
 }

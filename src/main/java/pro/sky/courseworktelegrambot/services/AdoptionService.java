@@ -187,4 +187,34 @@ public class AdoptionService {
                     .findByDateLessThanEqualAndTrialDateGreaterThanEqual(LocalDate.now(), LocalDate.now()));
         }
     }
+
+    /**
+     * Метод возвращает активное усыновление пользователя на заданную дату
+     * При создании усыновления и при записи испытательного срока API следит,
+     * чтобы активное усыновление у всех пользователей и у любого питомца
+     * на любую дату в пределах одного приюта было только одно
+     *
+     * Используется дольше для поиска отчета по усыновлению
+     * или для разрешения входа в состояние сдачи отчета
+     * или для поздравления пользователя, у которого вчера истек испытательный срок
+     *
+     * @param user пользователь, у которого ищется активное усыновление
+     * @param date дата, на которую найденное усыновление было активно
+     * @return Adoption найденное активное усыновление. null, если такое не найдено
+     * */
+    public Adoption getActiveAdoption(User user, LocalDate date) {
+        List<? extends Adoption> adoptionList;
+        if (user.getShelterId() == ShelterId.DOG) {
+            adoptionList = dogAdoptionRepository
+                    .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(user, date, date);
+        } else {
+            adoptionList = catAdoptionRepository
+                    .findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(user, date, date);
+        }
+        if (adoptionList.isEmpty()) {
+            return null;
+        } else {
+            return adoptionList.get(0);
+        }
+    }
 }
