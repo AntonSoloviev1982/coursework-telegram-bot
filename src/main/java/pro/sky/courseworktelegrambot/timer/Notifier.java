@@ -16,6 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ *  Проверяет каждый день в 21:01 все ежедневные отчеты усыновителей.<br>
+ *  Если усыновитель не прислал, или прислал не полный отчет напоминает ему об этом.
+ *  Если усыновитель не присылает отчет более 2 дней извещает волонтера.<br>
+ *  Проверяет каждый день в 23:01 все усыновления.<br>
+ *  Если пользователю не продлили испытательный период, поздравляет его.
+ *  */
 @Component
 public class Notifier {
 
@@ -42,6 +49,14 @@ public class Notifier {
         this.telegramBot = telegramBot;
     }
 
+    /**
+     *  Проверяет каждый день в 21:01 все ежедневные отчеты усыновителей.<br>
+     *  Если усыновитель не прислал, или прислал не полный отчет напоминает ему об этом.Используется метод <u>sendNotification</u> этого сервиса.
+     *  Полноту данных проверяем методамм {@link  DogReportRepository#findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate)} и
+     *  {@link CatReportRepository#findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate)}
+     *  Если усыновитель не присылает отчет более 2 дней извещает волонтера.
+     *  {@link MessageToVolunteerRepository#save()}
+     * */
     @Scheduled(cron = "0 1 21 * * *")
     private void sendWarningNoReport(){
         long today = ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.of(2022, 12,31));
@@ -96,10 +111,14 @@ public class Notifier {
                 }
             }
         }
-
     }
 
-    @Scheduled(cron = "0 0 23 * * *")
+    /**
+     *  Проверяет каждый день в 23:01 все усыновления.<br>
+     *  Если пользователю не продлили испытательный период, поздравляет его.
+     *  Используется метод <u>sendNotification</u> этого сервиса.
+     * */
+    @Scheduled(cron = "0 1 23 * * *")
     private void sendCongratulation(){
         List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (DogAdoption adoption : currentDogAdoptionList) {
@@ -117,6 +136,12 @@ public class Notifier {
         }
     }
 
+    /**
+     *  Отправляет уведомление пользователю, проходящему испытательный период.<br>
+     *  Используется метод сервиса {@link TelegramBot#sendMessageToUser(User, String, int)}  }
+     *  @param adoption (пользователь является усыновителем, получаем через adoption.getUser())
+     *  @param notification текст уведомления.
+     * */
     public void sendNotification(Adoption adoption, String notification){
         try {
             telegramBot.sendMessageToUser(adoption.getUser(), notification, 1000000);
