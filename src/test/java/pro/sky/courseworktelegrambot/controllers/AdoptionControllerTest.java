@@ -17,6 +17,7 @@ import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
 import pro.sky.courseworktelegrambot.services.AdoptionService;
 import pro.sky.courseworktelegrambot.services.ShelterService;
+import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class AdoptionControllerTest {
 
     @SpyBean
     private ShelterService shelterService;
+
+    @MockBean
+    private TelegramBotSender telegramBotSender;
 
     @Autowired
     private ObjectMapper objectMapper;

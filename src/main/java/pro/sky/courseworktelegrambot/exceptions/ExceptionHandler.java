@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import javax.persistence.EntityNotFoundException;
 
 @RestControllerAdvice
@@ -18,8 +17,8 @@ public class ExceptionHandler {
         logger.error("Entity by this Id not found. " + e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity by this Id not found. " + e.getMessage());
     }
-    @org.springframework.web.bind.annotation.ExceptionHandler({TelegramApiException.class})
-    public ResponseEntity<?> handlerTelegramError(TelegramApiException e){
+    @org.springframework.web.bind.annotation.ExceptionHandler({TelegramException.class})
+    public ResponseEntity<?> handlerTelegramError(TelegramException e){
         logger.error("TelegramError " + e.getMessage());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("TelegramError " + e.getMessage());
     }

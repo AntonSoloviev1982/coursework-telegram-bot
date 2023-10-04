@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
 import pro.sky.courseworktelegrambot.services.TelegramBot;
+import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,20 +34,20 @@ public class Notifier {
     private final CatReportRepository catReportRepository;
     private final DogReportRepository dogReportRepository;
     private final MessageToVolunteerRepository messageToVolunteerRepository;
-    private final TelegramBot telegramBot;
+    private final TelegramBotSender telegramBotSender;
 
     public Notifier(CatAdoptionRepository catAdoptionRepository,
                     DogAdoptionRepository dogAdoptionRepository,
                     CatReportRepository catReportRepository,
                     DogReportRepository dogReportRepository,
                     MessageToVolunteerRepository messageToVolunteerRepository,
-                    TelegramBot telegramBot) {
+                    TelegramBotSender telegramBotSender) {
         this.catAdoptionRepository = catAdoptionRepository;
         this.dogAdoptionRepository = dogAdoptionRepository;
         this.catReportRepository = catReportRepository;
         this.dogReportRepository = dogReportRepository;
         this.messageToVolunteerRepository = messageToVolunteerRepository;
-        this.telegramBot = telegramBot;
+        this.telegramBotSender = telegramBotSender;
     }
 
     /**
@@ -55,7 +56,7 @@ public class Notifier {
      *  Полноту данных проверяем методамм {@link  DogReportRepository#findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate)} и
      *  {@link CatReportRepository#findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate)}
      *  Если усыновитель не присылает отчет более 2 дней извещает волонтера.
-     *  {@link MessageToVolunteerRepository#save()}
+     *  посредством {@link MessageToVolunteerRepository#save(Object)} save()}
      * */
     @Scheduled(cron = "0 1 21 * * *")
     private void sendWarningNoReport(){
@@ -143,8 +144,11 @@ public class Notifier {
      *  @param notification текст уведомления.
      * */
     public void sendNotification(Adoption adoption, String notification){
+        //это почти тоже что sendMessageToUser, но не сигналит об ошибке отправки
+        //что не допустимо для вызова из контроллеров.
+        //а если по расписанию, то можно ошибку и проигнорировать
         try {
-            telegramBot.sendMessageToUser(adoption.getUser(), notification, 1000000);
+            telegramBotSender.sendMessageToUser(adoption.getUser(), notification, 0);
         }catch (TelegramApiException e){
             logger.error("TelegramError " + e.getMessage());
         }

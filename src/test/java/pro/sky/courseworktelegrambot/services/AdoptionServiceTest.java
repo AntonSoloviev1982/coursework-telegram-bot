@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
@@ -42,6 +43,9 @@ public class AdoptionServiceTest {
     @Mock
     private ShelterService shelterService;
 
+    @Mock
+    TelegramBotSender telegramBotSender;
+
     @InjectMocks
     private AdoptionService adoptionService;
 
@@ -62,7 +66,6 @@ public class AdoptionServiceTest {
     private ShelterId shelterIdDog;
 
     private ShelterId shelterIdCat;
-
 
     @BeforeEach
     public void beforeEach() {
@@ -235,12 +238,13 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void setTrialDateDogAdoptionTest() {
+    public void setTrialDateDogAdoptionTest() throws TelegramApiException {
         int adoptionId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption1));
         adoption1.setTrialDate(trialDate);
         when(dogAdoptionRepository.save(any())).thenReturn(adoption1);
+        //doReturn(null).when(telegramBotSender).execute(any(SendMessage.class));
 
         assertThat(adoptionService.setTrialDate(shelterIdDog, adoptionId, trialDate)).isEqualTo(adoption1);
         verify(dogAdoptionRepository, atLeast(1)).save(adoption1);

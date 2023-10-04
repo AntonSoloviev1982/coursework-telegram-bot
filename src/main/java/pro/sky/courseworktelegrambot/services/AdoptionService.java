@@ -1,14 +1,16 @@
 package pro.sky.courseworktelegrambot.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.persistence.EntityNotFoundException;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
+import pro.sky.courseworktelegrambot.exceptions.TelegramException;
 import pro.sky.courseworktelegrambot.exceptions.UserOrPetIsBusyException;
 import pro.sky.courseworktelegrambot.repositories.*;
-import pro.sky.courseworktelegrambot.timer.Notifier;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -17,13 +19,14 @@ import java.util.List;
 
 @Service
 public class AdoptionService {
+    private static final Logger logger = LoggerFactory.getLogger(AdoptionService.class);
     private final UserRepository userRepository;
     private final DogRepository dogRepository;
     private final CatRepository catRepository;
     private final DogAdoptionRepository dogAdoptionRepository;
     private final CatAdoptionRepository catAdoptionRepository;
     private final ShelterService shelterService;
-    private final Notifier notifier;
+    private final TelegramBotSender telegramBotSender;
 
     public AdoptionService(
             UserRepository userRepository,
@@ -31,14 +34,15 @@ public class AdoptionService {
             CatRepository catRepository,
             DogAdoptionRepository dogAdoptionRepository,
             CatAdoptionRepository catAdoptionRepository,
-            ShelterService shelterService, Notifier notifier) {
+            ShelterService shelterService,
+            TelegramBotSender telegramBotSender) {
         this.userRepository = userRepository;
         this.dogRepository = dogRepository;
         this.catRepository = catRepository;
         this.dogAdoptionRepository = dogAdoptionRepository;
         this.catAdoptionRepository = catAdoptionRepository;
         this.shelterService = shelterService;
-        this.notifier = notifier;
+        this.telegramBotSender = telegramBotSender;
     }
 
     //из такого репозитория удается прочитать, возвращается предок
@@ -128,25 +132,27 @@ public class AdoptionService {
      * @return {@link Adoption} измененный объект
      * @throws ShelterNotFoundException если приют не найден.
      * @throws EntityNotFoundException  если не найден id усыновления
+     * @throws TelegramException  если не найден не состоялось уведомление пользователя
      */
     public Adoption setTrialDate(ShelterId shelterId, Integer adoptionId, LocalDate trialDate){
         shelterService.checkShelterId(shelterId);
+
+        Adoption adoption = adoptionRepository(shelterId).findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
+                "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
+        long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
+        try {
+            telegramBotSender.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
+                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString(), 0);
+        } catch (TelegramApiException e) {
+            logger.error("Ошибка при попытке изменить испытательный срок " + e.getMessage());
+            //TelegramException - это RunTimeException, в отличие от TelegramApiException
+            throw new TelegramException(); //при ошибке срок не меняем и не сохраняем
+        }
+        adoption.setTrialDate(trialDate);
         if (shelterId==ShelterId.DOG) {
-            DogAdoption adoption = dogAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
-                    "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
-            long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
-            notifier.sendNotification(adoption, "ВНИМАНИЕ !!! " +
-                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString());
-            adoption.setTrialDate(trialDate);
-            return dogAdoptionRepository.save(adoption);
+            return dogAdoptionRepository.save((DogAdoption) adoption);
         } else {
-            CatAdoption adoption = catAdoptionRepository.findById(adoptionId).orElseThrow(() -> new EntityNotFoundException(
-                    "Adoption with id " + adoptionId + " for shelter " + shelterId + " not found"));
-            long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
-            notifier.sendNotification(adoption, "ВНИМАНИЕ !!! " +
-                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString());
-            adoption.setTrialDate(trialDate);
-            return catAdoptionRepository.save(adoption);
+            return catAdoptionRepository.save((CatAdoption)adoption);
         }
     }
 

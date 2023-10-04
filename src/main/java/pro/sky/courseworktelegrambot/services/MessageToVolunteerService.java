@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.MessageToVolunteer;
 import pro.sky.courseworktelegrambot.entities.User;
 import pro.sky.courseworktelegrambot.exceptions.MessageToVolunteerNotFoundException;
+import pro.sky.courseworktelegrambot.exceptions.TelegramException;
 import pro.sky.courseworktelegrambot.repositories.MessageToVolunteerRepository;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,7 @@ import java.util.List;
  */
 @Service
 public class MessageToVolunteerService {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageToVolunteerService.class);
 
     private final TelegramBotSender telegramBotSender;  //для посылки ответов
     private final MessageToVolunteerRepository messageToVolunteerRepository;
@@ -76,7 +77,8 @@ public class MessageToVolunteerService {
             telegramBotSender.sendMessageToUser(messageToVolunteer.getUser(), answer, answerToMessage ? id : 0);
         } catch (TelegramApiException e) {
             logger.error("Ошибка при отправке ответа волонтера "+e.getMessage());
-            return; //при ошибке отметку об отправке ответа (дату ответа) не сохраняем
+            //TelegramException - это RunTimeException, в отличие от TelegramApiException
+            throw new TelegramException(); //при ошибке отметку об отправке ответа (дату ответа) не сохраняем
         }
         messageToVolunteerRepository.save(messageToVolunteer);
     }
