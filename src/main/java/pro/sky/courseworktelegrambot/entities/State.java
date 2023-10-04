@@ -44,14 +44,23 @@ public class State {
     public String getText() {
         return text;
     }
+    public void setText(String text) {  //для тестов
+        this.text = text;
+    }
     public Boolean isTextInput() {
         return textInput;
     }
     public NamedState getNamedState() {
         return namedState;
     }
+    public void setNamedState(NamedState namedState) { //для тестов
+        this.namedState = namedState;
+    }
     public List<StateButton>getButtons() {
         return buttons;
     }
-
+    //для инициализации начального состояния, где кнопки возникают из имен приютов
+    public void setButtons(List<StateButton> buttons) {
+        this.buttons = buttons;
+    }
 }
