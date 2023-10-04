@@ -2,40 +2,34 @@ package pro.sky.courseworktelegrambot.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
-
-import static org.apache.commons.lang3.StringUtils.replace;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
-public class TelegramBot extends TelegramLongPollingBot {
+//интересно, что доступ к сервису TelegramBotSender осуществляется без внедрения
+//а как к родителю. Не думал, что Spring соберет эту матрешку из сервисов
+public class TelegramBot extends TelegramBotSender {
     private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
     private final UserRepository userRepository;
     private final StateRepository stateRepository;
     private final ShelterService shelterService;
-    private final FeedbackRequestService feedbackRequestService;
-    private final MessageToVolunteerRepository messageToVolunteerRepository;
 
     //для тестов оставим возможность заинжектить сюда
     //реальные сервисы с моками после создания spyTelegramBot
     //final - отсутствует
+    private FeedbackRequestService feedbackRequestService;
+    private MessageToVolunteerService messageToVolunteerService;
     private AdoptionService adoptionService;
     private ReportService reportService;
     private final DogRepository dogRepository;
@@ -45,7 +39,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                        StateRepository stateRepository,
                        ShelterService shelterService,
                        FeedbackRequestService feedbackRequestService,
-                       MessageToVolunteerRepository messageToVolunteerRepository,
+                       MessageToVolunteerService messageToVolunteerService,
                        AdoptionService adoptionService,
                        ReportService reportService,
                        DogRepository dogRepository,
@@ -54,7 +48,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.stateRepository = stateRepository;
         this.shelterService = shelterService;
         this.feedbackRequestService = feedbackRequestService;
-        this.messageToVolunteerRepository = messageToVolunteerRepository;
+        this.messageToVolunteerService = messageToVolunteerService;
         this.adoptionService = adoptionService;
         this.reportService = reportService;
         this.dogRepository = dogRepository;
@@ -62,7 +56,12 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     //для тестов
-    public void setServices( AdoptionService adoptionService, ReportService reportService) {
+    public void setServices( AdoptionService adoptionService,
+                             ReportService reportService,
+                             FeedbackRequestService feedbackRequestService,
+                             MessageToVolunteerService messageToVolunteerService) {
+        this.feedbackRequestService = feedbackRequestService;
+        this.messageToVolunteerService = messageToVolunteerService;
         this.adoptionService = adoptionService;
         this.reportService = reportService;
     }
@@ -75,38 +74,26 @@ public class TelegramBot extends TelegramLongPollingBot {
     //остальные будут приходить вместе с пользователем при извлечении его из репозитория
     private State badChoiceState;  //если пришло сообщение, не соответствующее кнопкам
     private State afterShelterChoiceState;  //состояние после выбора приюта.
-    // Нужно, если решим кнопки приютов создавать из табл Shelter
+
     @PostConstruct
     public void initStates() {
         initialState = stateRepository.findByNamedState(NamedState.INITIAL_STATE);//.get();
         badChoiceState = stateRepository.findByNamedState(NamedState.BAD_CHOICE);//.get();
         afterShelterChoiceState = stateRepository.findByNamedState(NamedState.AFTER_SHELTER_CHOICE_STATE);//.get();
-    }
-    
-    private final String RETURN_BUTTON_FOR_TEXT_INPUT = "Назад к кнопкам";
-    //Для состояний ожидания ввода текста создадим заранее клавиатуру. Получилось одной строкой
-    private final List<KeyboardRow> KEYBOARD_FOR_TEXT_INPUT =
-            Collections.singletonList(new KeyboardRow(
-                    Collections.singletonList(new KeyboardButton(
-                            RETURN_BUTTON_FOR_TEXT_INPUT))));
-
-    @Value("${telegram.bot.name}")
-    private String botName;
-
-    @Override
-    public String getBotUsername() {
-        return botName; //botConfig.getBotName();
-    }
-
-    @Value("${telegram.bot.token}")
-    private String token;
-
-    @Override
-    public String getBotToken() {
-        return token;//botConfig.getBotToken();
+        //прикрепим кнопки к начальному состоянию. Названия вынем из приютов
+        List<StateButton> buttons = new ArrayList<>();
+        AtomicInteger column= new AtomicInteger(1);
+        shelterService.findAll().forEach(shelter -> {
+            buttons.add(new StateButton(
+                    initialState, shelter.getName(), afterShelterChoiceState,
+                    (byte)1, (byte)column.getAndIncrement(), null));
+        });
+        initialState.setButtons(buttons);
     }
 
     @Override
+    //TelegramBotSender, чтобы стать реальным классом, уже переопределил этот метод пустышкой
+    //теперь в этом потомке сделаем это по-настоящему
     public void onUpdateReceived(Update update) {
         if (!update.hasMessage()) {return;}
         Message message = update.getMessage();
@@ -117,6 +104,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             user = new User(chatId, message.getChat().getFirstName(), initialState);
             //oldState останется = null. Это вызовет goToNextState, т.к. oldState<>initialState
             try {
+                //я не обрабатываю ошибку внутри sendMessage, а намеренно выбрасываю ее в бот
+                //чтобы была возможность на нее правильно среагировать, например не сохранять состояние
                 sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
             } catch (TelegramApiException e) {
                 logger.error("Ошибка посылки приветственного сообщения: " + e.getMessage());
@@ -156,7 +145,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         //Здесь посылаем сообщение с кнопками из StateButton
         //Если в новом состоянии кнопок нет, то новое состояние вернем в состояние oldState
         try {
-            if (!user.getState().equals(oldState)) goToNextState(user, oldState);
+            if (!user.getState().equals(oldState)) {goToNextState(user, oldState);}
         } catch (TelegramApiException e) {
             //при невозможности послать ответ, ничего не делаем. Но прерываем выполнение метода
             //в логах останется запись от sendMessage
@@ -169,115 +158,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (!user.getState().equals(oldState)) user.setPreviousState(oldState);
         user.setStateTime();
         userRepository.save(user);
-    }
-
-    /**
-     * Отправляет сообщение указанному чату с заданным текстовым сообщением.
-     *
-     * @param chatId     Идентификатор чата, куда нужно отправить сообщение.
-     * @param textToSend Текст сообщения, который следует отправить.
-     * @param replyKeyboardMarkup если не null, то содержит клавиатуру
-     * @param replyToMessageId если не 0, то содержит id предыдущего сообщения,
-     *                         в ответ на которое надо отправить заданное
-     */
-    public void sendMessage (long chatId, String textToSend,
-                            ReplyKeyboardMarkup replyKeyboardMarkup, int replyToMessageId)
-            throws TelegramApiException {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(String.valueOf(chatId));
-        //при посылке подчеркивания возникает ошибка
-        //[400] Bad Request: can't parse entities: Can't find end of the entity starting at byte offset - место подчеркивания
-        //поэтому заменяю подчеркивания на тире
-        sendMessage.setText(replace(textToSend,"_","-"));
-        if (replyKeyboardMarkup != null) {
-            sendMessage.enableMarkdown(true);
-            sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        }
-        if (replyToMessageId != 0) sendMessage.setReplyToMessageId(replyToMessageId);
-
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            logger.error("Error occurred by sending message: " + e.getMessage());
-            throw e; //пробрасываем в вызывающие методы, чтобы они прервали свою работу
-        }
-    }
-
-
-    /**
-     * Метод отправляет сообщение пользователю,
-     * учитывая его состояние кнопок (чтобы не стереть их, а повторить) .<br>
-     *
-     * @param user  пользователь, которому надо отправить соообщение.
-     * @param text  текст сообщения
-     * @param replyToMessageId  идентификатор предыдущего сообщения от пользователя,
-     *                          на которое надо отправить ответ
-     * @throws TelegramApiException выбрасывается, если отправка не состоялась.
-     *
-     */
-    //replyToMessageId если не 0, то боту уйдет сообщение в виде - с включенным в ответ вопросом
-    public void sendMessageToUser (User user, String text, int replyToMessageId)
-        throws TelegramApiException {
-        //задача - послать юзеру текст, но снабдить его кнопками в соответствии с состоянием
-        //этом метод вызываем откуда угодно и любой момент общения с ботом,
-        //например, после получения ответа от волонтераthrows TelegramApiException
-        //если текст в параметре пустой, то используется текст состояния из State
-        State state = user.getState();
-        if (text==null) {text = state.getText();}
-
-        //т.е. можно посылать все что угодно и сколько угодно раз с помощью SendMessage,
-        //но завершать переписку надо обязательно через sendMessageToUser(user, null, 0)
-        //чтобы появились правильные кнопки и обозначилось текущее состояние.
-        //Сообщений без кнопок мы посылать не планируем. Какие-нибудь кнопки всегда должны быть.
-        //Поэтому надо позаботиться, чтобы в таблицах не оказалось состояний не текстового ввода и без кнопок.
-
-        List<KeyboardRow> keyboard;
-        if (state.isTextInput()) {
-            keyboard = KEYBOARD_FOR_TEXT_INPUT; //прикрепим только кнопку Назад к кнопкам
-        //else if (state.equals(initialState)) {
-        //    //Кнопок - Кошки и Собаки - не должно быть в StateButton. Это временнно. Их надо взять из табл Shelter
-        } else {
-            //если не текстовый ввод и не список приютов,
-            //то должны быть кнопки в таблице state_button. Делаем спец клавиатуру
-            //для использования переменных в лямбде они должны быть final
-            final List<KeyboardRow> customKeyboard = new ArrayList<>();
-            final List<StateButton> buttons = state.getButtons();
-            if (buttons.isEmpty()) {
-                logger.error("State " + state.getId() + " has no button");
-            }
-            buttons.stream()
-                    .filter(button -> button.getShelterId() == null
-                            || button.getShelterId().equals(user.getShelterId()))
-                    .mapToInt(StateButton::getRow)
-                    .distinct()
-                    .forEachOrdered(row -> {
-                        KeyboardRow keyboardRow = new KeyboardRow();
-                        buttons.stream()
-                                .filter(button -> button.getRow() == row
-                                        && (button.getShelterId() == null
-                                            || button.getShelterId().equals(user.getShelterId())))
-                                .sorted(Comparator.comparingInt(StateButton::getCol))
-                                .forEach(button -> keyboardRow.add(button.getCaption()));
-                        customKeyboard.add(keyboardRow);
-                    });
-            keyboard = customKeyboard;
-        }
-
-        //Создаем клавиатуру
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        replyKeyboardMarkup.setSelective(true);
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(false);
-        //устанавливаем список keyboard нашей клавиатуре
-        replyKeyboardMarkup.setKeyboard(keyboard);
-        //бросает TelegramApiException
-        sendMessage(user.getId(), text, replyKeyboardMarkup, replyToMessageId);
-     }
-
-    private void goToInitialState(User user) {
-    //Сообщение берем из initialState
-    //а кнопки из shelter.name - пока не сделано
-    //sendMessage(user.getId(), text, replyKeyboardMarkup, 0);
     }
 
     private void goToNextState(User user, State oldState) throws TelegramApiException {
@@ -295,6 +175,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             try {
                 text = shelterService.getInformation(shelterId, informationType);
             } catch (IllegalAccessException e) {
+                logger.error("Ошибка получения информации. " + e);
                 //Антон, может быть здесь InformationTypeByShelterNotFound?
                 throw new RuntimeException(e);
             }
@@ -302,16 +183,22 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput() && state.getNamedState()!=NamedState.INITIAL_STATE) {
+        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
             //если кнопок нет и не состояние текстового ввода и не список приютов
             //то возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
             user.setState(oldState);
-            //выводим текст нового и кнопки старого состояния
+            //дальше выводим текст нового и кнопки старого состояния
         }
+
+        //Интересно, что у initialState будут свои кнопки, назначенные в @PostConstract из приютов
+        //А у user.getState().getButtons() - для того же состояния кнопок не будет, т.к. в базе их нет
+        //поэтому подменим кнопки у usera в начальном состоянии (выбора приюта)
+        if (state.equals(initialState)) state.setButtons(initialState.getButtons()); //возьмем из initialState
+
         //бросает TelegramApiException
         sendMessageToUser(user, text, 0);
-        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}  //пока ничего не делает
+        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}
     }
 
     private void checkButton(User user, Message message) {
@@ -323,13 +210,18 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         String textFromUser = message.getText();
 
-        if (user.getState().equals(initialState)) {  //если состоялся выбор приюта
-            //Это заплатка. По хорошему надо найти по названию ключ из таблицы приютов
-            if (!textFromUser.equals("Собаки") & !textFromUser.equals("Кошки")) {
+        //для тестов сравниваем у состояний поле - именованное состояние,
+        //а не ссылки на состояния. В тестах ссылок нет. user.getState()==initialState не работает
+        if (user.getState().getNamedState() == NamedState.INITIAL_STATE) {  //если состоялся выбор приюта
+            //Надо найти ключ из таблицы приютов по названию
+            List<Shelter> shelterList = shelterService.findAll().stream()
+                    .filter(shelter -> shelter.getName().equals(textFromUser))
+                    .toList();
+            if (shelterList.isEmpty()) {  //пришло не Кошки и не Собаки
                 user.setState(badChoiceState);
                 return;
             }
-            user.setShelterId((textFromUser.equals("Собаки"))?ShelterId.DOG:ShelterId.CAT);
+            user.setShelterId(shelterList.get(0).getId()); //запишем выбранный приют в пользователя
             user.setState(afterShelterChoiceState);
             return;
         }
@@ -343,21 +235,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         user.setState(badChoiceState);
     }
 
-
     private void createMessageToVolonteer(User user, Message message) {
         if (!message.hasText()) {
             user.setState(badChoiceState);
             return;
         }
         //сохраняем в табл MessageToVolonteer пришедший текст
-        MessageToVolunteer messageToVolunteer = new MessageToVolunteer();
-        messageToVolunteer.setId(message.getMessageId());
-        messageToVolunteer.setUser(user);
-        messageToVolunteer.setQuestionTime(LocalDateTime.now());
-        messageToVolunteer.setQuestion(message.getText());
-        messageToVolunteerRepository.save(messageToVolunteer);
+        messageToVolunteerService.createMessageToVolunteer(message.getMessageId(), user, message.getText());
         //message.getMessageId() - тоже сохраняем
         //чтобы у волонтера была возможность ответить на конкретный вопрос, а не просто послать сообщение
+
         //состояние не меняем. Пользователь может слать следующие сообщения волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
@@ -411,8 +298,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             //Главное - отчет принят. Ничего не делаем
             //даже не сообщаем в вызывающий метод
         }
-
-
         //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
@@ -465,7 +350,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             Adoption adoption = adoptionService.getActiveAdoption(user, LocalDate.now());
             if (adoption == null) {
                 user.setState(oldState);
-                return "В приюте " + user.getShelterId() + " у Вас нет активного испытательного срока";
+                return "В приюте " + shelterService.getNameById(user.getShelterId())
+                        + " у Вас нет активного испытательного срока";
             }
             report = reportService.getReportForToday(adoption);
         }

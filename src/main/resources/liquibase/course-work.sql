@@ -94,8 +94,8 @@ CREATE TABLE state_button(
     FOREIGN KEY (shelter_id) REFERENCES shelter(id)
     );
 INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_col, shelter_id) VALUES
-    ('Shelter', 'Собаки', 'Stage', 1, 1, Null),
-    ('Shelter', 'Кошки', 'Stage', 1, 2, Null),
+    -- теперь читаем из таблицы приютов ('Shelter', 'Собаки', 'Stage', 1, 1, Null),
+    -- теперь читаем из таблицы приютов ('Shelter', 'Кошки', 'Stage', 1, 2, Null),
 
     ('Stage', 'Узнать информацию о приюте (этап 1)','Info', 1, 1, Null ),
     ('Stage', 'Как взять животное из приюта (этап 2)','GetAnimal', 2, 1, Null),

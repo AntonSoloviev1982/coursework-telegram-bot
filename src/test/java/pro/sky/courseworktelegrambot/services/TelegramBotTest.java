@@ -39,6 +39,8 @@ public class TelegramBotTest {
     @Mock
     private MessageToVolunteerRepository messageToVolunteerRepository;
     @Mock
+    private FeedbackRequestRepository feedbackRequestRepository;
+    @Mock
     private DogAdoptionRepository dogAdoptionRepository;
     @Mock
     private CatAdoptionRepository catAdoptionRepository;
@@ -55,6 +57,10 @@ public class TelegramBotTest {
 
     //сервисы реальные - их тоже потестируем. Можно было упростить жизнь и их тоже замокать.
     @InjectMocks
+    private FeedbackRequestService feedbackRequestService;
+    @InjectMocks
+    private MessageToVolunteerService messageToVolunteerService;
+    @InjectMocks
     private AdoptionService adoptionService;
     @InjectMocks
     private ReportService reportService;
@@ -68,7 +74,8 @@ public class TelegramBotTest {
     void initSpyTelegramBot() {
         spyTelegramBot = Mockito.spy(telegramBot);
         //для работы бота передадим в него сервисы с заинжекченными моками репозиториев
-        spyTelegramBot.setServices(adoptionService, reportService);
+        spyTelegramBot.setServices(adoptionService, reportService,
+                feedbackRequestService,messageToVolunteerService);
     }
 
     @Test
@@ -80,7 +87,7 @@ public class TelegramBotTest {
         //when(spyTelegramBot.execute(any(SendMessage.class))).thenReturn(null); т.е. сначала идет ошибка, а потом задание вернуть null
         doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
 
-        //создадим объект - начальное состояние с кнопкой
+        //создадим объект - начальное состояние с кнопкой. Туда мы будем переводить пользователя
         State initialState = new State("1","Начало",false, NamedState.INITIAL_STATE,
                 Collections.singletonList(new StateButton(
                         null, "Первая кнопка", null, (byte)1,(byte)1 ,null)));
@@ -107,6 +114,8 @@ public class TelegramBotTest {
 
         //Должно было быть послано 2 сообщения. Проверим это
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        //Интересно, что посылаем мы сервисом TelegramBotSender, а следим за TelegramBot.
+        //Но из-за наследования все работает
         verify(spyTelegramBot,times(2)).execute(sendMessageCaptor.capture());
         List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();
         assertEquals("1", actualSendMessages.get(0).getChatId());
@@ -147,8 +156,8 @@ public class TelegramBotTest {
         //При поиске пользователя возвратим, что он найден по коду 1, в состоянии 11 (старое состояние)
         //и от него пришел текст "Какая-то кнопка". Ожидаю, что новое состояние будет 22 - новое состояние
 
-        when(userRepository.findById(1L)).thenReturn(
-                Optional.of(new User(1L,"Какой-то юзер", oldState)));
+        User user = new User(1L,"Какой-то юзер", oldState);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         //при посылке сообщения - ошибку не выбрасываем
         doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
 
@@ -183,6 +192,50 @@ public class TelegramBotTest {
         assertEquals("Какой-то юзер", actualUser.getName());
         assertEquals(0, ChronoUnit.SECONDS.between(actualUser.getStateTime(), LocalDateTime.now()));
         assertEquals(newState, actualUser.getState());
+
+        //----------------------------------------------------------
+        //Если в сообщении состояния используется служебный символ @,
+        //то надо при переходе в новое состояние взять текст из описания приюта
+        //Если старое состояние начальное (т.е. со списком приютов),
+        //то надо задать у пользователя приют и только потом перейти в Новое состояние.
+        //Сымитируем эту нереальную ситуацию с двумя особенностями сразу для большего покрытия
+        newState.setText("@information");
+        //создадим объект - начальное состояние. Оттуда мы будем переводить пользователя
+        //кнопок там нет. Сообщение будет сравниваться не с кнопками, а с именами приютов
+        oldState.setNamedState(NamedState.INITIAL_STATE);
+        user.setState(oldState);
+        message.setText("Собаки");
+
+        Shelter dogShelter = new Shelter();
+        dogShelter.setId(ShelterId.DOG);
+        dogShelter.setName("Собаки");
+
+        Shelter catShelter = new Shelter();
+        catShelter.setId(ShelterId.CAT);
+        catShelter.setName("Кошки");
+        when(shelterService.findAll()).thenReturn(List.of(dogShelter, catShelter));
+        try{
+            when(shelterService.getInformation(any(),any())).thenReturn("Информация о приюте");
+        } catch (IllegalAccessException e) {}
+
+        //Еще в боте надо задать поле afterShelterChoiceState,
+        //т.к. именно туда перейдет пользователь после выбора приюта
+        //передадим в бот новое состояние через мок репозитория состояний
+        when(stateRepository.findByNamedState(NamedState.INITIAL_STATE)).thenReturn(oldState);
+        when(stateRepository.findByNamedState(NamedState.BAD_CHOICE)).thenReturn(null);
+        when(stateRepository.findByNamedState(NamedState.AFTER_SHELTER_CHOICE_STATE)).thenReturn(newState);
+        spyTelegramBot.initStates();
+
+        reset(spyTelegramBot);  //обнуляем счетчик
+        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        //Инициируем получение сообщения
+        spyTelegramBot.onUpdateReceived(update);
+        //В ответ должно было быть послано 1 сообщение. Проверим это
+        sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //обнуляем ловца
+        verify(spyTelegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        actualSendMessage = sendMessageCaptor.getValue();  //вынем из ловца, то что он словил
+        assertEquals("1", actualSendMessage.getChatId()); //проверяем, что сообщение послано пользователю 1
+        assertEquals("Информация о приюте", actualSendMessage.getText());
     }
     @Test
     public void onUpdateReceived_MessageToVolunteer() throws TelegramApiException {
@@ -238,32 +291,50 @@ public class TelegramBotTest {
 
     @Test
     public void onUpdateReceived_Feedback() throws TelegramApiException {
-        //создадим объект - состояние messageToVolunteer
-        State state = new State("MessageToVolunteer",
-                "Введите сообщение для волонтера - это пользователь уже получил. Ждем, что пришлет",
-                true, NamedState.MESSAGE_TO_VOLUNTEER, null);
+        //создадим объект - состояние FeedbackRequest
+        State state = new State("FeedbackRequest",
+                "Введите контакты для обратной связи - это пользователь уже получил. Ждем, что пришлет",
+                true, NamedState.FEEDBACK_REQUEST, null);
+        State previousState = new State("PreviousState",
+                "Предыдущее состояние", false, null, new ArrayList<>());
+        //у предыдущего состояния обязательно должна быть кнопка,
+        //иначе мы бы не попали в FeedbackRequest и во-вторых,
+        //назад в бескнопочное состояние переход будет невозможен
+        //возникнет ошибка при построении клавиатуры
+        StateButton anyButton = new StateButton(
+                previousState, "Какая-то кнопка",  null, (byte)1,(byte)1 ,null);
+        previousState.getButtons().add(0, anyButton);
 
-        //При поиске пользователя возвратим, что он найден по коду 1, в состоянии MessageToVolunteer
-        //и от него пришел текст "Что собаки едят?".
-        //Ожидаю, что новое состояние останется прежним - MessageToVolunteer
-        //а в базу запишется новая запись для волонтера. Id записи = Id пришедшего Message
+        //При поиске пользователя возвратим, что он найден по коду 1, в состоянии FeedbackRequest
+        //с предыдущим состоянием initialState (хотя такого не бывает)
+        //и от него пришел текст "Перезвоните мне по номеру 123".
+        //Ожидаю, что новое состояние изменится на предыдущее - initialState
+        //а в базу в табл FeedbackRequest запишется новая запись для волонтера.
+        User user = new User(1L,"Какой-то юзер", state);
+        user.setPreviousState(previousState);
 
-        when(userRepository.findById(1L)).thenReturn(
-                Optional.of(new User(1L,"Какой-то юзер", state)));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        //при посылке сообщения - ошибку не выбрасываем
+        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
 
         //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c текстом 'Что собаки едят?'
         Message message = new Message();
         message.setMessageId(123);
         message.setChat(new Chat(1L,""));
-        message.setText("Что собаки едят?");
+        message.setText("Перезвоните мне по номеру 123");
         Update update = new Update();
         update.setMessage(message);
 
         //Инициируем получение сообщения
         spyTelegramBot.onUpdateReceived(update);
 
-        //Никаких сообщений не должно быть послано. Проверим это
-        verify(spyTelegramBot, never()).execute(any(SendMessage.class));
+        //Должно было быть послано 2 сообщения. Проверим это
+        ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(spyTelegramBot,times(2)).execute(sendMessageCaptor.capture());
+        List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();
+        assertEquals("1", actualSendMessages.get(0).getChatId());
+        assertEquals("Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", actualSendMessages.get(0).getText());
+        assertEquals("Предыдущее состояние", actualSendMessages.get(1).getText());
 
         //Должен быть 1 поиск User
         verify(userRepository).findById(1L); //times(1) можно не писать
@@ -275,17 +346,17 @@ public class TelegramBotTest {
         assertEquals(1, actualUser.getId());
         assertEquals("Какой-то юзер", actualUser.getName());
         assertEquals(0, ChronoUnit.SECONDS.between(actualUser.getStateTime(), LocalDateTime.now()));
-        assertEquals(state, actualUser.getState());
+        assertEquals(previousState, actualUser.getState());
 
-        //Проверим, что сохранено в MessageToVolunteer
-        ArgumentCaptor<MessageToVolunteer> messageToVolunteerCaptor = ArgumentCaptor.forClass(MessageToVolunteer.class);
-        verify(messageToVolunteerRepository).save(messageToVolunteerCaptor.capture());
-        MessageToVolunteer actualMessageToVolunteer = messageToVolunteerCaptor.getValue();
-        //проверяем поля объекта, отправленного в репозиторий id, user, questionTime, question
-        assertEquals(123, actualMessageToVolunteer.getId());
-        assertEquals(actualUser, actualMessageToVolunteer.getUser());
-        assertEquals(0, ChronoUnit.SECONDS.between(actualMessageToVolunteer.getQuestionTime(), LocalDateTime.now()));
-        assertEquals("Что собаки едят?", actualMessageToVolunteer.getQuestion());
+        //Проверим, что сохранено в FeedbackRequest
+        ArgumentCaptor<FeedbackRequest> feedbackRequestCaptor = ArgumentCaptor.forClass(FeedbackRequest.class);
+        verify(feedbackRequestRepository).save(feedbackRequestCaptor.capture());
+        FeedbackRequest actualFeedbackRequest = feedbackRequestCaptor.getValue();
+        //проверяем поля объекта, отправленного в репозиторий user, LocalDateTime.now(), contact
+        assertEquals(0, actualFeedbackRequest.getId());
+        assertEquals(actualUser, actualFeedbackRequest.getUser());
+        assertEquals(0, ChronoUnit.SECONDS.between(actualFeedbackRequest.getRequestTime(), LocalDateTime.now()));
+        assertEquals("Перезвоните мне по номеру 123", actualFeedbackRequest.getContact());
     }
 
     @Test
@@ -360,5 +431,33 @@ public class TelegramBotTest {
         assertEquals(LocalDate.now(), actualReport.getDate());
         assertArrayEquals(photoSize.toString().getBytes(), actualReport.getPhoto());
         assertEquals(null, actualReport.getText());
+
+        //Что будет, если у пользователя нет активного усыновления.
+        //Теоретически мы должны оказаться в предыдущем состоянии
+        when(dogAdoptionRepository.findByUserAndDateLessThanEqualAndTrialDateGreaterThanEqual(any(),any(),any()))
+                .thenReturn(Collections.emptyList());
+
+        //создаем предыдущее состояние
+        State previousState = new State("PreviousState",
+                "Предыдущее состояние", false, null, new ArrayList<>());
+        //у предыдущего состояния обязательно должна быть кнопка,
+        //назад в бескнопочное состояние переход будет невозможен
+        StateButton anyButton = new StateButton(
+                previousState, "Какая-то кнопка",  null, (byte)1,(byte)1 ,null);
+        previousState.getButtons().add(0, anyButton);
+        user.setPreviousState(previousState);
+
+        reset(spyTelegramBot);  //обнуляем счетчик
+        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+
+        //Инициируем получение сообщения
+        spyTelegramBot.onUpdateReceived(update);
+        //В ответ должно было быть послано 2 сообщения. Проверим это
+        sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //обнуляем ловца
+        verify(spyTelegramBot, times(2)).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();  //вынем из ловца, то что он словил
+        assertEquals("1", actualSendMessages.get(0).getChatId()); //проверяем, что сообщение послано пользователю 1
+        assertEquals("В приюте null у Вас нет активного испытательного срока", actualSendMessages.get(0).getText());
+        assertEquals("Предыдущее состояние", actualSendMessages.get(1).getText());
     }
 }
