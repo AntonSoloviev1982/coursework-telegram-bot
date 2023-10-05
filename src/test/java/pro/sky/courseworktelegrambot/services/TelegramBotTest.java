@@ -3,10 +3,7 @@ package pro.sky.courseworktelegrambot.services;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -65,16 +62,16 @@ public class TelegramBotTest {
     @InjectMocks
     private ReportService reportService;
     @InjectMocks
+    @Spy
     //В тестируемый бот инжектим моки и одновременно сделаем его spy-объектом
+    //Реальный сервис TelegramBotSender уже является родителем TelegramBot
+    //и не создается отдельно. Он подпадает под @Spy вместе с TelegramBot
     private TelegramBot telegramBot;  //out - ObjectUnderTest
 
-    //инициировать взаимодействие с telegramBot и собирать результат будем через spy-объект
-    private TelegramBot spyTelegramBot;
     @BeforeEach
-    void initSpyTelegramBot() {
-        spyTelegramBot = Mockito.spy(telegramBot);
+    void injectServicesIntoTelegramBot() {
         //для работы бота передадим в него сервисы с заинжекченными моками репозиториев
-        spyTelegramBot.setServices(adoptionService, reportService,
+        telegramBot.setServices(adoptionService, reportService,
                 feedbackRequestService,messageToVolunteerService);
     }
 
@@ -85,7 +82,7 @@ public class TelegramBotTest {
         //при посылке сообщения - ошибку не выбрасываем
         //так возникает TelegramApiException: Parameter method can not be null
         //when(spyTelegramBot.execute(any(SendMessage.class))).thenReturn(null); т.е. сначала идет ошибка, а потом задание вернуть null
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
         //создадим объект - начальное состояние с кнопкой. Туда мы будем переводить пользователя
         State initialState = new State("1","Начало",false, NamedState.INITIAL_STATE,
@@ -94,7 +91,7 @@ public class TelegramBotTest {
 
         //передадим созданное состояние в бот через мок репозитория состояний
         when(stateRepository.findByNamedState(NamedState.INITIAL_STATE)).thenReturn(initialState);
-        spyTelegramBot.initStates();
+        telegramBot.initStates();
 
         //Метод замоканного объекта UserRepository.save ничего не возвращает, далать when не нужно
         //а нужно будет проверить, какие параметры попадают ему на вход
@@ -109,14 +106,14 @@ public class TelegramBotTest {
         update.setMessage(message);
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
         //Проверим, что было вызвано в spy и mock - объектах
 
         //Должно было быть послано 2 сообщения. Проверим это
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
         //Интересно, что посылаем мы сервисом TelegramBotSender, а следим за TelegramBot.
         //Но из-за наследования все работает
-        verify(spyTelegramBot,times(2)).execute(sendMessageCaptor.capture());
+        verify(telegramBot,times(2)).execute(sendMessageCaptor.capture());
         List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();
         assertEquals("1", actualSendMessages.get(0).getChatId());
         assertEquals("Привет, null", actualSendMessages.get(0).getText());
@@ -159,7 +156,7 @@ public class TelegramBotTest {
         User user = new User(1L,"Какой-то юзер", oldState);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         //при посылке сообщения - ошибку не выбрасываем
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
         //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c текстом 'Какая-то кнопка'
         Message message = new Message();
@@ -171,12 +168,12 @@ public class TelegramBotTest {
         update.setMessage(message);
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
         //Проверим, что было вызвано в spy и mock - объектах
 
         //Должно было быть послано 1 сообщение. Проверим это
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //создаем ловца SendMessage
-        verify(spyTelegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        verify(telegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         SendMessage actualSendMessage = sendMessageCaptor.getValue();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessage.getChatId()); //проверяем, что сообщение послано пользователю 1
         assertEquals("Новое состояние", actualSendMessage.getText());
@@ -224,15 +221,15 @@ public class TelegramBotTest {
         when(stateRepository.findByNamedState(NamedState.INITIAL_STATE)).thenReturn(oldState);
         when(stateRepository.findByNamedState(NamedState.BAD_CHOICE)).thenReturn(null);
         when(stateRepository.findByNamedState(NamedState.AFTER_SHELTER_CHOICE_STATE)).thenReturn(newState);
-        spyTelegramBot.initStates();
+        telegramBot.initStates();
 
-        reset(spyTelegramBot);  //обнуляем счетчик
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        reset(telegramBot);  //обнуляем счетчик
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
         //В ответ должно было быть послано 1 сообщение. Проверим это
         sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //обнуляем ловца
-        verify(spyTelegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        verify(telegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         actualSendMessage = sendMessageCaptor.getValue();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessage.getChatId()); //проверяем, что сообщение послано пользователю 1
         assertEquals("Информация о приюте", actualSendMessage.getText());
@@ -261,10 +258,10 @@ public class TelegramBotTest {
         update.setMessage(message);
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
 
         //Никаких сообщений не должно быть послано. Проверим это
-        verify(spyTelegramBot, never()).execute(any(SendMessage.class));
+        verify(telegramBot, never()).execute(any(SendMessage.class));
 
         //Должен быть 1 поиск User
         verify(userRepository).findById(1L); //times(1) можно не писать
@@ -315,7 +312,7 @@ public class TelegramBotTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         //при посылке сообщения - ошибку не выбрасываем
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
         //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c текстом 'Что собаки едят?'
         Message message = new Message();
@@ -326,11 +323,11 @@ public class TelegramBotTest {
         update.setMessage(message);
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
 
         //Должно было быть послано 2 сообщения. Проверим это
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(spyTelegramBot,times(2)).execute(sendMessageCaptor.capture());
+        verify(telegramBot,times(2)).execute(sendMessageCaptor.capture());
         List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();
         assertEquals("1", actualSendMessages.get(0).getChatId());
         assertEquals("Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", actualSendMessages.get(0).getText());
@@ -387,7 +384,7 @@ public class TelegramBotTest {
         when(dogReportRepository.findByAdoptionAndDate(any(), any()))
                 .thenReturn(Collections.singletonList(report));
         //при посылке сообщения - ошибку не выбрасываем
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
         //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c фото
         Message message = new Message();
@@ -400,11 +397,11 @@ public class TelegramBotTest {
         update.setMessage(message);
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
 
         //В ответ должно было быть послано 1 сообщение. Проверим это
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //создаем ловца SendMessage
-        verify(spyTelegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        verify(telegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         SendMessage actualSendMessage = sendMessageCaptor.getValue();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessage.getChatId()); //проверяем, что сообщение послано пользователю 1
         assertEquals("Осталось прислать текст", actualSendMessage.getText());
@@ -447,14 +444,14 @@ public class TelegramBotTest {
         previousState.getButtons().add(0, anyButton);
         user.setPreviousState(previousState);
 
-        reset(spyTelegramBot);  //обнуляем счетчик
-        doReturn(null).when(spyTelegramBot).execute(any(SendMessage.class));
+        reset(telegramBot);  //обнуляем счетчик
+        doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
         //Инициируем получение сообщения
-        spyTelegramBot.onUpdateReceived(update);
+        telegramBot.onUpdateReceived(update);
         //В ответ должно было быть послано 2 сообщения. Проверим это
         sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class); //обнуляем ловца
-        verify(spyTelegramBot, times(2)).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
+        verify(telegramBot, times(2)).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessages.get(0).getChatId()); //проверяем, что сообщение послано пользователю 1
         assertEquals("В приюте null у Вас нет активного испытательного срока", actualSendMessages.get(0).getText());
