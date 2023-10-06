@@ -21,4 +21,6 @@ public interface CatReportRepository extends JpaRepository<CatReport, Integer> {
             "order by date desc limit 1", nativeQuery = true)
     CatReport findLatestReport(Integer adoption_id);
 
+    List<CatReport> findAllByAdoptionIdAndPhotoIsNotNullAndTextIsNotNull(Integer AdoptionId);
+
 }

@@ -5,14 +5,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
+import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,8 +31,10 @@ class NotifierTest {
     private  CatReportRepository catReportRepository;
     @Mock
     private  DogReportRepository dogReportRepository;
-    @Spy
+    @Mock
     private  MessageToVolunteerRepository messageToVolunteerRepository;
+    @Mock
+    private MessageToVolunteerService messageToVolunteerService;
     @Mock
     private  TelegramBotSender telegramBotSender;
 
@@ -39,8 +42,8 @@ class NotifierTest {
     private Notifier notifier;
 
     @Test
-    void sendWarningNoReportTest() throws TelegramApiException {
-/*        Cat cat7 = new Cat();
+    void sendWarningNoCatReportTest() throws TelegramApiException {
+        Cat cat7 = new Cat();
         Cat cat8 = new Cat();
         cat7.setId(7);
         cat8.setId(8);
@@ -49,30 +52,56 @@ class NotifierTest {
         user7.setId(77777777);
         user8.setId(88888888);
         CatAdoption adoption7 = new CatAdoption(user7, cat7, LocalDate.now());
+        adoption7.setId(7);
         CatAdoption adoption8 = new CatAdoption(user8, cat8, LocalDate.of(2023, 11, 5));
+        adoption8.setId(8);
         CatReport report7 = new CatReport(
                 adoption7,LocalDate.of(2023,10, 5), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
-        CatReport report8 = new CatReport(
-                adoption8,LocalDate.now(), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
+        report7.setId(7);
         when(catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now())).thenReturn(List.of(adoption7, adoption8));
-        when(catReportRepository.findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate.now())).thenReturn(List.of(report8));
-        when(catReportRepository.findLatestReport(any())).thenReturn(report7);
+        when(catReportRepository.findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate.now())).thenReturn(Collections.emptyList());
+        when(catReportRepository.findAllByAdoptionIdAndPhotoIsNotNullAndTextIsNotNull(any())).thenReturn(List.of(report7))
+                .thenReturn(Collections.emptyList());
+
         notifier.sendWarningNoReport();
 
-        ArgumentCaptor<MessageToVolunteer> argumentCaptor = ArgumentCaptor.forClass(MessageToVolunteer.class);
-        verify(messageToVolunteerRepository, only()).save(argumentCaptor.capture());
-        assertEquals(argumentCaptor.getValue().getUser(), user7);
-        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней", argumentCaptor.getValue().getQuestion());
-
-        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(telegramBotSender, only()).sendMessageToUser(
-                userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
-        assertEquals(userArgumentCaptor.getValue(), user7);
+        verify(telegramBotSender, times(2)).sendMessageToUser(any(User.class), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
                 "Просим вас присылать ежедневный отчет до 21:00.");
+    }
 
-*/
+    @Test
+    void sendWarningNoDogReportTest() throws TelegramApiException {
+        Dog dog9 = new Dog();
+        Dog dog10 = new Dog();
+        dog9.setId(9);
+        dog10.setId(10);
+        User user9 = new User();
+        User user10 = new User();
+        user9.setId(99999999);
+        user10.setId(1000000000);
+        DogAdoption adoption9 = new DogAdoption(user9, dog9, LocalDate.now());
+        adoption9.setId(9);
+        DogAdoption adoption10 = new DogAdoption(user10, dog10, LocalDate.of(2023, 11, 5));
+        adoption10.setId(10);
+        DogReport report9 = new DogReport(
+                adoption9,LocalDate.of(2023,10, 1), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
+        report9.setId(9);
+        DogReport report10 = new DogReport(
+                adoption10,LocalDate.now(), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
+        when(dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now())).thenReturn(List.of(adoption9, adoption10));
+        when(dogReportRepository.findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate.now())).thenReturn(List.of(report10));
+        when(dogReportRepository.findAllByAdoptionIdAndPhotoIsNotNullAndTextIsNotNull(any())).thenReturn(List.of(report9))
+                .thenReturn(List.of(report10));
+        notifier.sendWarningNoReport();
+
+        ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        verify(messageToVolunteerService, only()).createMessageToVolunteer(
+                anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
+        assertEquals(userArgumentCaptor.getValue(), user9);
+        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней", stringArgumentCaptor.getValue());
     }
 
     @Test

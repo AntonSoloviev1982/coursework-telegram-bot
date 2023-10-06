@@ -2,7 +2,6 @@ package pro.sky.courseworktelegrambot.timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -10,13 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
+import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -36,20 +37,20 @@ public class Notifier {
     private final DogAdoptionRepository dogAdoptionRepository;
     private final CatReportRepository catReportRepository;
     private final DogReportRepository dogReportRepository;
-    private final MessageToVolunteerRepository messageToVolunteerRepository;
+    private final MessageToVolunteerService messageToVolunteerService;
     private final TelegramBotSender telegramBotSender;
 
     public Notifier(CatAdoptionRepository catAdoptionRepository,
                     DogAdoptionRepository dogAdoptionRepository,
                     CatReportRepository catReportRepository,
                     DogReportRepository dogReportRepository,
-                    MessageToVolunteerRepository messageToVolunteerRepository,
-                    TelegramBotSender telegramBotSender, TaskScheduler taskScheduler) {
+                    MessageToVolunteerService messageToVolunteerService,
+                    TelegramBotSender telegramBotSender) {
         this.catAdoptionRepository = catAdoptionRepository;
         this.dogAdoptionRepository = dogAdoptionRepository;
         this.catReportRepository = catReportRepository;
         this.dogReportRepository = dogReportRepository;
-        this.messageToVolunteerRepository = messageToVolunteerRepository;
+        this.messageToVolunteerService = messageToVolunteerService;
         this.telegramBotSender = telegramBotSender;
     }
 
@@ -77,15 +78,12 @@ public class Notifier {
             if (todayDogReports.containsKey(adoption)) {
                 break;
             }else{
-                report = dogReportRepository.findLatestReport(adoption.getId());
+                report = findLatestCatReport(adoption.getId()).orElse(null);
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(date, LocalDate.of(2022, 12,31));
                 if(today-dayLatestReport > 2){
-                    MessageToVolunteer notification = new MessageToVolunteer();
-                    notification.setUser(adoption.getUser());
-                    notification.setQuestionTime(LocalDateTime.now());
-                    notification.setQuestion("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней");
-                    messageToVolunteerRepository.save(notification);
+                    messageToVolunteerService.createMessageToVolunteer( 1000000, adoption.getUser(),
+                            "ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.");
                 }else {
                     sendNotification(adoption, "ВНИМАНИЕ !!! " +
                             "Просим вас присылать ежедневный отчет до 21:00.");
@@ -101,21 +99,30 @@ public class Notifier {
             if (todayCatReports.containsKey(adoption)) {
                 break;
             }else{
-                report = catReportRepository.findLatestReport(adoption.getId());
+                report = findLatestCatReport(adoption.getId()).orElse(null);
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(date, LocalDate.of(2022, 12,31));
                 if(today-dayLatestReport > 2){
-                    MessageToVolunteer notification = new MessageToVolunteer();
-                    notification.setUser(adoption.getUser());
-                    notification.setQuestionTime(LocalDateTime.now());
-                    notification.setQuestion("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней");
-                    messageToVolunteerRepository.save(notification);
+                    messageToVolunteerService.createMessageToVolunteer( 0, adoption.getUser(),
+                            "ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.");
                 }else {
                     sendNotification(adoption, "ВНИМАНИЕ !!! " +
                                     "Просим вас присылать ежедневный отчет до 21:00.");
                 }
             }
         }
+    }
+
+    private Optional<CatReport> findLatestCatReport(int adoptionId){
+        return catReportRepository.findAllByAdoptionIdAndPhotoIsNotNullAndTextIsNotNull(adoptionId)
+                .stream()
+                .max(Comparator.comparing(Report::getDate));
+    }
+
+    private Optional<DogReport> findLatestDogReport(int adoptionId){
+        return dogReportRepository.findAllByAdoptionIdAndPhotoIsNotNullAndTextIsNotNull(adoptionId)
+                .stream()
+                .max(Comparator.comparing(Report::getDate));
     }
 
     /**
