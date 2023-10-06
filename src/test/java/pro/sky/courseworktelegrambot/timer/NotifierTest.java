@@ -40,39 +40,57 @@ class NotifierTest {
 
     @Test
     void sendWarningNoReportTest() throws TelegramApiException {
-/*        Cat cat7 = new Cat();
+        Cat cat7 = new Cat();
         Cat cat8 = new Cat();
+        Cat cat9 = new Cat();
         cat7.setId(7);
         cat8.setId(8);
-        User user7 = new User();
-        User user8 = new User();
-        user7.setId(77777777);
-        user8.setId(88888888);
+        cat8.setId(9);
+        User user7 = new User(); //прислал последний отчет 3 дня назад
+        User user8 = new User(); //прислал последний отчет вчера
+        User user9 = new User(); //прислал последний отчет сегодня
+        user7.setId(77);
+        user8.setId(88);
+        user9.setId(99);
         CatAdoption adoption7 = new CatAdoption(user7, cat7, LocalDate.now());
+        adoption7.setId(777);
         CatAdoption adoption8 = new CatAdoption(user8, cat8, LocalDate.of(2023, 11, 5));
+        adoption8.setId(888);
+        CatAdoption adoption9 = new CatAdoption(user9, cat9, LocalDate.of(2023, 11, 5));
+        adoption8.setId(999);
         CatReport report7 = new CatReport(
-                adoption7,LocalDate.of(2023,10, 5), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
+                adoption7,LocalDate.now().plusDays(-3), new byte[]{1,2},new byte[]{3,4});
         CatReport report8 = new CatReport(
-                adoption8,LocalDate.now(), new byte[]{33,33,33,41,41,41},new byte[]{1,2,3,4,5,6,7,8,9});
-        when(catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now())).thenReturn(List.of(adoption7, adoption8));
-        when(catReportRepository.findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate.now())).thenReturn(List.of(report8));
-        when(catReportRepository.findLatestReport(any())).thenReturn(report7);
+                adoption8,LocalDate.now().plusDays(-1), new byte[]{1,2},new byte[]{3,4});
+        CatReport report9 = new CatReport(
+                adoption9,LocalDate.now(), new byte[]{1,2},new byte[]{3,4});
+
+        when(catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now()))
+                .thenReturn(List.of(adoption7, adoption8, adoption9));
+        when(catReportRepository.findByDateAndPhotoIsNotNullAndTextIsNotNull(LocalDate.now()))
+                .thenReturn(List.of(report9));
+        when(catReportRepository.findLatestReport(adoption7.getId())).thenReturn(report7);
+        when(catReportRepository.findLatestReport(adoption8.getId())).thenReturn(report8);
+
+        //запускаем тестируемый метод
         notifier.sendWarningNoReport();
 
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        //пользователю 7 и 8 уйдут сообщения в чат
+        verify(telegramBotSender, times(2)).sendMessageToUser(
+                userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
+        assertEquals(userArgumentCaptor.getAllValues().get(0), user7);
+        assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
+                "Просим вас присылать ежедневный отчет до 21:00.");
+
+        //а про пользователя 7 еще уйдет жалоба волонтеру
         ArgumentCaptor<MessageToVolunteer> argumentCaptor = ArgumentCaptor.forClass(MessageToVolunteer.class);
         verify(messageToVolunteerRepository, only()).save(argumentCaptor.capture());
         assertEquals(argumentCaptor.getValue().getUser(), user7);
         assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней", argumentCaptor.getValue().getQuestion());
 
-        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
-        ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(telegramBotSender, only()).sendMessageToUser(
-                userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
-        assertEquals(userArgumentCaptor.getValue(), user7);
-        assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
-                "Просим вас присылать ежедневный отчет до 21:00.");
 
-*/
     }
 
     @Test

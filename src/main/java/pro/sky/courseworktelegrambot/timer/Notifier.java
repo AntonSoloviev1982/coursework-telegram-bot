@@ -64,7 +64,7 @@ public class Notifier {
     @Scheduled(cron = "0 1 21 * * *")
     @Transactional
     public void sendWarningNoReport(){
-        long today = ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.of(2022, 12,31));
+        long today = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), LocalDate.now());
         long dayLatestReport;
         LocalDate date;
         Report report;
@@ -103,17 +103,16 @@ public class Notifier {
             }else{
                 report = catReportRepository.findLatestReport(adoption.getId());
                 date = (report != null) ? report.getDate() : adoption.getDate();
-                dayLatestReport = ChronoUnit.DAYS.between(date, LocalDate.of(2022, 12,31));
+                dayLatestReport = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), date);
                 if(today-dayLatestReport > 2){
                     MessageToVolunteer notification = new MessageToVolunteer();
                     notification.setUser(adoption.getUser());
                     notification.setQuestionTime(LocalDateTime.now());
                     notification.setQuestion("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней");
                     messageToVolunteerRepository.save(notification);
-                }else {
-                    sendNotification(adoption, "ВНИМАНИЕ !!! " +
-                                    "Просим вас присылать ежедневный отчет до 21:00.");
                 }
+                sendNotification(adoption, "ВНИМАНИЕ !!! " +
+                                    "Просим вас присылать ежедневный отчет до 21:00.");
             }
         }
     }
