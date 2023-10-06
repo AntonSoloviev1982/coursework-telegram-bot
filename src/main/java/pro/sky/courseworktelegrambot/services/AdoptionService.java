@@ -142,7 +142,7 @@ public class AdoptionService {
         long days = ChronoUnit.DAYS.between(adoption.getTrialDate(), trialDate);
         try {
             telegramBotSender.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
-                    "Вам увеличен испытательный срок на" + days + " дней до " + trialDate.toString(), 0);
+                    "Вам увеличен испытательный срок на " + days + " дней до " + trialDate.toString(), 0);
         } catch (TelegramApiException e) {
             logger.error("Ошибка при попытке изменить испытательный срок " + e.getMessage());
             //TelegramException - это RunTimeException, в отличие от TelegramApiException

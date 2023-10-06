@@ -2,12 +2,14 @@ package pro.sky.courseworktelegrambot.timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
-import pro.sky.courseworktelegrambot.services.TelegramBot;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
@@ -18,13 +20,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- *  Проверяет каждый день в 21:01 все ежедневные отчеты усыновителей.<br>
+ *  Проверяет каждый день в 21:01 по Московскому времени (GMT+ 3) все ежедневные отчеты усыновителей.<br>
  *  Если усыновитель не прислал, или прислал не полный отчет напоминает ему об этом.
  *  Если усыновитель не присылает отчет более 2 дней извещает волонтера.<br>
- *  Проверяет каждый день в 23:01 все усыновления.<br>
+ *  Проверяет каждый день в 23:01 Московскому времени (GMT+ 3) все усыновления.<br>
  *  Если пользователю не продлили испытательный период, поздравляет его.
  *  */
 @Component
+@EnableScheduling
 public class Notifier {
 
     private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
@@ -41,7 +44,7 @@ public class Notifier {
                     CatReportRepository catReportRepository,
                     DogReportRepository dogReportRepository,
                     MessageToVolunteerRepository messageToVolunteerRepository,
-                    TelegramBotSender telegramBotSender) {
+                    TelegramBotSender telegramBotSender, TaskScheduler taskScheduler) {
         this.catAdoptionRepository = catAdoptionRepository;
         this.dogAdoptionRepository = dogAdoptionRepository;
         this.catReportRepository = catReportRepository;
@@ -59,7 +62,8 @@ public class Notifier {
      *  посредством {@link MessageToVolunteerRepository#save(Object)} save()}
      * */
     @Scheduled(cron = "0 1 21 * * *")
-    private void sendWarningNoReport(){
+    @Transactional
+    public void sendWarningNoReport(){
         long today = ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.of(2022, 12,31));
         long dayLatestReport;
         LocalDate date;
@@ -73,7 +77,7 @@ public class Notifier {
             if (todayDogReports.containsKey(adoption)) {
                 break;
             }else{
-                report = dogReportRepository.findLatestReport(adoption);
+                report = dogReportRepository.findLatestReport(adoption.getId());
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(date, LocalDate.of(2022, 12,31));
                 if(today-dayLatestReport > 2){
@@ -97,7 +101,7 @@ public class Notifier {
             if (todayCatReports.containsKey(adoption)) {
                 break;
             }else{
-                report = catReportRepository.findLatestReport(adoption);
+                report = catReportRepository.findLatestReport(adoption.getId());
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(date, LocalDate.of(2022, 12,31));
                 if(today-dayLatestReport > 2){
@@ -120,7 +124,8 @@ public class Notifier {
      *  Используется метод <u>sendNotification</u> этого сервиса.
      * */
     @Scheduled(cron = "0 1 23 * * *")
-    private void sendCongratulation(){
+    @Transactional
+    public void sendCongratulation(){
         List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (DogAdoption adoption : currentDogAdoptionList) {
             if (adoption.getTrialDate().isEqual(LocalDate.now())) {
@@ -139,7 +144,7 @@ public class Notifier {
 
     /**
      *  Отправляет уведомление пользователю, проходящему испытательный период.<br>
-     *  Используется метод сервиса {@link TelegramBot#sendMessageToUser(User, String, int)}  }
+     *  Используется метод сервиса {@link TelegramBotSender#sendMessageToUser(User, String, int)}  }
      *  @param adoption (пользователь является усыновителем, получаем через adoption.getUser())
      *  @param notification текст уведомления.
      * */
