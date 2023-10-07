@@ -308,11 +308,11 @@ public class TelegramBot extends TelegramBotSender {
             System.out.println(text);
         }
 
-        Report report = reportService.saveReport(user, photo, mediaType, mediaSize, text);
+        Report report = null;
         //найдем активное усыновление пользователя
         Adoption adoption = adoptionService.getActiveAdoption(user, LocalDate.now());
         if (adoption != null) { //если усыновление найдено
-            report = reportService.saveReport(adoption, LocalDate.now(), photo, text);
+            report = reportService.saveReport(adoption, LocalDate.now(), photo,mediaType,mediaSize, text);
         }
         //если после сохранения report=null, значит у юзера не было испытательного срока
         //в этом случае reportRequestText побочным действием вернет его предыдущее состояние

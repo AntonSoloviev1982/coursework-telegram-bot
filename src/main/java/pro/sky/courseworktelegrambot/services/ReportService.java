@@ -151,4 +151,27 @@ public class ReportService {
         return List.copyOf(reportRepository(shelterId).findAll());
     }
 
+    /**
+     * Метод находит отчет за сегодня для заданного усыновления.<br>
+     * Используется для определения полноты сданного отчета
+     * при выводе запроса пользователю, прислать оставшуюся чась отчета
+     *
+     * @param adoption усыновление, для которого ищем отчет за сегодня
+     * @return Report  найденный отчет, null - если не найден
+     */
+    public Report getReportForToday(Adoption adoption) {
+        List<? extends Report> reportList;
+        if (adoption.getUser().getShelterId() == ShelterId.DOG) {
+            DogAdoption dogAdoption = (DogAdoption) adoption;
+            reportList = dogReportRepository.findByAdoptionAndDate(dogAdoption, LocalDate.now());
+        } else {
+            CatAdoption catAdoption = (CatAdoption) adoption;
+            reportList = catReportRepository.findByAdoptionAndDate(catAdoption, LocalDate.now());
+        }
+        if (!reportList.isEmpty()) {
+            return reportList.get(0);
+        } else {
+            return null;
+        }
+    }
 }
