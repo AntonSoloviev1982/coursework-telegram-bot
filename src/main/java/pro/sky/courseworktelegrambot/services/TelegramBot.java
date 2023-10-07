@@ -7,21 +7,19 @@ import eu.medsea.mimeutil.detector.MagicMimeMimeDetector;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.repositories.*;
+import pro.sky.courseworktelegrambot.repositories.CatRepository;
+import pro.sky.courseworktelegrambot.repositories.DogRepository;
+import pro.sky.courseworktelegrambot.repositories.StateRepository;
+import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -29,11 +27,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 //интересно, что доступ к сервису TelegramBotSender осуществляется без внедрения
@@ -341,7 +337,7 @@ public class TelegramBot extends TelegramBotSender {
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpEntity<String> request = new HttpEntity<>(httpHeaders);
         return restTemplate.exchange(
-                fileInfoUri,
+                getFileInfoUri(),
                 HttpMethod.GET,
                 request,
                 String.class,
@@ -350,7 +346,7 @@ public class TelegramBot extends TelegramBotSender {
     }
     //вспомогательный метод скачивания файла по пути
     private byte[] downloadPhoto(String filePath) {
-        String fullUri = fileStorageUri.replace("{token}", getBotToken())
+        String fullUri = getFileStorageUri().replace("{token}", getBotToken())
                 .replace("{filePath}", filePath);
         URL urlObj = null;
         try {

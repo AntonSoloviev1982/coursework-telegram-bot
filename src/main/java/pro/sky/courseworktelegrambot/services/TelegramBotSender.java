@@ -36,9 +36,23 @@ public class TelegramBotSender extends TelegramLongPollingBot {
     @Value("${telegram.bot.token}")
     private String token;
 
+    @Value("${file_info.uri}")
+    private String fileInfoUri;
+
+    @Value("${file_storage.uri}")
+    private String fileStorageUri;
+
     @Override
     public String getBotToken() {
         return token;//botConfig.getBotToken();
+    }
+
+    public String getFileInfoUri() {
+        return fileInfoUri;
+    }
+
+    public String getFileStorageUri() {
+        return fileStorageUri;
     }
 
     @Override
