@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
-import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
-import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
 
 import javax.persistence.EntityNotFoundException;
@@ -49,18 +47,20 @@ public class ReportService {
      * @param text      текст отчета, может быть null, если прислано фото
      * @return Report сохраненные данные отчета для кошки или собаки
      */
-    public Report saveReport(Adoption adoption, LocalDate date, byte[] photo, byte[] text) {
+    public Report saveReport(Adoption adoption, LocalDate date, byte[] photo, String mediaType,int mediaSize, String text) {
         //вызывается из бота (дата в этом случае всегда now()), волонтер отчеты только читает
         if (adoption.getUser().getShelterId() == ShelterId.DOG) {
             DogAdoption dogAdoption = (DogAdoption) adoption;
             List<DogReport> reportList = dogReportRepository.findByAdoptionAndDate(dogAdoption, date);
             DogReport report;  //объект для сохранения
             if (reportList.isEmpty()) {
-                report = new DogReport(dogAdoption, LocalDate.now(), photo, text);
+                report = new DogReport(dogAdoption, LocalDate.now(), photo,mediaType,mediaSize, text);
             } else {
                 report = reportList.get(0);
                 if (photo != null) {
                     report.setPhoto(photo);
+                    report.setImageType(mediaType);
+                    report.setImageSize(mediaSize);
                 }
                 if (text != null) {
                     report.setText(text);
@@ -72,11 +72,13 @@ public class ReportService {
             List<CatReport> reportList = catReportRepository.findByAdoptionAndDate(catAdoption, date);
             CatReport report;  //объект для сохранения
             if (reportList.isEmpty()) {
-                report = new CatReport(catAdoption, LocalDate.now(), photo, text);
+                report = new CatReport(catAdoption, LocalDate.now(), photo,mediaType,mediaSize, text);
             } else {
                 report = reportList.get(0);
                 if (photo != null) {
                     report.setPhoto(photo);
+                    report.setImageType(mediaType);
+                    report.setImageSize(mediaSize);
                 }
                 if (text != null) {
                     report.setText(text);
@@ -149,27 +151,4 @@ public class ReportService {
         return List.copyOf(reportRepository(shelterId).findAll());
     }
 
-    /**
-     * Метод находит отчет за сегодня для заданного усыновления.<br>
-     * Используется для определения полноты сданного отчета
-     * при выводе запроса пользователю, прислать оставшуюся чась отчета
-     *
-     * @param adoption усыновление, для которого ищем отчет за сегодня
-     * @return Report  найденный отчет, null - если не найден
-     */
-    public Report getReportForToday(Adoption adoption) {
-        List<? extends Report> reportList;
-        if (adoption.getUser().getShelterId() == ShelterId.DOG) {
-            DogAdoption dogAdoption = (DogAdoption) adoption;
-            reportList = dogReportRepository.findByAdoptionAndDate(dogAdoption, LocalDate.now());
-        } else {
-            CatAdoption catAdoption = (CatAdoption) adoption;
-            reportList = catReportRepository.findByAdoptionAndDate(catAdoption, LocalDate.now());
-        }
-        if (!reportList.isEmpty()) {
-            return reportList.get(0);
-        } else {
-            return null;
-        }
-    }
 }

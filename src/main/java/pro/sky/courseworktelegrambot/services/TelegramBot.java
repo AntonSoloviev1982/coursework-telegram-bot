@@ -1,19 +1,39 @@
 package pro.sky.courseworktelegrambot.services;
 
+//import lombok.extern.slf4j.Slf4j;
+
+import eu.medsea.mimeutil.MimeUtil;
+import eu.medsea.mimeutil.detector.MagicMimeMimeDetector;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.repositories.*;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 //интересно, что доступ к сервису TelegramBotSender осуществляется без внедрения
@@ -175,7 +195,6 @@ public class TelegramBot extends TelegramBotSender {
             try {
                 text = shelterService.getInformation(shelterId, informationType);
             } catch (IllegalAccessException e) {
-                logger.error("Ошибка получения информации. " + e);
                 //Антон, может быть здесь InformationTypeByShelterNotFound?
                 throw new RuntimeException(e);
             }
@@ -183,22 +202,16 @@ public class TelegramBot extends TelegramBotSender {
 
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
+        if (buttons.isEmpty()  && !state.isTextInput() && state.getNamedState()!=NamedState.INITIAL_STATE) {
             //если кнопок нет и не состояние текстового ввода и не список приютов
             //то возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
             user.setState(oldState);
-            //дальше выводим текст нового и кнопки старого состояния
+            //выводим текст нового и кнопки старого состояния
         }
-
-        //Интересно, что у initialState будут свои кнопки, назначенные в @PostConstract из приютов
-        //А у user.getState().getButtons() - для того же состояния кнопок не будет, т.к. в базе их нет
-        //поэтому подменим кнопки у usera в начальном состоянии (выбора приюта)
-        if (state.equals(initialState)) state.setButtons(initialState.getButtons()); //возьмем из initialState
-
         //бросает TelegramApiException
         sendMessageToUser(user, text, 0);
-        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}
+        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}  //пока ничего не делает
     }
 
     private void checkButton(User user, Message message) {
@@ -210,18 +223,13 @@ public class TelegramBot extends TelegramBotSender {
         }
         String textFromUser = message.getText();
 
-        //для тестов сравниваем у состояний поле - именованное состояние,
-        //а не ссылки на состояния. В тестах ссылок нет. user.getState()==initialState не работает
-        if (user.getState().getNamedState() == NamedState.INITIAL_STATE) {  //если состоялся выбор приюта
-            //Надо найти ключ из таблицы приютов по названию
-            List<Shelter> shelterList = shelterService.findAll().stream()
-                    .filter(shelter -> shelter.getName().equals(textFromUser))
-                    .toList();
-            if (shelterList.isEmpty()) {  //пришло не Кошки и не Собаки
+        if (user.getState().equals(initialState)) {  //если состоялся выбор приюта
+            //Это заплатка. По хорошему надо найти по названию ключ из таблицы приютов
+            if (!textFromUser.equals("Собаки") & !textFromUser.equals("Кошки")) {
                 user.setState(badChoiceState);
                 return;
             }
-            user.setShelterId(shelterList.get(0).getId()); //запишем выбранный приют в пользователя
+            user.setShelterId((textFromUser.equals("Собаки"))?ShelterId.DOG:ShelterId.CAT);
             user.setState(afterShelterChoiceState);
             return;
         }
@@ -234,6 +242,7 @@ public class TelegramBot extends TelegramBotSender {
         }
         user.setState(badChoiceState);
     }
+
 
     private void createMessageToVolonteer(User user, Message message) {
         if (!message.hasText()) {
@@ -272,15 +281,38 @@ public class TelegramBot extends TelegramBotSender {
 
     private void acceptReport(User user, Message message) {
         byte[] photo = null; //пока так
+        String  text = null;
+        String mediaType = null;
+        int mediaSize = 0;
         if (message.hasPhoto()) {
-            photo = message.getPhoto().get(0).toString().getBytes(); //пока так
+            List<PhotoSize> photoSizes = message.getPhoto();
+            PhotoSize largestPhoto = photoSizes.get(photoSizes.size() - 1); // получаем последний и самый большой вариант фото
+            String fileId = largestPhoto.getFileId();
+            //String path = largestPhoto.getFilePath(); не работает, приходит null
+            ResponseEntity<String> response = getFilePath(fileId);
+            System.out.println(response);
+            if (response.getStatusCode() == HttpStatus.OK){
+                JSONObject jsonObject = new JSONObject(response.getBody());
+                String filePath = String.valueOf(jsonObject
+                        .getJSONObject("result")
+                        .getString("file_path"));
+                System.out.println(jsonObject);
+                photo = downloadPhoto(filePath);
+            }
+            // Определяем MIME-тип
+            mediaType = detectMimeType(photo);
+            System.out.println(mediaType);
+            // Размер файла
+            mediaSize = largestPhoto.getFileSize();
+            System.out.println(mediaSize);
         }
-        byte[] text = null; //пока так
-        if (message.hasDocument()) {
-            text = message.getDocument().toString().getBytes(); //пока так
+        if (message.hasText()) {
+            //text = message.getDocument().toString().getBytes(); //пока так
+            text = message.getText();
+            System.out.println(text);
         }
 
-        Report report = null;
+        Report report = reportService.saveReport(user, photo, mediaType, mediaSize, text);
         //найдем активное усыновление пользователя
         Adoption adoption = adoptionService.getActiveAdoption(user, LocalDate.now());
         if (adoption != null) { //если усыновление найдено
@@ -298,8 +330,53 @@ public class TelegramBot extends TelegramBotSender {
             //Главное - отчет принят. Ничего не делаем
             //даже не сообщаем в вызывающий метод
         }
+
+
         //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
+    }
+    //вспомогательный метод получения пути файла по fileId
+    private ResponseEntity<String> getFilePath(String fileId) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        HttpEntity<String> request = new HttpEntity<>(httpHeaders);
+        return restTemplate.exchange(
+                fileInfoUri,
+                HttpMethod.GET,
+                request,
+                String.class,
+                getBotToken(),
+                fileId);
+    }
+    //вспомогательный метод скачивания файла по пути
+    private byte[] downloadPhoto(String filePath) {
+        String fullUri = fileStorageUri.replace("{token}", getBotToken())
+                .replace("{filePath}", filePath);
+        URL urlObj = null;
+        try {
+            urlObj = new URL(fullUri);
+            System.out.println(urlObj);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Ошибка создания URI", e);
+        }
+
+        try (InputStream is = urlObj.openStream()) {
+            return is.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка чтения с URI" + urlObj.toExternalForm(), e);
+        }
+    }
+
+
+
+    private String detectMimeType(byte[] data) {
+        // Регистрируем MimeDetector
+        MimeUtil.registerMimeDetector(MagicMimeMimeDetector.class.getName());
+
+        // Получаем MIME-тип из массива байт
+        String mimeType = MimeUtil.getMostSpecificMimeType(MimeUtil.getMimeTypes(data)).toString();
+
+        return mimeType;
     }
 
     private void showAnimalList(User user) throws TelegramApiException  {

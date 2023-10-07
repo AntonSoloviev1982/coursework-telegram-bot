@@ -17,14 +17,17 @@ public abstract class Report {
     @Lob
     @Column(columnDefinition = "oid")
     private byte[] photo; // фото отчета
-    @Lob
-    @Column(columnDefinition = "oid")
-    private byte[] text; // текст отчета
+    private String imageType; //расширение фото
+    private int imageSize; //размер фото
+    private String text; // текст отчета
 
-    public Report(LocalDate date, byte[] photo, byte[] text) {
+    public Report(LocalDate date, byte[] photo, String imageType,
+                  int imageSize, String text) {
         this.date = date;
         this.photo = photo;
         this.text = text;
+        this.imageType = imageType;
+        this.imageSize = imageSize;
     }
 
     public Report() {
@@ -60,15 +63,32 @@ public abstract class Report {
         this.photo = photo;
     }
     @JsonIgnore
-    public byte[]  getText() {
+    public String getText() {
         return text;
     }
     public boolean getTextPresented(){
         return text != null;
     }
 
-    public void setText(byte[]  text) {
+    public void setText(String text) {
         this.text = text;
+    }
+
+
+    public String getImageType() {
+        return imageType;
+    }
+
+    public void setImageType(String imageType) {
+        this.imageType = imageType;
+    }
+
+    public int getImageSize() {
+        return imageSize;
+    }
+
+    public void setImageSize(int imageSize) {
+        this.imageSize = imageSize;
     }
 
     @Override

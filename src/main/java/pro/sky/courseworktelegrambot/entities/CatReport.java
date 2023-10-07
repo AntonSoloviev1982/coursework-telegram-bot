@@ -13,8 +13,9 @@ public class CatReport extends Report {
         return adoption;
     }
 
-    public CatReport(CatAdoption adoption, LocalDate date, byte[] photo, byte[] text) {
-        super(date, photo, text);
+    public CatReport(CatAdoption adoption, LocalDate date, byte[] photo,
+                     String imageType,int imageSize,String text) {
+        super(date, photo,imageType,imageSize, text);
         this.adoption = adoption;
     }
     public CatReport() {
