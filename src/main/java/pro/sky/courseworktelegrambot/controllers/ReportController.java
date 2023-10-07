@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,33 @@ public class ReportController {
         Report dogReport = reportService.getReportById(shelterId, reportId);
         return ResponseEntity.ok(dogReport);
     }
+    @Operation(summary = "Получение фотографии животного из отчета",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Фотография животного",
+                            content = @Content(
+                                    mediaType = MediaType.IMAGE_JPEG_VALUE
+                            )
+                    )
+            })
+    @GetMapping("{shelter_id}/{report_id}/photo")
+    public ResponseEntity<byte[]> getReportPhoto(
+            @Parameter(description = "Идентификатор приюта")
+            @PathVariable("shelter_id") ShelterId shelterId,
+            @Parameter(description = "Идентификатор отчета о животном")
+            @PathVariable("report_id") Integer reportId) {
+        Report report = reportService.getReportById(shelterId, reportId);
+        byte[] photo = report.getPhoto();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        headers.setContentLength(photo.length);
+
+        return new ResponseEntity<>(photo, headers, HttpStatus.OK);
+    }
+
+
 
     @Operation(summary = "Удаление отчета о животном по идентификатору",
             responses = {
