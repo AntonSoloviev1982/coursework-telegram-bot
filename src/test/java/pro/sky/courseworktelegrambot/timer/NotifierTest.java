@@ -5,17 +5,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
-import pro.sky.courseworktelegrambot.repositories.*;
+import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
+import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
+import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
+import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
+import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -30,8 +33,8 @@ class NotifierTest {
     private  CatReportRepository catReportRepository;
     @Mock
     private  DogReportRepository dogReportRepository;
-    @Spy
-    private  MessageToVolunteerRepository messageToVolunteerRepository;
+    @Mock
+    private MessageToVolunteerService messageToVolunteerService;
     @Mock
     private  TelegramBotSender telegramBotSender;
 
@@ -85,10 +88,12 @@ class NotifierTest {
                 "Просим вас присылать ежедневный отчет до 21:00.");
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
-        ArgumentCaptor<MessageToVolunteer> argumentCaptor = ArgumentCaptor.forClass(MessageToVolunteer.class);
-        verify(messageToVolunteerRepository, only()).save(argumentCaptor.capture());
-        assertEquals(argumentCaptor.getValue().getUser(), user7);
-        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней", argumentCaptor.getValue().getQuestion());
+        userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(messageToVolunteerService, only()).createMessageToVolunteer(
+                anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
+        assertEquals(userArgumentCaptor.getValue(), user7);
+        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
@@ -138,10 +143,12 @@ class NotifierTest {
                 "Просим вас присылать ежедневный отчет до 21:00.");
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
-        ArgumentCaptor<MessageToVolunteer> argumentCaptor = ArgumentCaptor.forClass(MessageToVolunteer.class);
-        verify(messageToVolunteerRepository, only()).save(argumentCaptor.capture());
-        assertEquals(argumentCaptor.getValue().getUser(), user7);
-        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней", argumentCaptor.getValue().getQuestion());
+        userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(messageToVolunteerService, only()).createMessageToVolunteer(
+                anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
+        assertEquals(userArgumentCaptor.getValue(), user7);
+        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
