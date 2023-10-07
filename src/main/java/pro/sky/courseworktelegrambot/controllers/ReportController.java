@@ -10,7 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.courseworktelegrambot.entities.Report;
-import pro.sky.courseworktelegrambot.entities.Shelter;
 import pro.sky.courseworktelegrambot.entities.ShelterId;
 import pro.sky.courseworktelegrambot.services.ReportService;
 

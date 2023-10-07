@@ -67,25 +67,27 @@ public class ReportServiceTest {
         trialDate = LocalDate.now();
         adoption1 = new DogAdoption(user1, pet1, trialDate);
         adoption2 = new CatAdoption(user2, pet2, trialDate);
-        report1 = new DogReport(adoption1, LocalDate.now(), null, null);
+        report1 = new DogReport(adoption1, LocalDate.now(), null,"image/jpeg", 111, null);
         report1.setId(1);
-        report2 = new CatReport(adoption2, LocalDate.now(), null, null);
+        report2 = new CatReport(adoption2, LocalDate.now(), null,"image/jpeg", 111, null);
         report2.setId(2);
     }
 
     @Test
     public void saveDogReportTest() {
         byte[] photo = new byte[5];
-        byte[] text = new byte[5];
+        String text = "Пет здоров!";
+        String mediaType = "image/jpeg";
+        int mediaSize = 111;
         LocalDate date = LocalDate.now();
         //Пусть по заданному усыновлению и дате отчет уже есть
         List<DogReport> reportList = new ArrayList<>();
         reportList.add(report1);
         when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
         report1.setPhoto(photo);
-        report1.setPhoto(text);
+        report1.setText(text);
         when(dogReportRepository.save(report1)).thenReturn(report1);
-        assertThat(reportService.saveReport(adoption1, date, photo, text)).isEqualTo(report1);
+        assertThat(reportService.saveReport(adoption1,date, photo,mediaType,mediaSize, text)).isEqualTo(report1);
         verify(dogReportRepository, atLeast(1)).save(report1);
     }
 
@@ -97,17 +99,19 @@ public class ReportServiceTest {
 
         List<DogReport> reportList = new ArrayList<>();
         when(dogReportRepository.findByAdoptionAndDate(adoption1, date)).thenReturn(reportList);
-        DogReport newReport = new DogReport(adoption1, date, null, null);
+        DogReport newReport = new DogReport(adoption1, date, null,"image/jpeg", 111, null);
 
         when(dogReportRepository.save(newReport)).thenReturn(newReport);
-        assertThat(reportService.saveReport(adoption1, date, null, null)).isEqualTo(newReport);
+        assertThat(reportService.saveReport(adoption1, date, null,"image/jpeg", 111, null)).isEqualTo(newReport);
         verify(dogReportRepository, atLeast(1)).save(newReport);
     }
 
     @Test
     public void saveCatReportTest() {
         byte[] photo = new byte[5];
-        byte[] text = new byte[5];
+        String text = "Пет здоров!";
+        String mediaType = "image/jpeg";
+        int mediaSize = 111;
         LocalDate date = LocalDate.now();
         List<CatAdoption> adoptionList = new ArrayList<>();
         adoptionList.add(adoption2);
@@ -115,9 +119,9 @@ public class ReportServiceTest {
         reportList.add(report2);
         when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
         report2.setPhoto(photo);
-        report2.setPhoto(text);
+        report2.setText(text);
         when(catReportRepository.save(report2)).thenReturn(report2);
-        assertThat(reportService.saveReport(adoption2, date, photo, text)).isEqualTo(report2);
+        assertThat(reportService.saveReport(adoption2, date, photo,mediaType,mediaSize, text)).isEqualTo(report2);
         verify(catReportRepository, atLeast(1)).save(report2);
     }
 
@@ -128,10 +132,10 @@ public class ReportServiceTest {
         adoptionList.add(adoption2);
         List<CatReport> reportList = new ArrayList<>();
         when(catReportRepository.findByAdoptionAndDate(adoption2, date)).thenReturn(reportList);
-        CatReport newReport = new CatReport(adoption2, date, null, null);
+        CatReport newReport = new CatReport(adoption2, date, null,"image/jpeg",111, null);
         when(catReportRepository.save(newReport)).thenReturn(newReport);
 
-        assertThat(reportService.saveReport(adoption2, date, null, null)).isEqualTo(newReport);
+        assertThat(reportService.saveReport(adoption2, date, null,"image/jpeg",111, null)).isEqualTo(newReport);
         verify(catReportRepository, atLeast(1)).save(newReport);
     }
 

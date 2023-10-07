@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,14 +19,15 @@ import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
 import pro.sky.courseworktelegrambot.services.ReportService;
 import pro.sky.courseworktelegrambot.services.ShelterService;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.mockito.Mockito.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ReportController.class)
 public class ReportControllerTest {
@@ -74,7 +74,7 @@ public class ReportControllerTest {
         pet = new Dog();
         trialDate = LocalDate.of(2023, 9, 20);
         adoption = new DogAdoption(user, pet, trialDate);
-        report = new DogReport(adoption, LocalDate.of(2023, 9, 27), null, null);
+        report = new DogReport(adoption, LocalDate.of(2023, 9, 27), null,"image/jpeg", 111, null);
         report.setId(1);
     }
 
