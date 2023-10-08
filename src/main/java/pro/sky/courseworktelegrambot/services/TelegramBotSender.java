@@ -94,7 +94,8 @@ public class TelegramBotSender extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            logger.error("Error occurred by sending message: " + e.getMessage());
+            logger.error("Error occurred by sending message '"
+                    +textToSend+"' to chat "+chatId+" : " + e.getMessage());
             throw e; //пробрасываем в вызывающие методы, чтобы они прервали свою работу
         }
     }

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -50,9 +52,11 @@ public class TelegramBotTest {
     @Mock
     private CatRepository catRepository;
     @Mock
-    private ShelterService shelterService;
+    private ShelterRepository shelterRepository;
 
     //сервисы реальные - их тоже потестируем. Можно было упростить жизнь и их тоже замокать.
+    //@InjectMocks - shelterService будем создавать сами, тогда и заинжектим репозиторий
+    private ShelterService shelterService;
     @InjectMocks
     private FeedbackRequestService feedbackRequestService;
     @InjectMocks
@@ -70,8 +74,18 @@ public class TelegramBotTest {
 
     @BeforeEach
     void injectServicesIntoTelegramBot() {
+        //пересоздадим shelterService, передадим туда список приютов
+        Shelter dogShelter = new Shelter();
+        dogShelter.setId(ShelterId.DOG);
+        dogShelter.setName("Собаки");
+
+        Shelter catShelter = new Shelter();
+        catShelter.setId(ShelterId.CAT);
+        catShelter.setName("Кошки");
+        when(shelterRepository.findAll()).thenReturn(List.of(dogShelter, catShelter));
+        shelterService = new ShelterService(shelterRepository); //в конструкторе считываются все приюты
         //для работы бота передадим в него сервисы с заинжекченными моками репозиториев
-        telegramBot.setServices(adoptionService, reportService,
+        telegramBot.setServices(shelterService, adoptionService, reportService,
                 feedbackRequestService,messageToVolunteerService);
     }
 
@@ -197,23 +211,18 @@ public class TelegramBotTest {
         //то надо задать у пользователя приют и только потом перейти в Новое состояние.
         //Сымитируем эту нереальную ситуацию с двумя особенностями сразу для большего покрытия
         newState.setText("@information");
+        try {
+        shelterService.setInformation(ShelterId.DOG,"information","Информация о приюте");
+        } catch (IllegalAccessException e) {}
         //создадим объект - начальное состояние. Оттуда мы будем переводить пользователя
         //кнопок там нет. Сообщение будет сравниваться не с кнопками, а с именами приютов
         oldState.setNamedState(NamedState.INITIAL_STATE);
         user.setState(oldState);
         message.setText("Собаки");
 
-        Shelter dogShelter = new Shelter();
-        dogShelter.setId(ShelterId.DOG);
-        dogShelter.setName("Собаки");
-
-        Shelter catShelter = new Shelter();
-        catShelter.setId(ShelterId.CAT);
-        catShelter.setName("Кошки");
-        when(shelterService.findAll()).thenReturn(List.of(dogShelter, catShelter));
-        try{
-            when(shelterService.getInformation(any(),any())).thenReturn("Информация о приюте");
-        } catch (IllegalAccessException e) {}
+        //try{
+        //    when(shelterService.getInformation(any(),any())).thenReturn("Информация о приюте");
+        //} catch (IllegalAccessException e) {}
 
         //Еще в боте надо задать поле afterShelterChoiceState,
         //т.к. именно туда перейдет пользователь после выбора приюта
@@ -372,7 +381,7 @@ public class TelegramBotTest {
         user.setShelterId(ShelterId.DOG);
         DogAdoption adoption = new DogAdoption(user, new Dog(), LocalDate.of(2024,1,1));
         adoption.setId(11);
-        DogReport report = new DogReport(adoption, LocalDate.now(), null, null);
+        DogReport report = new DogReport(adoption, LocalDate.now(), null, null, 0, null);
         report.setId(111);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -386,13 +395,25 @@ public class TelegramBotTest {
         //при посылке сообщения - ошибку не выбрасываем
         doReturn(null).when(telegramBot).execute(any(SendMessage.class));
 
-        //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c фото
+        //создаем параметр для onUpdateReceived - в чат c id 1L пришло сообщение c текстом
         Message message = new Message();
         message.setMessageId(123);
         message.setChat(new Chat(1L,""));
         PhotoSize photoSize = new PhotoSize();
         photoSize.setFileId("1111");
+        photoSize.setFileSize(1234);
+        //мокаем все методы бота, участвующие в скачивании файла
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(
+                "{\"ok\":true,\"result\":{\"file_id\":\"abcd\",\"file_unique_id\":\"dcba\",\"file_size\":12345,\"file_path\":\"photos/file_1.jpg\"}}"
+                , HttpStatus.OK);
+        doReturn(responseEntity).when(telegramBot).getFilePath(anyString());
+        doReturn("https://api.telegram.org/bot{telegram.bot.token}/getFile?file_id={fileId}")
+                .when(telegramBot).getFileStorageUri();
+        doReturn("12345").when(telegramBot).getBotToken();
+        doReturn(new byte[]{1,2}).when(telegramBot).downloadJFileByURL(any());
+
         message.setPhoto(Collections.singletonList(photoSize));
+        message.setText("Сдаю отчет");
         Update update = new Update();
         update.setMessage(message);
 
@@ -404,7 +425,7 @@ public class TelegramBotTest {
         verify(telegramBot).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         SendMessage actualSendMessage = sendMessageCaptor.getValue();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessage.getChatId()); //проверяем, что сообщение послано пользователю 1
-        assertEquals("Осталось прислать текст", actualSendMessage.getText());
+        assertEquals("Отчет уже получен. Можете послать еще раз", actualSendMessage.getText());
 
         //Должен быть 1 поиск User
         verify(userRepository).findById(1L); //times(1) можно не писать
@@ -426,8 +447,8 @@ public class TelegramBotTest {
         assertEquals(111, actualReport.getId());
         assertEquals(adoption, actualReport.getAdoption());
         assertEquals(LocalDate.now(), actualReport.getDate());
-        assertArrayEquals(photoSize.toString().getBytes(), actualReport.getPhoto());
-        assertEquals(null, actualReport.getText());
+        assertArrayEquals(new byte[]{1,2}, actualReport.getPhoto());
+        assertEquals("Сдаю отчет", actualReport.getText());
 
         //Что будет, если у пользователя нет активного усыновления.
         //Теоретически мы должны оказаться в предыдущем состоянии
@@ -446,6 +467,7 @@ public class TelegramBotTest {
 
         reset(telegramBot);  //обнуляем счетчик
         doReturn(null).when(telegramBot).execute(any(SendMessage.class));
+        message.setPhoto(null); //фотографию больше не читаем
 
         //Инициируем получение сообщения
         telegramBot.onUpdateReceived(update);
@@ -454,7 +476,7 @@ public class TelegramBotTest {
         verify(telegramBot, times(2)).execute(sendMessageCaptor.capture()); //times(1) можем не указывать
         List<SendMessage> actualSendMessages = sendMessageCaptor.getAllValues();  //вынем из ловца, то что он словил
         assertEquals("1", actualSendMessages.get(0).getChatId()); //проверяем, что сообщение послано пользователю 1
-        assertEquals("В приюте null у Вас нет активного испытательного срока", actualSendMessages.get(0).getText());
+        assertEquals("В приюте Собаки у Вас нет активного испытательного срока", actualSendMessages.get(0).getText());
         assertEquals("Предыдущее состояние", actualSendMessages.get(1).getText());
     }
 }

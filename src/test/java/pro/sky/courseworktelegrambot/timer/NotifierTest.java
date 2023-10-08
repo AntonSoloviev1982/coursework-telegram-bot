@@ -62,11 +62,11 @@ class NotifierTest {
         CatAdoption adoption9 = new CatAdoption(user9, cat9, LocalDate.of(2023, 11, 5));
         adoption8.setId(999);
         CatReport report7 = new CatReport(
-                adoption7,LocalDate.now().plusDays(-3), new byte[]{1,2},new byte[]{3,4});
+                adoption7,LocalDate.now().plusDays(-3), new byte[]{1,2},null, 0, null);
         CatReport report8 = new CatReport(
-                adoption8,LocalDate.now().plusDays(-1), new byte[]{1,2},new byte[]{3,4});
+                adoption8,LocalDate.now().plusDays(-1), new byte[]{1,2},null, 0, null);
         CatReport report9 = new CatReport(
-                adoption9,LocalDate.now(), new byte[]{1,2},new byte[]{3,4});
+                adoption9,LocalDate.now(), new byte[]{1,2},null, 0, null);
 
         when(catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now()))
                 .thenReturn(List.of(adoption7, adoption8, adoption9));
@@ -85,7 +85,7 @@ class NotifierTest {
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(userArgumentCaptor.getAllValues().get(0), user7);
         assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
-                "Просим вас присылать ежедневный отчет до 21:00.");
+                "null, просим Вас присылать ежедневный отчет по кошке null до 21:00.");
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
         userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -93,7 +93,7 @@ class NotifierTest {
         verify(messageToVolunteerService, only()).createMessageToVolunteer(
                 anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
         assertEquals(userArgumentCaptor.getValue(), user7);
-        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.", stringArgumentCaptor.getValue());
+        assertEquals("ВНИМАНИЕ !!! Опекун null не присылал ежедневный отчет по кошке null более 2х дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
@@ -117,11 +117,11 @@ class NotifierTest {
         DogAdoption adoption9 = new DogAdoption(user9, dog9, LocalDate.of(2023, 11, 5));
         adoption8.setId(999);
         DogReport report7 = new DogReport(
-                adoption7,LocalDate.now().plusDays(-3), new byte[]{1,2},new byte[]{3,4});
+                adoption7,LocalDate.now().plusDays(-3), new byte[]{1,2},null, 0, null);
         DogReport report8 = new DogReport(
-                adoption8,LocalDate.now().plusDays(-1), new byte[]{1,2},new byte[]{3,4});
+                adoption8,LocalDate.now().plusDays(-1), new byte[]{1,2}, null, 0, null);
         DogReport report9 = new DogReport(
-                adoption9,LocalDate.now(), new byte[]{1,2},new byte[]{3,4});
+                adoption9,LocalDate.now(), new byte[]{1,2}, null, 0, null);
 
         when(dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now()))
                 .thenReturn(List.of(adoption7, adoption8, adoption9));
@@ -140,7 +140,7 @@ class NotifierTest {
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(userArgumentCaptor.getAllValues().get(0), user7);
         assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
-                "Просим вас присылать ежедневный отчет до 21:00.");
+                "null, просим Вас присылать ежедневный отчет по собаке null до 21:00.");
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
         userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -148,7 +148,7 @@ class NotifierTest {
         verify(messageToVolunteerService, only()).createMessageToVolunteer(
                 anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
         assertEquals(userArgumentCaptor.getValue(), user7);
-        assertEquals("ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.", stringArgumentCaptor.getValue());
+        assertEquals("ВНИМАНИЕ !!! Опекун null не присылал ежедневный отчет по собаке null более 2х дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
@@ -170,9 +170,9 @@ class NotifierTest {
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(telegramBotSender, only()).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
-        assertEquals(userArgumentCaptor.getValue(), user1);
-        assertEquals(stringArgumentCaptor.getValue(), "Поздравляем !!! Вы успешно прошли испытательный период. " +
-                "Всего наилучшего Вам и вашему питомцу.");
+        assertEquals(user1, userArgumentCaptor.getValue());
+        assertEquals("null! Поздравляем !!! Вы успешно прошли испытательный период. " +
+                "Всего наилучшего Вам и вашему питомцу.", stringArgumentCaptor.getValue());
     }
 
     @Test
@@ -195,9 +195,9 @@ class NotifierTest {
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(telegramBotSender, only()).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
-        assertEquals(userArgumentCaptor.getValue(), user4);
-        assertEquals(stringArgumentCaptor.getValue(), "Поздравляем !!! Вы успешно прошли испытательный период. " +
-                "Всего наилучшего Вам и вашему питомцу.");
+        assertEquals(user4, userArgumentCaptor.getValue());
+        assertEquals("null! Поздравляем !!! Вы успешно прошли испытательный период. " +
+                "Всего наилучшего Вам и вашему питомцу.", stringArgumentCaptor.getValue());
     }
 
     @Test

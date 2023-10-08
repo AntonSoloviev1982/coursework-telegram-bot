@@ -1,7 +1,5 @@
 package pro.sky.courseworktelegrambot.services;
 
-//import lombok.extern.slf4j.Slf4j;
-
 import eu.medsea.mimeutil.MimeUtil;
 import eu.medsea.mimeutil.detector.MagicMimeMimeDetector;
 import org.json.JSONObject;
@@ -39,11 +37,11 @@ public class TelegramBot extends TelegramBotSender {
 
     private final UserRepository userRepository;
     private final StateRepository stateRepository;
-    private final ShelterService shelterService;
 
     //для тестов оставим возможность заинжектить сюда
     //реальные сервисы с моками после создания spyTelegramBot
     //final - отсутствует
+    private ShelterService shelterService;
     private FeedbackRequestService feedbackRequestService;
     private MessageToVolunteerService messageToVolunteerService;
     private AdoptionService adoptionService;
@@ -72,10 +70,12 @@ public class TelegramBot extends TelegramBotSender {
     }
 
     //для тестов
-    public void setServices( AdoptionService adoptionService,
+    public void setServices( ShelterService shelterService,
+                             AdoptionService adoptionService,
                              ReportService reportService,
                              FeedbackRequestService feedbackRequestService,
                              MessageToVolunteerService messageToVolunteerService) {
+        this.shelterService = shelterService;
         this.feedbackRequestService = feedbackRequestService;
         this.messageToVolunteerService = messageToVolunteerService;
         this.adoptionService = adoptionService;
@@ -286,26 +286,25 @@ public class TelegramBot extends TelegramBotSender {
             String fileId = largestPhoto.getFileId();
             //String path = largestPhoto.getFilePath(); не работает, приходит null
             ResponseEntity<String> response = getFilePath(fileId);
-            System.out.println(response);
+            logger.debug(response.toString());
             if (response.getStatusCode() == HttpStatus.OK){
                 JSONObject jsonObject = new JSONObject(response.getBody());
                 String filePath = String.valueOf(jsonObject
                         .getJSONObject("result")
                         .getString("file_path"));
-                System.out.println(jsonObject);
+                logger.debug(jsonObject.toString());
                 photo = downloadPhoto(filePath);
             }
             // Определяем MIME-тип
             mediaType = detectMimeType(photo);
-            System.out.println(mediaType);
+            logger.debug("mediaType = " + mediaType);
             // Размер файла
             mediaSize = largestPhoto.getFileSize();
-            System.out.println(mediaSize);
+            logger.debug("mediaSize = " + mediaSize);
         }
         if (message.hasText()) {
             //text = message.getDocument().toString().getBytes(); //пока так
             text = message.getText();
-            System.out.println(text);
         }
 
         Report report = null;
@@ -326,13 +325,11 @@ public class TelegramBot extends TelegramBotSender {
             //Главное - отчет принят. Ничего не делаем
             //даже не сообщаем в вызывающий метод
         }
-
-
         //состояние не меняем. Пользователь может слать следующие элементы отчета волонтеру.
         //поэтому потом goToNextState не выполняется и user.setPreviousState тоже не выполняется
     }
     //вспомогательный метод получения пути файла по fileId
-    private ResponseEntity<String> getFilePath(String fileId) {
+    public ResponseEntity<String> getFilePath(String fileId) {  //public - для тестов, чтобы замокать
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpEntity<String> request = new HttpEntity<>(httpHeaders);
@@ -351,19 +348,20 @@ public class TelegramBot extends TelegramBotSender {
         URL urlObj = null;
         try {
             urlObj = new URL(fullUri);
-            System.out.println(urlObj);
+            logger.debug("urlObj = " + urlObj);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Ошибка создания URI", e);
         }
-
-        try (InputStream is = urlObj.openStream()) {
+        return downloadJFileByURL(urlObj);
+    }
+    //вспомогательный метод скачивания файла по URL
+    public byte[] downloadJFileByURL(URL url) { //public - для тестов, чтобы замокать
+        try (InputStream is = url.openStream()) {
             return is.readAllBytes();
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка чтения с URI" + urlObj.toExternalForm(), e);
+            throw new RuntimeException("Ошибка чтения с URI: " + url.toExternalForm(), e);
         }
     }
-
-
 
     private String detectMimeType(byte[] data) {
         // Регистрируем MimeDetector
@@ -431,8 +429,8 @@ public class TelegramBot extends TelegramBotSender {
         //если отчет в базе не найден, значит он еще не сдан. report будет == null
 
         //потом узнаем состояние сдачи отчета и сформируем сообщение
-        if (report==null || !report.getPhotoPresented() && !report.getPhotoPresented()) {
-            return "Пришлите, пожалуйста, фото (.jpeg) и текстовый отчет (.docx)";
+        if (report==null || !report.getPhotoPresented() && !report.getTextPresented()) {
+            return "Пришлите, пожалуйста, фото (.jpeg) и текстовый отчет";
         } else if (!report.getPhotoPresented() && report.getTextPresented()){
             return "Осталось прислать фото";
         } else if (report.getPhotoPresented() && !report.getTextPresented()) {

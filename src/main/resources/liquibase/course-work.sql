@@ -105,10 +105,7 @@ CREATE TABLE state_button
     FOREIGN KEY (shelter_id) REFERENCES shelter (id)
 );
 INSERT INTO state_button(state_id, caption, next_state_id, button_row, button_col, shelter_id)
-VALUES ('Shelter', 'Собаки', 'Stage', 1, 1, Null),
-       ('Shelter', 'Кошки', 'Stage', 1, 2, Null),
-
-       ('Stage', 'Узнать информацию о приюте (этап 1)', 'Info', 1, 1, Null),
+VALUES ('Stage', 'Узнать информацию о приюте (этап 1)', 'Info', 1, 1, Null),
        ('Stage', 'Как взять животное из приюта (этап 2)', 'GetAnimal', 2, 1, Null),
        ('Stage', 'Прислать отчет о питомце (этап 3)', 'Report', 3, 1, Null),
        ('Stage', 'Назад к выбору приюта', 'Shelter', 4, 1, Null),
@@ -155,7 +152,8 @@ CREATE TABLE users
 );
 INSERT INTO users(id, name, shelter_id, state_id)
 VALUES (11, 'User11', 'DOG', 'Shelter'),
-       (22, 'User22', 'CAT', 'Shelter');
+       (22, 'User22', 'CAT', 'Shelter'),
+       (340330886, 'Салават', Null, 'Shelter');
 
 --changeset anton:create_message_to_volunteer
 DROP TABLE IF EXISTS message_to_volunteer;
@@ -280,5 +278,5 @@ CREATE UNIQUE INDEX dog_report_adoption_date ON dog_report (adoption_id, date)
 
 --changeset salavat:add_user_dog_adoption
 INSERT INTO dog_adoption(user_id, pet_id, date, trial_date)
-VALUES (340330886, 1, '2023-10-07', '2023-10-10');
+VALUES (340330886, 1, '2023-10-01', '2023-10-02');
 

@@ -2,7 +2,6 @@ package pro.sky.courseworktelegrambot.timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +60,9 @@ public class Notifier {
      *  Если усыновитель не присылает отчет более 2 дней извещает волонтера.
      *  посредством {@link MessageToVolunteerRepository#save(Object)} save()}
      * */
-    @Scheduled(cron = "0 1 21 * * *")
+    @Scheduled(cron = "1 * * * * *")
+    //@Scheduled(cron = "0 21 * * * *")
+    //улучшенный формат <Минуты> <Часы> <Дни_месяца> <Месяцы> <Дни_недели> <Годы>
     @Transactional
     public void sendWarningNoReport(){
         long today = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), LocalDate.now());
@@ -83,10 +83,11 @@ public class Notifier {
                 dayLatestReport = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), date);
                 if(today-dayLatestReport > 2){
                     messageToVolunteerService.createMessageToVolunteer(adoption.getId(), adoption.getUser(),
-                            "ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.");
+                            "ВНИМАНИЕ !!! Опекун " + adoption.getUser().getName()
+                                    + " не присылал ежедневный отчет по собаке " + adoption.getPet().getName() + " более 2х дней.");
                 }
-                sendNotification(adoption, "ВНИМАНИЕ !!! " +
-                            "Просим вас присылать ежедневный отчет до 21:00.");
+                sendNotification(adoption, "ВНИМАНИЕ !!! " + adoption.getUser().getName() +
+                        ", просим Вас присылать ежедневный отчет по собаке " + adoption.getPet().getName() + " до 21:00.");
             }
         }
 
@@ -103,10 +104,11 @@ public class Notifier {
                 dayLatestReport = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), date);
                 if(today-dayLatestReport > 2){
                     messageToVolunteerService.createMessageToVolunteer(adoption.getId(), adoption.getUser(),
-                            "ВНИМАНИЕ !!! Данный опекун не присылал ежедневный отчет более 2 дней.");
+                            "ВНИМАНИЕ !!! Опекун " + adoption.getUser().getName()
+                                    + " не присылал ежедневный отчет по кошке " + adoption.getPet().getName() + " более 2х дней.");
                 }
-                sendNotification(adoption, "ВНИМАНИЕ !!! " +
-                                    "Просим вас присылать ежедневный отчет до 21:00.");
+                sendNotification(adoption, "ВНИМАНИЕ !!! " + adoption.getUser().getName() +
+                        ", просим Вас присылать ежедневный отчет по кошке " + adoption.getPet().getName() + " до 21:00.");
             }
         }
     }
@@ -116,20 +118,21 @@ public class Notifier {
      *  Если пользователю не продлили испытательный период, поздравляет его.
      *  Используется метод <u>sendNotification</u> этого сервиса.
      * */
-    @Scheduled(cron = "0 1 23 * * *")
+    //@Scheduled(cron = "0 22 * * * *")  //в 22 часа каждый день
+    @Scheduled(cron = "1 * * * * *")
     @Transactional
     public void sendCongratulation(){
         List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (DogAdoption adoption : currentDogAdoptionList) {
             if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                sendNotification(adoption, "Поздравляем !!! Вы успешно прошли испытательный период. " +
+                sendNotification(adoption, adoption.getUser().getName() + "! Поздравляем !!! Вы успешно прошли испытательный период. " +
                         "Всего наилучшего Вам и вашему питомцу.");
             }
         }
         List<CatAdoption> currentCatAdoptionList = catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
         for (CatAdoption adoption : currentCatAdoptionList) {
             if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                sendNotification(adoption, "Поздравляем !!! Вы успешно прошли испытательный период. " +
+                sendNotification(adoption, adoption.getUser().getName() + "! Поздравляем !!! Вы успешно прошли испытательный период. " +
                         "Всего наилучшего Вам и вашему питомцу.");
             }
         }
