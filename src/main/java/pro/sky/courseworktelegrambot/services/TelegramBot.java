@@ -191,6 +191,7 @@ public class TelegramBot extends TelegramBotSender {
             try {
                 text = shelterService.getInformation(shelterId, informationType);
             } catch (IllegalAccessException e) {
+                logger.error("Ошибка получения информации. " + e);
                 //Антон, может быть здесь InformationTypeByShelterNotFound?
                 throw new RuntimeException(e);
             }
@@ -198,16 +199,22 @@ public class TelegramBot extends TelegramBotSender {
 
         //выясняем, есть ли кнопки в текущем состоянии
         List<StateButton> buttons = state.getButtons();
-        if (buttons.isEmpty()  && !state.isTextInput() && state.getNamedState()!=NamedState.INITIAL_STATE) {
+        if (buttons.isEmpty()  && !state.isTextInput() && !state.equals(initialState)) {
             //если кнопок нет и не состояние текстового ввода и не список приютов
             //то возвращаем состояние назад (к тому, что было при входе в обработку сообщения)
             //этот режим используем для вывода разной информации о приюте, оставаясь в прежнем состоянии
             user.setState(oldState);
-            //выводим текст нового и кнопки старого состояния
+            //дальше выводим текст нового и кнопки старого состояния
         }
+
+        //Интересно, что у initialState будут свои кнопки, назначенные в @PostConstract из приютов
+        //А у user.getState().getButtons() - для того же состояния кнопок не будет, т.к. в базе их нет
+        //поэтому подменим кнопки у usera в начальном состоянии (выбора приюта)
+        if (state.equals(initialState)) state.setButtons(initialState.getButtons()); //возьмем из initialState
+
         //бросает TelegramApiException
         sendMessageToUser(user, text, 0);
-        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}  //пока ничего не делает
+        if (state.getNamedState()==NamedState.ANIMAL_LIST) {showAnimalList(user);}
     }
 
     private void checkButton(User user, Message message) {
@@ -219,13 +226,18 @@ public class TelegramBot extends TelegramBotSender {
         }
         String textFromUser = message.getText();
 
-        if (user.getState().equals(initialState)) {  //если состоялся выбор приюта
-            //Это заплатка. По хорошему надо найти по названию ключ из таблицы приютов
-            if (!textFromUser.equals("Собаки") & !textFromUser.equals("Кошки")) {
+        //для тестов сравниваем у состояний поле - именованное состояние,
+        //а не ссылки на состояния. В тестах ссылок нет. user.getState()==initialState не работает
+        if (user.getState().getNamedState() == NamedState.INITIAL_STATE) {  //если состоялся выбор приюта
+            //Надо найти ключ из таблицы приютов по названию
+            List<Shelter> shelterList = shelterService.findAll().stream()
+                    .filter(shelter -> shelter.getName().equals(textFromUser))
+                    .toList();
+            if (shelterList.isEmpty()) {  //пришло не Кошки и не Собаки
                 user.setState(badChoiceState);
                 return;
             }
-            user.setShelterId((textFromUser.equals("Собаки"))?ShelterId.DOG:ShelterId.CAT);
+            user.setShelterId(shelterList.get(0).getId()); //запишем выбранный приют в пользователя
             user.setState(afterShelterChoiceState);
             return;
         }
