@@ -83,7 +83,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatDogAdoptionTest() {
+    public void createDogAdoptionTest() {
         long userId = 123L;
         int petId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
@@ -99,7 +99,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatCatAdoptionTest() {
+    public void createCatAdoptionTest() {
         long userId = 125L;
         int petId = 2;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.CAT);
@@ -115,7 +115,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatAdoptionNegativeUserIsNotFoundTest() {
+    public void createAdoptionNegativeUserIsNotFoundTest() {
         long userId = 123L;
         int petId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
@@ -127,7 +127,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatAdoptionNegativeDogIsNotFoundTest() {
+    public void createAdoptionNegativeDogIsNotFoundTest() {
         long userId = 123L;
         int petId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
@@ -140,7 +140,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatAdoptionNegativeCatIsNotFoundTest() {
+    public void createAdoptionNegativeCatIsNotFoundTest() {
         long userId = 125L;
         int petId = 2;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.CAT);
@@ -153,7 +153,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatDogAdoptionFindByUserAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
+    public void createDogAdoptionFindByUserAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
         long userId = 123L;
         int petId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
@@ -169,7 +169,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatDogAdoptionFindByPetAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
+    public void createDogAdoptionFindByPetAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
         long userId = 123L;
         int petId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
@@ -185,7 +185,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatCatAdoptionFindByUserAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
+    public void createCatAdoptionFindByUserAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
         long userId = 125L;
         int petId = 2;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.CAT);
@@ -201,7 +201,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void creatCatAdoptionFindByPetAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
+    public void createCatAdoptionFindByPetAndDateLessThanEqualAndTrialDateGreaterThanEqualIsNotEmptyTest() {
         long userId = 125L;
         int petId = 2;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.CAT);

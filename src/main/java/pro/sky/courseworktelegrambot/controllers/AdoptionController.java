@@ -6,13 +6,10 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.courseworktelegrambot.entities.Adoption;
-import pro.sky.courseworktelegrambot.entities.Report;
-import pro.sky.courseworktelegrambot.entities.ShelterId;
+import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.services.AdoptionService;
 
 import java.time.LocalDate;
@@ -39,24 +36,24 @@ public class AdoptionController {
                                     schema = @Schema(implementation = Adoption.class)
                             )
                     )
-            })
+            },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Новое усыновление",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = AdoptionDTO.class)
+                    )
+            )
+    )
     @PostMapping("{shelter_id}")
     public ResponseEntity<Adoption> createAdoption(
             @Parameter(description = "Идентификатор приюта")
             @PathVariable(name="shelter_id") ShelterId shelterId,
-            @Parameter(description = "Идентификатор юзера")
-            @RequestParam("user_id") long userId,
-            @Parameter(description = "Идентификатор питомца")
-            @RequestParam("pet_id") int petId,
-            //date возьмем сегодня
-            @Parameter(description = "Испытательный срок")
-            @RequestParam("trial_date") LocalDate trialDate
+            @RequestBody AdoptionDTO adoptionDTO
             ) {
-
         return ResponseEntity.ok(
-                adoptionService.createAdoption(shelterId, userId, petId, trialDate));
-        //можно и так тоже
-        //return adoptionService.createAdoption(shelterId, userId, petId, trialDate);
+                adoptionService.createAdoption(shelterId,
+                        adoptionDTO.getUserId(), adoptionDTO.getPetId(), adoptionDTO.getTrialDate()));
     }
 
     @Operation(summary = "Поиск усыновления по идентификатору",

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,10 +98,15 @@ public class AdoptionControllerTest {
         //в save в качестве аргумента придет посторонний adoption, поэтому any()
         when(dogAdoptionRepository.save(any())).thenReturn(adoption);
 
-        mockMvc.perform(
-                post("/adoption/DOG?user_id=123&pet_id=1&trial_date=25.09.2023")
-                        //, userId, petId, trialDate)
-                        //.contentType(MediaType.APPLICATION_JSON)
+        AdoptionDTO adoptionDTO = new AdoptionDTO();
+        adoptionDTO.setUserId(123);
+        adoptionDTO.setPetId(1);
+        adoptionDTO.setTrialDate(LocalDate.of(2023,9,23));
+
+        mockMvc.perform(post("/adoption/DOG")
+                //вариант без DTO post("/adoption/DOG?user_id=123&pet_id=1&trial_date=25.09.2023")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(adoptionDTO))
         ).andExpect(status().isOk())
                 .andExpect(result -> {
                     DogAdoption dogAdoption = objectMapper.readValue(
