@@ -238,7 +238,7 @@ public class AdoptionServiceTest {
     }
 
     @Test
-    public void setTrialDateDogAdoptionTest() throws TelegramApiException {
+    public void setTrialDateDogAdoptionTest() {
         int adoptionId = 1;
         Mockito.doNothing().when(shelterService).checkShelterId(ShelterId.DOG);
         when(dogAdoptionRepository.findById(any())).thenReturn(Optional.of(adoption1));

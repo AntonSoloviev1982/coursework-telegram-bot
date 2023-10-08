@@ -72,7 +72,7 @@ public class AdoptionService {
         //Проверяем, что заданный User есть
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new EntityNotFoundException("User with id " + userId + " not found"));
-
+        Adoption adoption; //переменная для возврата
         if (shelterId == ShelterId.DOG) {
             //Проверяем, что заданный Dog есть
             //Dog pet = dogRepository.getReferenceById(petId);  //так не идет обращение к  БД. Оно будет позже
@@ -88,8 +88,8 @@ public class AdoptionService {
                     pet, trialDate, LocalDate.now()).isEmpty()) {
                 throw new UserOrPetIsBusyException();
             }
-            DogAdoption adoption = new DogAdoption(user, pet, trialDate);
-            return dogAdoptionRepository.save(adoption);
+            DogAdoption dogAdoption = new DogAdoption(user, pet, trialDate);
+            adoption = dogAdoptionRepository.save(dogAdoption);
         } else {
             Cat pet = catRepository.findById(petId).orElseThrow(() ->
                     new EntityNotFoundException("Cat with id " + petId + " not found"));
@@ -101,9 +101,17 @@ public class AdoptionService {
                     pet, trialDate, LocalDate.now()).isEmpty()) {
                 throw new UserOrPetIsBusyException();
             }
-            CatAdoption adoption = new CatAdoption(user, pet, trialDate);
-            return catAdoptionRepository.save(adoption);
+            CatAdoption catAdoption = new CatAdoption(user, pet, trialDate);
+            adoption = catAdoptionRepository.save(catAdoption);
         }
+        try {
+            telegramBotSender.sendMessageToUser(adoption.getUser(),
+                    adoption.getUser().getName()+", поздравляем с усыновлением нашего питомца! " +
+                    "Вам назначен испытательный срок до " + trialDate.toString(), 0);
+        } catch (TelegramApiException e) {
+            logger.error("Ошибка при поздравлении об усыновлении " + e.getMessage());
+        }
+        return adoption;
     }
 
     /**
@@ -209,8 +217,7 @@ public class AdoptionService {
      * При создании усыновления и при записи испытательного срока API следит,
      * чтобы активное усыновление у всех пользователей и у любого питомца
      * на любую дату в пределах одного приюта было только одно
-     *
-     * Используется дольше для поиска отчета по усыновлению
+     * Используется дальше для поиска отчета по усыновлению
      * или для разрешения входа в состояние сдачи отчета
      * или для поздравления пользователя, у которого вчера истек испытательный срок
      *
