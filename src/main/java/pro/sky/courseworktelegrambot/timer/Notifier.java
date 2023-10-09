@@ -13,6 +13,7 @@ import pro.sky.courseworktelegrambot.services.MessageToVolunteerService;
 import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class Notifier {
     //улучшенный формат <Минуты> <Часы> <Дни_месяца> <Месяцы> <Дни_недели> <Годы>
     @Transactional
     public void sendWarningNoReport(){
+        logger.info("Вызов sendWarningNoReport " + LocalDateTime.now());
         long today = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), LocalDate.now());
         long dayLatestReport;
         LocalDate date;
@@ -82,6 +84,7 @@ public class Notifier {
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), date);
                 if(today-dayLatestReport > 2){
+                    logger.info("Вызов messageToVolunteer");
                     messageToVolunteerService.createMessageToVolunteer(adoption.getId(), adoption.getUser(),
                             "ВНИМАНИЕ !!! Опекун " + adoption.getUser().getName()
                                     + " не присылал ежедневный отчет по собаке " + adoption.getPet().getName() + " более 2х дней.");

@@ -154,4 +154,24 @@ public class AdoptionController {
             @PathVariable("shelter_id") ShelterId shelterId) {
         return adoptionService.getAllActiveAdoptions(shelterId);
     }
+
+    @Operation(
+            summary = "Отправляет предупреждение усыновителю при неполном отчете",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Если пользователя с таким идентификатором нет в БД"
+                    )
+            }
+    )
+    @PostMapping("/warning_user_by_id/{id}")
+    public void warningUser(@Parameter(description = "Идентификатор пользователя")
+                            @PathVariable("id") long id)
+    {
+        adoptionService.warningUser(id);
+    }
+
 }

@@ -240,4 +240,27 @@ public class AdoptionService {
             return adoptionList.get(0);
         }
     }
+
+    /**
+    * Метод отправляет пользователю предупреждение о том, что
+    * он не так подробно заполняет ежедневный отчет, как необходимо.
+    * Предупреждение посылает волонтер через API.
+    * @param id идентификатор пользователя
+    * @throws EntityNotFoundException если пользователь не найден.
+    * */
+    public void warningUser(long id){
+        User user = userRepository.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("User with id " + id + " not found"));
+        try {
+            telegramBotSender.sendMessageToUser(
+                    user, "Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо. " +
+                    "Пожалуйста, подойди ответственнее к этому занятию. В противном случае волонтеры приюта будут обязаны " +
+                    "самолично проверять условия содержания животного", 0);
+        } catch (TelegramApiException e) {
+            logger.error("Ошибка при отправке сообщения "+e.getMessage());
+            //TelegramException - это RunTimeException, в отличие от TelegramApiException
+            throw new TelegramException();
+        }
+    }
+
 }
