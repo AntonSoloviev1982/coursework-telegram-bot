@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.replace;
 
 @Service
 public class TelegramBotSender extends TelegramLongPollingBot {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TelegramBot.class);
     @Value("${telegram.bot.name}")
     private String botName;
 
@@ -94,7 +94,7 @@ public class TelegramBotSender extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            logger.error("Error occurred by sending message '"
+            LOGGER.error("Error occurred by sending message '"
                     +textToSend+"' to chat "+chatId+" : " + e.getMessage());
             throw e; //пробрасываем в вызывающие методы, чтобы они прервали свою работу
         }
@@ -137,7 +137,7 @@ public class TelegramBotSender extends TelegramLongPollingBot {
             final List<KeyboardRow> customKeyboard = new ArrayList<>();
             final List<StateButton> buttons = state.getButtons();
             if (buttons.isEmpty()) {
-                logger.error("State " + state.getId() + " has no button");
+                LOGGER.error("State " + state.getId() + " has no button");
             }
             buttons.stream()
                     .filter(button -> button.getShelterId() == null

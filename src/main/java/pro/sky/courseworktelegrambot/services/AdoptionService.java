@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 public class AdoptionService {
-    private static final Logger logger = LoggerFactory.getLogger(AdoptionService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdoptionService.class);
     private final UserRepository userRepository;
     private final DogRepository dogRepository;
     private final CatRepository catRepository;
@@ -109,7 +109,7 @@ public class AdoptionService {
                     adoption.getUser().getName()+", поздравляем с усыновлением нашего питомца! " +
                     "Вам назначен испытательный срок до " + trialDate.toString(), 0);
         } catch (TelegramApiException e) {
-            logger.error("Ошибка при поздравлении об усыновлении " + e.getMessage());
+            LOGGER.error("Ошибка при поздравлении об усыновлении " + e.getMessage());
         }
         return adoption;
     }
@@ -152,7 +152,7 @@ public class AdoptionService {
             telegramBotSender.sendMessageToUser(adoption.getUser(), "ВНИМАНИЕ !!! " +
                     "Вам увеличен испытательный срок на " + days + " дней до " + trialDate.toString(), 0);
         } catch (TelegramApiException e) {
-            logger.error("Ошибка при попытке изменить испытательный срок " + e.getMessage());
+            LOGGER.error("Ошибка при попытке изменить испытательный срок " + e.getMessage());
             //TelegramException - это RunTimeException, в отличие от TelegramApiException
             throw new TelegramException(); //при ошибке срок не меняем и не сохраняем
         }

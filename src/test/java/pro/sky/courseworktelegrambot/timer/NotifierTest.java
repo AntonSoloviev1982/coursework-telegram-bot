@@ -44,6 +44,7 @@ class NotifierTest {
     @Test
     void sendWarningNoCatReportTest() throws TelegramApiException {
         Cat cat7 = new Cat();
+        cat7.setName("Кот");
         Cat cat8 = new Cat();
         Cat cat9 = new Cat();
         cat7.setId(7);
@@ -53,6 +54,7 @@ class NotifierTest {
         User user8 = new User(); //прислал последний отчет вчера
         User user9 = new User(); //прислал последний отчет сегодня
         user7.setId(77);
+        user7.setName("Иван");
         user8.setId(88);
         user9.setId(99);
         CatAdoption adoption7 = new CatAdoption(user7, cat7, LocalDate.now());
@@ -84,8 +86,8 @@ class NotifierTest {
         verify(telegramBotSender, times(2)).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(userArgumentCaptor.getAllValues().get(0), user7);
-        assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
-                "null, просим Вас присылать ежедневный отчет по кошке null до 21:00.");
+        assertEquals(stringArgumentCaptor.getAllValues().get(0), "ВНИМАНИЕ !!! " +
+                "Иван, просим Вас присылать ежедневный отчет по кошке Кот до 21:00.");
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
         userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -93,7 +95,7 @@ class NotifierTest {
         verify(messageToVolunteerService, only()).createMessageToVolunteer(
                 anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
         assertEquals(userArgumentCaptor.getValue(), user7);
-        assertEquals("ВНИМАНИЕ !!! Опекун null не присылал ежедневный отчет по кошке null более 2х дней.", stringArgumentCaptor.getValue());
+        assertEquals("ВНИМАНИЕ !!! Опекун Иван не присылал ежедневный отчет по кошке Кот более 2х дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
@@ -102,12 +104,14 @@ class NotifierTest {
         Dog dog8 = new Dog();
         Dog dog9 = new Dog();
         dog7.setId(7);
+        dog7.setName("Барбос");
         dog8.setId(8);
         dog8.setId(9);
         User user7 = new User(); //прислал последний отчет 3 дня назад
         User user8 = new User(); //прислал последний отчет вчера
         User user9 = new User(); //прислал последний отчет сегодня
         user7.setId(77);
+        user7.setName("Иван");
         user8.setId(88);
         user9.setId(99);
         DogAdoption adoption7 = new DogAdoption(user7, dog7, LocalDate.now());
@@ -138,9 +142,10 @@ class NotifierTest {
         //пользователю 7 и 8 уйдут сообщения в чат
         verify(telegramBotSender, times(2)).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
-        assertEquals(userArgumentCaptor.getAllValues().get(0), user7);
-        assertEquals(stringArgumentCaptor.getValue(), "ВНИМАНИЕ !!! " +
-                "null, просим Вас присылать ежедневный отчет по собаке null до 21:00.");
+        assertEquals(user7, userArgumentCaptor.getAllValues().get(0));
+        assertEquals("ВНИМАНИЕ !!! " +
+                "Иван, просим Вас присылать ежедневный отчет по собаке Барбос до 21:00."
+                , stringArgumentCaptor.getAllValues().get(0));
 
         //а про пользователя 7 еще уйдет жалоба волонтеру
         userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -148,22 +153,18 @@ class NotifierTest {
         verify(messageToVolunteerService, only()).createMessageToVolunteer(
                 anyInt(), userArgumentCaptor.capture(), stringArgumentCaptor.capture());
         assertEquals(userArgumentCaptor.getValue(), user7);
-        assertEquals("ВНИМАНИЕ !!! Опекун null не присылал ежедневный отчет по собаке null более 2х дней.", stringArgumentCaptor.getValue());
+        assertEquals("ВНИМАНИЕ !!! Опекун Иван не присылал ежедневный отчет по собаке Барбос более 2х дней.", stringArgumentCaptor.getValue());
     }
 
     @Test
     void sendCongratulationCatAdoptionTest() throws TelegramApiException {
         Cat cat1 = new Cat();
-        Cat cat2 = new Cat();
         cat1.setId(1);
-        cat1.setId(2);
         User user1 = new User();
-        User user2 = new User();
         user1.setId(111111111);
-        user2.setId(222222222);
+        user1.setName("Иван");
         CatAdoption adoption1 = new CatAdoption(user1, cat1, LocalDate.now());
-        CatAdoption adoption2 = new CatAdoption(user2, cat2, LocalDate.of(2023, 11, 5));
-        when(catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now())).thenReturn(List.of(adoption1, adoption2));
+        when(catAdoptionRepository.findByTrialDate(LocalDate.now())).thenReturn(List.of(adoption1));
         notifier.sendCongratulation();
 
         ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -171,7 +172,7 @@ class NotifierTest {
         verify(telegramBotSender, only()).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(user1, userArgumentCaptor.getValue());
-        assertEquals("null! Поздравляем !!! Вы успешно прошли испытательный период. " +
+        assertEquals("Иван! Поздравляем !!! Вы успешно прошли испытательный период. " +
                 "Всего наилучшего Вам и вашему питомцу.", stringArgumentCaptor.getValue());
     }
 
@@ -179,24 +180,20 @@ class NotifierTest {
     void sendCongratulationDogAdoptionTest() throws TelegramApiException {
 
         Dog dog4 = new Dog();
-        Dog dog5 = new Dog();
         dog4.setId(4);
-        dog5.setId(5);
         User user4 = new User();
-        User user5 = new User();
         user4.setId(444444444);
-        user5.setId(555555555);
+        user4.setName("Мария");
         DogAdoption adoption4 = new DogAdoption(user4, dog4, LocalDate.now());
-        DogAdoption adoption5 = new DogAdoption(user5, dog5, LocalDate.of(2023,11, 5));
-        when(dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now())).thenReturn(List.of(adoption4, adoption5));
+        when(dogAdoptionRepository.findByTrialDate(LocalDate.now())).thenReturn(List.of(adoption4));
         notifier.sendCongratulation();
 
         ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(telegramBotSender, only()).sendMessageToUser(
+        verify(telegramBotSender, times(1)).sendMessageToUser(
                 userArgumentCaptor.capture(), stringArgumentCaptor.capture(), any(Integer.class));
         assertEquals(user4, userArgumentCaptor.getValue());
-        assertEquals("null! Поздравляем !!! Вы успешно прошли испытательный период. " +
+        assertEquals("Мария! Поздравляем !!! Вы успешно прошли испытательный период. " +
                 "Всего наилучшего Вам и вашему питомцу.", stringArgumentCaptor.getValue());
     }
 

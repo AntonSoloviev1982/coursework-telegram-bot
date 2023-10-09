@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Service
 public class MessageToVolunteerService {
-    private static final Logger logger = LoggerFactory.getLogger(MessageToVolunteerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageToVolunteerService.class);
 
     private final TelegramBotSender telegramBotSender;  //для посылки ответов
     private final MessageToVolunteerRepository messageToVolunteerRepository;
@@ -76,7 +76,7 @@ public class MessageToVolunteerService {
         try {
             telegramBotSender.sendMessageToUser(messageToVolunteer.getUser(), answer, answerToMessage ? id : 0);
         } catch (TelegramApiException e) {
-            logger.error("Ошибка при отправке ответа волонтера "+e.getMessage());
+            LOGGER.error("Ошибка при отправке ответа волонтера "+e.getMessage());
             //TelegramException - это RunTimeException, в отличие от TelegramApiException
             throw new TelegramException(); //при ошибке отметку об отправке ответа (дату ответа) не сохраняем
         }
