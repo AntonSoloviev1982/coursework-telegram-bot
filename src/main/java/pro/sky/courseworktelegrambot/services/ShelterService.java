@@ -43,6 +43,7 @@ public class ShelterService {
      * @return Возвращает созданный Shelter после сохранения.
      * @throws IllegalArgumentException Если аргумент shelter равен null.
      */
+
     public Shelter create(Shelter shelter) {
         return shelterRepository.save(shelter);
     }
