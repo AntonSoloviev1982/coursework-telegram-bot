@@ -16,8 +16,10 @@ import pro.sky.courseworktelegrambot.repositories.CatAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.DogAdoptionRepository;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
+import pro.sky.courseworktelegrambot.repositories.UserRepository;
 import pro.sky.courseworktelegrambot.services.ReportService;
 import pro.sky.courseworktelegrambot.services.ShelterService;
+import pro.sky.courseworktelegrambot.services.TelegramBotSender;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,7 +49,13 @@ public class ReportControllerTest {
     private CatAdoptionRepository catAdoptionRepository;
 
     @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
     private ShelterService shelterService;
+
+    @MockBean
+    private TelegramBotSender telegramBotSender;
 
     @SpyBean
     private ReportService reportService;

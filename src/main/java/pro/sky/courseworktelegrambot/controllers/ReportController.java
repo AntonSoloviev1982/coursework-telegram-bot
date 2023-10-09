@@ -136,4 +136,28 @@ public class ReportController {
             //@RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date){
         return ResponseEntity.ok(reportService.getAllReportsByDate(shelterId, date));
     }
+    @Operation(
+            summary = "Отправляет предупреждение усыновителю при неполном отчете",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Отправка сообщения состоялась успешно"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Если пользователя с таким идентификатором нет в БД"
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Сервис отправки сообщений недоступен"
+                    )
+            }
+    )
+    @PostMapping("/warning_to_user/{user_id}")
+    public void warningToUser(@Parameter(description = "Идентификатор пользователя")
+                              @PathVariable("user_id") long id)
+    {
+        reportService.warningToUser(id);
+    }
+
 }

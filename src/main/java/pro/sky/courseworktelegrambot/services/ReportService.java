@@ -4,10 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.courseworktelegrambot.entities.*;
 import pro.sky.courseworktelegrambot.exceptions.ShelterNotFoundException;
+import pro.sky.courseworktelegrambot.exceptions.TelegramException;
 import pro.sky.courseworktelegrambot.repositories.CatReportRepository;
 import pro.sky.courseworktelegrambot.repositories.DogReportRepository;
+import pro.sky.courseworktelegrambot.repositories.UserRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
@@ -19,13 +22,20 @@ public class ReportService {
     private final DogReportRepository dogReportRepository;
     private final CatReportRepository catReportRepository;
     private final ShelterService shelterService;
+    private final UserRepository userRepository;
+    private final TelegramBotSender telegramBotSender;
+
 
     public ReportService(CatReportRepository catReportRepository,
                          DogReportRepository dogReportRepository,
-                         ShelterService shelterService) {
+                         ShelterService shelterService,
+                         UserRepository userRepository,
+                         TelegramBotSender telegramBotSender) {
         this.dogReportRepository = dogReportRepository;
         this.catReportRepository = catReportRepository;
         this.shelterService = shelterService;
+        this.userRepository = userRepository;
+        this.telegramBotSender = telegramBotSender;
     }
 
     //из такого репозитория удается прочитать, возвращается предок
@@ -172,6 +182,29 @@ public class ReportService {
             return reportList.get(0);
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Метод отправляет пользователю предупреждение о том, что
+     * он не так подробно заполняет ежедневный отчет, как необходимо.
+     * Предупреждение посылает волонтер через API.
+     * @param id идентификатор пользователя
+     * @throws EntityNotFoundException если пользователь не найден.
+     * @throws TelegramException если отправка не состоялась.
+     * */
+    public void warningToUser(long id){
+        User user = userRepository.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("User with id " + id + " not found"));
+        try {
+            telegramBotSender.sendMessageToUser(
+                    user, "Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо. " +
+                            "Пожалуйста, подойди ответственнее к этому занятию. В противном случае волонтеры приюта будут обязаны " +
+                            "самолично проверять условия содержания животного", 0);
+        } catch (TelegramApiException e) {
+            logger.error("Ошибка при отправке сообщения "+e.getMessage());
+            //TelegramException - это RunTimeException, в отличие от TelegramApiException
+            throw new TelegramException();
         }
     }
 }
