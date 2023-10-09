@@ -62,7 +62,7 @@ public abstract class Report {
     public void setPhoto(byte[] photo) {
         this.photo = photo;
     }
-    @JsonIgnore
+
     public String getText() {
         return text;
     }
