@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 //интересно, что доступ к сервису TelegramBotSender осуществляется без внедрения
 //а как к родителю. Не думал, что Spring соберет эту матрешку из сервисов
 public class TelegramBot extends TelegramBotSender {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TelegramBot.class);
 
     private final UserRepository userRepository;
     private final StateRepository stateRepository;
@@ -124,7 +124,7 @@ public class TelegramBot extends TelegramBotSender {
                 //чтобы была возможность на нее правильно среагировать, например не сохранять состояние
                 sendMessage(user.getId(), "Привет, " + user.getName(), null, 0);
             } catch (TelegramApiException e) {
-                logger.error("Ошибка посылки приветственного сообщения: " + e.getMessage());
+                LOGGER.error("Ошибка посылки приветственного сообщения: " + e.getMessage());
                 return;
             }
         } else {
@@ -191,7 +191,7 @@ public class TelegramBot extends TelegramBotSender {
             try {
                 text = shelterService.getInformation(shelterId, informationType);
             } catch (IllegalAccessException e) {
-                logger.error("Ошибка получения информации. " + e);
+                LOGGER.error("Ошибка получения информации. " + e);
                 //Антон, может быть здесь InformationTypeByShelterNotFound?
                 throw new RuntimeException(e);
             }
@@ -281,7 +281,7 @@ public class TelegramBot extends TelegramBotSender {
         try {
             sendMessage(user.getId(), "Запрос обратной связи принят. Волонтер свяжется с вами указанным способом.", null, 0);
         } catch (TelegramApiException e) {
-            logger.error("Не удалось отправить подтверждение на прием запроса обратной связи." + e.getMessage());
+            LOGGER.error("Не удалось отправить подтверждение на прием запроса обратной связи." + e.getMessage());
             //Главное - запрос принят. Ничего не делаем
             //даже не сообщаем в вызывающий метод
         }
@@ -298,21 +298,21 @@ public class TelegramBot extends TelegramBotSender {
             String fileId = largestPhoto.getFileId();
             //String path = largestPhoto.getFilePath(); не работает, приходит null
             ResponseEntity<String> response = getFilePath(fileId);
-            logger.debug(response.toString());
+            LOGGER.debug(response.toString());
             if (response.getStatusCode() == HttpStatus.OK){
                 JSONObject jsonObject = new JSONObject(response.getBody());
                 String filePath = String.valueOf(jsonObject
                         .getJSONObject("result")
                         .getString("file_path"));
-                logger.debug(jsonObject.toString());
+                LOGGER.debug(jsonObject.toString());
                 photo = downloadPhoto(filePath);
             }
             // Определяем MIME-тип
             mediaType = detectMimeType(photo);
-            logger.debug("mediaType = " + mediaType);
+            LOGGER.debug("mediaType = " + mediaType);
             // Размер файла
             mediaSize = largestPhoto.getFileSize();
-            logger.debug("mediaSize = " + mediaSize);
+            LOGGER.debug("mediaSize = " + mediaSize);
         }
         if (message.hasText()) {
             //text = message.getDocument().toString().getBytes(); //пока так
@@ -360,7 +360,7 @@ public class TelegramBot extends TelegramBotSender {
         URL urlObj = null;
         try {
             urlObj = new URL(fullUri);
-            logger.debug("urlObj = " + urlObj);
+            LOGGER.debug("urlObj = " + urlObj);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Ошибка создания URI", e);
         }

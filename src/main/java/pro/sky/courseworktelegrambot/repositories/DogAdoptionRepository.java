@@ -19,11 +19,15 @@ public interface DogAdoptionRepository extends JpaRepository<DogAdoption,Integer
     List<DogAdoption> findByPetAndDateLessThanEqualAndTrialDateGreaterThanEqual(
             //trialDate_parameter >= date_base AND date_parameter <= trialDate_base
             Pet pet, LocalDate trialDate, LocalDate Date);
-    //поиск активных, действующих на дату усыновлений
+    //поиск активных усыновлений, действующих на дату с проверкой обех границ
+    //от даты усыновления до конца испытательного срока (использовал Павел)
     List<DogAdoption> findByDateLessThanEqualAndTrialDateGreaterThanEqual(
             //date_parameter >= date_base AND date_parameter <= trialDate_base
             LocalDate date1, LocalDate date2);
-
+    //поиск активных усыновлений, действующих на дату с проверкой только верхней границы
+    //(использовал Александр)
     List<DogAdoption> findByTrialDateGreaterThanEqual(LocalDate date);
-
+    //Поиск усыновлений, в которых на дату-параметр заканчивается испытательный срок.
+    //Для поздравлений
+    List<DogAdoption> findByTrialDate(LocalDate date);
 }

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @EnableScheduling
 public class Notifier {
 
-    private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Notifier.class);
 
     private final CatAdoptionRepository catAdoptionRepository;
     private final DogAdoptionRepository dogAdoptionRepository;
@@ -66,7 +66,7 @@ public class Notifier {
     //улучшенный формат <Минуты> <Часы> <Дни_месяца> <Месяцы> <Дни_недели> <Годы>
     @Transactional
     public void sendWarningNoReport(){
-        logger.info("Вызов sendWarningNoReport " + LocalDateTime.now());
+        LOGGER.info("Вызов sendWarningNoReport " + LocalDateTime.now());
         long today = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), LocalDate.now());
         long dayLatestReport;
         LocalDate date;
@@ -84,7 +84,7 @@ public class Notifier {
                 date = (report != null) ? report.getDate() : adoption.getDate();
                 dayLatestReport = ChronoUnit.DAYS.between(LocalDate.of(2022, 12,31), date);
                 if(today-dayLatestReport > 2){
-                    logger.info("Вызов messageToVolunteer");
+                    LOGGER.info("Вызов messageToVolunteer");
                     messageToVolunteerService.createMessageToVolunteer(adoption.getId(), adoption.getUser(),
                             "ВНИМАНИЕ !!! Опекун " + adoption.getUser().getName()
                                     + " не присылал ежедневный отчет по собаке " + adoption.getPet().getName() + " более 2х дней.");
@@ -125,19 +125,17 @@ public class Notifier {
     @Scheduled(cron = "1 * * * * *")
     @Transactional
     public void sendCongratulation(){
-        List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
+        List<DogAdoption> currentDogAdoptionList = dogAdoptionRepository.findByTrialDate(LocalDate.now());
         for (DogAdoption adoption : currentDogAdoptionList) {
-            if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                sendNotification(adoption, adoption.getUser().getName() + "! Поздравляем !!! Вы успешно прошли испытательный период. " +
-                        "Всего наилучшего Вам и вашему питомцу.");
-            }
+            sendNotification(adoption, adoption.getUser().getName()
+                    + "! Поздравляем !!! Вы успешно прошли испытательный период. "
+                    + "Всего наилучшего Вам и вашему питомцу.");
         }
-        List<CatAdoption> currentCatAdoptionList = catAdoptionRepository.findByTrialDateGreaterThanEqual(LocalDate.now());
+        List<CatAdoption> currentCatAdoptionList = catAdoptionRepository.findByTrialDate(LocalDate.now());
         for (CatAdoption adoption : currentCatAdoptionList) {
-            if (adoption.getTrialDate().isEqual(LocalDate.now())) {
-                sendNotification(adoption, adoption.getUser().getName() + "! Поздравляем !!! Вы успешно прошли испытательный период. " +
-                        "Всего наилучшего Вам и вашему питомцу.");
-            }
+            sendNotification(adoption, adoption.getUser().getName()
+                    + "! Поздравляем !!! Вы успешно прошли испытательный период. "
+                    + "Всего наилучшего Вам и вашему питомцу.");
         }
     }
 
@@ -154,8 +152,7 @@ public class Notifier {
         try {
             telegramBotSender.sendMessageToUser(adoption.getUser(), notification, 0);
         }catch (TelegramApiException e){
-            logger.error("TelegramError " + e.getMessage());
+            LOGGER.error("TelegramError " + e.getMessage());
         }
     }
-
 }

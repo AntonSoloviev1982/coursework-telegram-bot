@@ -14,7 +14,7 @@ import javax.annotation.PostConstruct;
 
 @Component
 public class BotInitializer {
-    private static final Logger logger = LoggerFactory.getLogger(BotInitializer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BotInitializer.class);
 
     private final TelegramBot bot;
 
@@ -35,7 +35,7 @@ public class BotInitializer {
             // Регистрация бота с TelegramBotsApi.
             telegramBotsApi.registerBot(bot);
         } catch (TelegramApiException e) {
-            logger.error("Error of creation or registration of bot occurred: " + e.getMessage());
+            LOGGER.error("Error of creation or registration of bot occurred: " + e.getMessage());
         }
     }
 }

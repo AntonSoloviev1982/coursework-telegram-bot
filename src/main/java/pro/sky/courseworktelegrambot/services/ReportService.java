@@ -18,7 +18,7 @@ import java.util.List;
 
 @Service
 public class ReportService {
-    private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReportService.class);
     private final DogReportRepository dogReportRepository;
     private final CatReportRepository catReportRepository;
     private final ShelterService shelterService;
@@ -202,7 +202,7 @@ public class ReportService {
                             "Пожалуйста, подойди ответственнее к этому занятию. В противном случае волонтеры приюта будут обязаны " +
                             "самолично проверять условия содержания животного", 0);
         } catch (TelegramApiException e) {
-            logger.error("Ошибка при отправке сообщения "+e.getMessage());
+            LOGGER.error("Ошибка при отправке сообщения "+e.getMessage());
             //TelegramException - это RunTimeException, в отличие от TelegramApiException
             throw new TelegramException();
         }
